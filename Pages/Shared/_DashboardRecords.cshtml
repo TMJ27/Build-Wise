@@ -1,0 +1,36 @@
+@model BuildWise.Web.Pages.IndexModel
+@using BuildWise.Web.Pages
+<div class="table-wrap" id="dashboard-records">
+    <table>
+        <thead><tr><th>@(Model.Tab == "requests" ? "Request / customer" : "Quotation / customer")</th><th>Status</th><th>@(Model.Tab == "requests" ? "Created" : "Value (USD)")</th><th><span class="visually-hidden">Open record</span></th></tr></thead>
+        <tbody>
+        @if (Model.Tab == "requests")
+        {
+            @foreach (var request in Model.VisibleRequests.Take(6))
+            {
+                <tr><td><a href="@Model.ScreenUrl($"request/{request.Id}")"><strong>@request.Title</strong><small>@request.Customer · REQ-@request.Id</small></a></td>
+                    <td><span class="badge @request.BadgeClass">@request.Status</span></td><td class="muted">@IndexModel.Date(request.CreatedOn)</td>
+                    <td><a href="@Model.ScreenUrl($"request/{request.Id}")" aria-label="Open @request.Title">@await Html.PartialAsync("_WorkspaceIcon", "chevron")</a></td></tr>
+            }
+            @if (Model.VisibleRequests.Count == 0) { <tr><td colspan="4" class="empty">No requests match your search.</td></tr> }
+        }
+        else
+        {
+            @foreach (var quotation in Model.VisibleQuotations.Take(6))
+            {
+                var request = Model.RequestFor(quotation.RequestId);
+                <tr><td><a href="@Model.ScreenUrl($"quote/{quotation.Id}")"><strong>BW-2026-@quotation.Id.ToString("D4")</strong><small>@request.Customer · @request.Title</small></a></td>
+                    <td><span class="badge @(quotation.Status == "Approved" ? "green" : "")">@quotation.Status</span></td><td>@IndexModel.Money(quotation.Amount)</td>
+                    <td><a href="@Model.ScreenUrl($"quote/{quotation.Id}")" aria-label="Open quotation @quotation.Id">@await Html.PartialAsync("_WorkspaceIcon", "chevron")</a></td></tr>
+            }
+            @if (Model.VisibleQuotations.Count == 0) { <tr><td colspan="4" class="empty">No quotations match your search.</td></tr> }
+        }
+        </tbody>
+    </table>
+</div>
+<div class="table-foot">
+    @if (Model.Tab == "requests")
+    { <span>Showing @Math.Min(6, Model.VisibleRequests.Count) of @Model.VisibleRequests.Count requests</span><a href="@Model.ScreenUrl("requests")">View all requests →</a> }
+    else
+    { <span>Showing @Math.Min(6, Model.VisibleQuotations.Count) of @Model.VisibleQuotations.Count quotations</span><a href="@Model.ScreenUrl("quotations")">View all quotations →</a> }
+</div>

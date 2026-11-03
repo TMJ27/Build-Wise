@@ -1,0 +1,126 @@
+@page "{id:int?}"
+@model BuildWise.Web.Pages.Quotations.EditModel
+@{
+    ViewData["Title"] = Model.Existing is null ? "Create quotation" : "Edit quotation";
+    ViewData["ActiveSection"] = "quotations";
+    ViewData["AccountName"] = "Tawanda M.";
+    ViewData["AccountRole"] = "Business owner";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/requests.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/quotations.css" asp-append-version="true" />
+}
+
+<div class="requests-page quotations-page">
+    <a class="request-back" asp-page="Index">← Back to quotations</a>
+    <header class="requests-heading">
+        <div>
+            <div class="eyebrow">@(Model.Existing?.Number ?? "NEW QUOTATION")</div>
+            <h1>Put the details on paper.</h1>
+            <p>Set out the work, pricing and terms in one clear document.</p>
+        </div>
+        @if (Model.Existing is not null)
+        {
+            <span class="badge">Revision @Model.Existing.Quotation.Revision · Draft</span>
+        }
+    </header>
+
+    @if (Model.AvailableRequests.Count == 0)
+    {
+        <section class="panel request-detail-panel">
+            <h2>No requests are ready for a new quotation.</h2>
+            <p>Prepare a request’s scope before quoting, or open an existing draft from the quotation register.</p>
+            <a class="btn" asp-page="/Requests/Index" asp-route-status="Ready to quote">View requests</a>
+        </section>
+    }
+    else
+    {
+        <form method="post" class="quotation-editor" asp-route-id="@Model.Existing?.Quotation.Id">
+            <div class="quotation-column">
+                <section class="panel request-detail-panel request-form">
+                    <h2>Customer &amp; request</h2>
+                    <div asp-validation-summary="All" class="request-validation" role="alert"></div>
+                    <div class="field">
+                        <label asp-for="Input.RequestId">Source request</label>
+                        <select asp-for="Input.RequestId" required>
+                            <option value="">Choose a request</option>
+                            @foreach (var request in Model.AvailableRequests)
+                            {
+                                <option value="@request.Id">REQ-@request.Id · @request.Customer · @request.Title</option>
+                            }
+                        </select>
+                        <span asp-validation-for="Input.RequestId"></span>
+                    </div>
+                </section>
+
+                <section class="panel request-detail-panel">
+                    <div class="quotation-overview-heading">
+                        <div><h2>Quotation items</h2><p>All amounts are in USD.</p></div>
+                        <button class="btn" type="submit" asp-page-handler="AddLine" formnovalidate>
+                            @await Html.PartialAsync("_WorkspaceIcon", "plus")
+                            <span>Add item</span>
+                        </button>
+                    </div>
+
+                    <div class="quotation-edit-lines">
+                        @for (var i = 0; i < Model.Input.Lines.Count; i++)
+                        {
+                            <div class="quotation-edit-line">
+                                <div class="field quotation-description-field">
+                                    <label asp-for="Input.Lines[i].Description">Item @(i + 1) · Description</label>
+                                    <input asp-for="Input.Lines[i].Description" required maxlength="300" placeholder="Describe the work or material" />
+                                    <span asp-validation-for="Input.Lines[i].Description"></span>
+                                </div>
+                                <div class="field">
+                                    <label asp-for="Input.Lines[i].Quantity">Quantity</label>
+                                    <input asp-for="Input.Lines[i].Quantity" type="number" step="0.01" min="0.01" max="100000" required />
+                                    <span asp-validation-for="Input.Lines[i].Quantity"></span>
+                                </div>
+                                <div class="field">
+                                    <label asp-for="Input.Lines[i].Rate">Rate (USD)</label>
+                                    <input asp-for="Input.Lines[i].Rate" type="number" step="0.01" min="0" max="1000000" required />
+                                    <span asp-validation-for="Input.Lines[i].Rate"></span>
+                                </div>
+                                @if (Model.Input.Lines.Count > 1)
+                                {
+                                    <button class="quotation-remove" type="submit" asp-page-handler="RemoveLine" name="lineIndex" value="@i" formnovalidate aria-label="Remove item @(i + 1)">Remove</button>
+                                }
+                            </div>
+                        }
+                    </div>
+                </section>
+
+                <section class="panel request-detail-panel request-form">
+                    <h2>Terms &amp; exclusions</h2>
+                    <div class="field">
+                        <label asp-for="Input.Terms">Terms and validity</label>
+                        <textarea asp-for="Input.Terms" rows="3" maxlength="2000" required></textarea>
+                        <span asp-validation-for="Input.Terms"></span>
+                    </div>
+                    <div class="field">
+                        <label asp-for="Input.Exclusions">Exclusions</label>
+                        <textarea asp-for="Input.Exclusions" rows="3" maxlength="2000" required></textarea>
+                        <span asp-validation-for="Input.Exclusions"></span>
+                    </div>
+                    <div class="request-form-actions">
+                        <button class="btn primary" type="submit">Save draft</button>
+                        <a class="btn" asp-page="Index">Cancel</a>
+                    </div>
+                </section>
+            </div>
+
+            <aside class="request-workflow-note quotation-status-note">
+                @await Html.PartialAsync("_WorkspaceIcon", "help")
+                <div>
+                    <h2>Your approval comes next.</h2>
+                    <p>Save the draft to calculate its total and review the full document. You can edit it again before approving.</p>
+                    @if (Model.Existing is not null)
+                    {
+                        <p class="quotation-saved-total">Last saved total <strong>@BuildWise.Web.Pages.IndexModel.Money(Model.Existing.Quotation.Amount)</strong></p>
+                    }
+                </div>
+            </aside>
+        </form>
+    }
+</div>

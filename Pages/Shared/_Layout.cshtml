@@ -1,2 +1,66 @@
+@using BuildWise.Web.ViewModels.Layout
+@{
+    var title = ViewData["Title"]?.ToString() ?? "Workspace";
+
+
+    var fullWidth = ViewData["UseFullWidthLayout"] as bool? ?? false;
+    var breadcrumbs = ViewData["Breadcrumbs"] as IEnumerable<BreadcrumbItem> ?? [];
+    ViewData["ActiveSection"] ??= ViewContext.RouteData.Values["page"]?.ToString() is "/Index" ? "dashboard" : "";
+}
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="theme-color" content="#173f35" /><title>BuildWise · Service planning & quotations</title><link rel="icon" type="image/svg+xml" href="~/brand/buildwise-mark.svg" /><link rel="stylesheet" href="~/css/site.css" asp-append-version="true" /></head><body>@RenderBody()<script src="~/js/site.js" asp-append-version="true"></script>@await RenderSectionAsync("Scripts", required: false)</body></html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#14233b" />
+    <title>@title · BuildWise</title>
+    <link rel="icon" type="image/svg+xml" href="~/brand/buildwise-mark-muted.svg" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/blueprint.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/workspace.css" asp-append-version="true" />
+
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body class="workspace-page" data-server-shell="@(!fullWidth ? "true" : "false")" data-native-dashboard="@(ViewData["NativeDashboard"] is true ? "true" : "false")">
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    @if (fullWidth)
+    {
+        <main id="main-content" class="public-wrapper" tabindex="-1">@RenderBody()</main>
+        IgnoreSection("actionbar");
+    }
+    else
+    {
+        @await Html.PartialAsync("_WorkspaceHeader")
+        @await Html.PartialAsync("_Sidebar")
+        <main class="v2-main" id="main-content" tabindex="-1">
+            <div class="content">
+                @if (breadcrumbs.Any())
+                {
+                    <nav class="workspace-breadcrumbs" aria-label="Breadcrumb"><ol>
+                        @foreach (var crumb in breadcrumbs)
+                        {
+                            <li>@if (crumb.Url is not null && Url.IsLocalUrl(crumb.Url)) { <a href="@crumb.Url">@crumb.Title</a> } else { <span>@crumb.Title</span> }</li>
+                        }
+                        <li aria-current="page">@(ViewData["BreadcrumbTitle"] ?? title)</li>
+                    </ol></nav>
+                }
+                @if (ViewData["PageTitle"] is not null || IsSectionDefined("actionbar"))
+                {
+                    <div class="page-head"><div>
+                        @if (ViewData["PageEyebrow"] is not null) { <div class="eyebrow">@ViewData["PageEyebrow"]</div> }
+                        @if (ViewData["PageTitle"] is not null) { <h1>@ViewData["PageTitle"]</h1> }
+                        @if (ViewData["PageSubTitle"] is not null) { <p>@ViewData["PageSubTitle"]</p> }
+                    </div><div class="actions">@await RenderSectionAsync("actionbar", required: false)</div></div>
+                }
+                @RenderBody()
+                <footer class="footer-note"><span>© @DateTime.Now.Year BuildWise · Built for the way you work.</span></footer>
+            </div>
+        </main>
+    }
+    <div id="toast" role="status" aria-live="polite"></div>
+    <dialog id="modal" aria-label="Workspace dialog"><div id="modal-content"></div></dialog>
+    <script src="~/js/workspace.js" asp-append-version="true"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,422 @@
+.quotation-value-card strong {
+    font-size: 25px;
+    white-space: nowrap;
+}
+
+.quotation-table {
+    min-width: 860px;
+}
+
+.quotation-table th:first-child {
+    width: 38%;
+}
+
+.quotation-amount {
+    color: #233b58;
+    font-weight: 600;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.quotation-actions,
+.quotation-overview-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.quotation-detail-grid,
+.quotation-editor {
+    display: grid;
+    grid-template-columns: minmax(0, 1.9fr) minmax(280px, 1fr);
+    gap: 24px;
+    align-items: start;
+}
+
+.quotation-column {
+    display: grid;
+    gap: 24px;
+    min-width: 0;
+}
+
+.quotation-total {
+    margin: 26px 0;
+    font-size: 36px;
+    font-weight: 650;
+    letter-spacing: -1px;
+    font-variant-numeric: tabular-nums;
+}
+
+.quotation-total span {
+    display: block;
+    margin-top: 7px;
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0;
+}
+
+.quotation-copy {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.quotation-status-note h2 {
+    margin-bottom: 10px;
+    color: #3e5877;
+    font-size: 15px;
+}
+
+.quotation-status-note .btn {
+    margin-top: 18px;
+}
+
+.quotation-confirm {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 20px 0;
+    color: #52637a;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.quotation-confirm input {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 16px;
+    margin-top: 3px;
+    accent-color: #aa6248;
+}
+
+.quotation-lines-wrap {
+    overflow-x: auto;
+}
+
+.quotation-lines {
+    width: 100%;
+    min-width: 510px;
+    border-collapse: collapse;
+}
+
+.quotation-lines th {
+    padding: 14px 22px;
+    text-align: left;
+    font-size: 11px;
+    color: #617188;
+}
+
+.quotation-lines td {
+    padding: 18px 22px;
+    font-size: 13px;
+    line-height: 1.7;
+    vertical-align: top;
+}
+
+.quotation-lines th:first-child {
+    width: 50%;
+}
+
+.quotation-lines :is(th, td):not(:first-child) {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.quotation-lines td:first-child {
+    overflow-wrap: anywhere;
+}
+
+.quotation-lines td:nth-child(n + 2) {
+    white-space: nowrap;
+}
+
+.quotation-lines tfoot th,
+.quotation-lines tfoot td {
+    padding-top: 18px;
+    padding-bottom: 18px;
+    background: #f7f9fc;
+    color: #233b58;
+    font-size: 14px;
+    font-weight: 650;
+    border-top: 1px solid #e5eaf0;
+}
+
+.quotation-editor {
+    margin: 0;
+}
+
+.quotation-editor > * {
+    min-width: 0;
+}
+
+.quotation-editor .field {
+    margin-bottom: 0;
+}
+
+.quotation-editor .field label {
+    display: block;
+    margin-bottom: 9px;
+    color: #52637a;
+    font-size: 13px;
+}
+
+.quotation-editor .field :is(input, select, textarea) {
+    width: 100%;
+    min-width: 0;
+    padding: 10px 12px;
+    border: 1px solid #dce3ec;
+    border-radius: 6px;
+    background: white;
+    font: inherit;
+    font-size: 14px;
+    color: #233b58;
+}
+
+.quotation-editor textarea {
+    resize: vertical;
+}
+
+.quotation-editor .request-form > .field + .field {
+    margin-top: 20px;
+}
+
+.quotation-overview-heading p {
+    color: #64748b;
+    font-size: 12px;
+    margin: 5px 0 0;
+}
+
+.quotation-edit-lines {
+    margin-top: 24px;
+    display: grid;
+    gap: 20px;
+}
+
+.quotation-edit-line {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(80px, .25fr) minmax(100px, .3fr);
+    gap: 14px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #e5eaf0;
+}
+
+.quotation-edit-line:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
+}
+
+.quotation-remove {
+    grid-column: 1 / -1;
+    justify-self: start;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #98543d;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.quotation-saved-total {
+    margin-top: 20px !important;
+}
+
+.quotation-saved-total strong {
+    display: block;
+    font-size: 22px;
+    color: #233b58;
+    margin-top: 5px;
+}
+
+.quotation-document {
+    width: 100%;
+    max-width: 900px;
+    min-width: 0;
+    margin: 0 auto;
+    padding: 44px;
+    border: 1px solid #e5eaf0;
+    border-top: 4px solid #aa6248;
+    background: white;
+    box-shadow: 0 8px 30px #14233b07;
+}
+
+.quotation-document-header,
+.quotation-document-customer {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    margin-bottom: 32px;
+}
+
+.quotation-document-header {
+    padding-bottom: 28px;
+    border-bottom: 1px solid #e5eaf0;
+}
+
+.quotation-document-brand {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 19px;
+    font-weight: 700;
+    margin-bottom: 25px;
+}
+
+.quotation-document-brand img {
+    width: 28px;
+    height: 28px;
+}
+
+.quotation-company-logo {
+    display: block;
+    max-width: 140px;
+    max-height: 64px;
+    object-fit: contain;
+    margin-bottom: 14px;
+}
+
+.quotation-document-reference {
+    text-align: right;
+}
+
+.quotation-document :is(h2, h3) {
+    font-size: 15px;
+    font-weight: 650;
+    line-height: 1.5;
+    margin: 10px 0 6px;
+}
+
+.quotation-document p {
+    color: #52637a;
+    font-size: 13px;
+    line-height: 1.7;
+    margin: 4px 0;
+    overflow-wrap: anywhere;
+}
+
+.quotation-document .eyebrow {
+    color: #64748b;
+    font-size: 10px;
+    letter-spacing: 1px;
+}
+
+.quotation-document .quotation-lines-wrap {
+    margin: 22px 0 30px;
+}
+
+.quotation-document-terms h3 {
+    margin-top: 20px;
+}
+
+.quotation-document-footer {
+    margin-top: 34px;
+    padding-top: 18px;
+    border-top: 1px solid #e5eaf0;
+    color: #64748b;
+    font-size: 11px;
+    text-align: center;
+}
+
+@media (max-width: 1150px) {
+    .quotation-detail-grid,
+    .quotation-editor {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 650px) {
+    .quotation-actions {
+        justify-content: flex-start;
+    }
+
+    .quotation-value-card strong {
+        font-size: 23px;
+    }
+
+    .quotation-edit-line {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .quotation-description-field {
+        grid-column: 1 / -1;
+    }
+
+    .quotation-document {
+        padding: 24px 18px;
+    }
+
+    .quotation-document-header,
+    .quotation-document-customer {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 22px;
+    }
+
+    .quotation-document-reference {
+        text-align: left;
+    }
+}
+
+@media print {
+    @page {
+        size: A4;
+        margin: 15mm;
+    }
+
+    body,
+    .workspace-page[data-server-shell="true"] {
+        height: auto;
+        overflow: visible;
+        background: white;
+    }
+
+    .v2-header,
+    .workspace-sidebar,
+    .workspace-nav-backdrop,
+    .quotation-preview-toolbar,
+    .footer-note,
+    .skip-link,
+    #toast {
+        display: none !important;
+    }
+
+    .workspace-page > .v2-main {
+        margin: 0;
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    .content {
+        max-width: none;
+        padding: 0;
+    }
+
+    .quotation-document {
+        max-width: none;
+        border: 0;
+        box-shadow: none;
+        padding: 0;
+    }
+
+    .quotation-document-header,
+    .quotation-document-customer {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .quotation-document-reference {
+        text-align: right;
+    }
+
+    .quotation-lines-wrap {
+        overflow: visible;
+    }
+
+    .quotation-lines {
+        min-width: 0;
+    }
+
+    .quotation-lines tr,
+    .quotation-document-terms {
+        break-inside: avoid;
+    }
+}

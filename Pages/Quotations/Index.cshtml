@@ -1,0 +1,164 @@
+@page
+@model BuildWise.Web.Pages.Quotations.IndexModel
+@using BuildWise.Web.Pages.Quotations
+@{
+    ViewData["Title"] = "Quotations";
+    ViewData["ActiveSection"] = "quotations";
+    ViewData["AccountName"] = "Tawanda M.";
+    ViewData["AccountRole"] = "Business owner";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/requests.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/quotations.css" asp-append-version="true" />
+}
+
+<div class="requests-page quotations-page">
+    <header class="requests-heading">
+        <div>
+            <div class="eyebrow">SCOPE. PRICE. CONFIDENCE.</div>
+            <h1>Clear work. Clear quotations.</h1>
+            <p>Keep your drafts, approvals and customer quotations together.</p>
+        </div>
+        <a class="btn primary" asp-page="Edit">
+            @await Html.PartialAsync("_WorkspaceIcon", "plus")
+            <span>Create quotation</span>
+        </a>
+    </header>
+
+    <div class="request-summary quotation-summary" aria-label="Quotation summary">
+        <a class="request-summary-card" asp-page="Index">
+            <span class="summary-icon">@await Html.PartialAsync("_WorkspaceIcon", "quote")</span>
+            <span><span class="summary-label">Total quotations</span><strong>@Model.All.Count.ToString("D2")</strong></span>
+        </a>
+        <a class="request-summary-card" asp-page="Index" asp-route-status="Draft">
+            <span class="summary-icon">@await Html.PartialAsync("_WorkspaceIcon", "edit")</span>
+            <span><span class="summary-label">Draft quotations</span><strong>@Model.DraftCount.ToString("D2")</strong></span>
+        </a>
+        <a class="request-summary-card" asp-page="Index" asp-route-status="Approved">
+            <span class="summary-icon">@await Html.PartialAsync("_WorkspaceIcon", "check")</span>
+            <span><span class="summary-label">Approved quotations</span><strong>@Model.ApprovedCount.ToString("D2")</strong></span>
+        </a>
+        <div class="request-summary-card quotation-value-card">
+            <span class="summary-icon">@await Html.PartialAsync("_WorkspaceIcon", "quote")</span>
+            <span><span class="summary-label">Approved value · USD</span><strong>@IndexModel.Money(Model.ApprovedValue)</strong></span>
+        </div>
+    </div>
+
+    <section class="panel requests-panel" aria-labelledby="quotation-list-heading">
+        <div class="requests-panel-heading">
+            <div>
+                <h2 id="quotation-list-heading">Quotation register</h2>
+                <p>Review the details before making a commitment.</p>
+            </div>
+            <span class="badge">@Model.All.Count quotations</span>
+        </div>
+
+        <nav class="request-tabs" aria-label="Quotation status">
+            @foreach (var tab in new[] { ("all", "All quotations", Model.All.Count), ("Draft", "Drafts", Model.DraftCount), ("Approved", "Approved", Model.ApprovedCount) })
+            {
+                <a asp-page="Index"
+                   asp-route-status="@tab.Item1"
+                   asp-route-search="@Model.Search"
+                   asp-route-sort="@Model.Sort"
+                   class="@(Model.Status == tab.Item1 ? "active" : null)"
+                   aria-current="@(Model.Status == tab.Item1 ? "page" : null)">
+                    @tab.Item2 <span>@tab.Item3</span>
+                </a>
+            }
+        </nav>
+
+        <form method="get" class="requests-filters" role="search">
+            <input type="hidden" asp-for="Status" />
+            <label class="request-search">
+                @await Html.PartialAsync("_WorkspaceIcon", "search")
+                <span class="visually-hidden">Search quotations</span>
+                <input asp-for="Search" type="search" maxlength="120" placeholder="Search quotation, customer or request…" />
+            </label>
+            <label class="request-filter">
+                <span>Sort by</span>
+                <select asp-for="Sort">
+                    <option value="newest">Newest first</option>
+                    <option value="oldest">Oldest first</option>
+                    <option value="highest">Highest value</option>
+                </select>
+            </label>
+            <button class="btn" type="submit">Apply filters</button>
+            @if (Model.Search != "" || Model.Status != "all" || Model.Sort != "newest")
+            {
+                <a class="request-clear" asp-page="Index">Clear filters</a>
+            }
+        </form>
+
+        <div class="table-wrap requests-table-wrap" tabindex="0" role="region" aria-label="Quotations; scroll horizontally on smaller screens">
+            <table class="requests-table quotation-table">
+                <thead>
+                    <tr>
+                        <th>Quotation / customer</th>
+                        <th>Status</th>
+                        <th>Revision</th>
+                        <th>Value (USD)</th>
+                        <th>Prepared</th>
+                        <th><span class="visually-hidden">View quotation</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var entry in Model.Records)
+                    {
+                        var request = Model.RequestFor(entry);
+                        <tr>
+                            <td>
+                                <a asp-page="Details" asp-route-id="@entry.Quotation.Id">
+                                    <strong>@entry.Number</strong>
+                                    <small>@request.Customer · @request.Title</small>
+                                </a>
+                            </td>
+                            <td><span class="badge @(entry.Quotation.Status == "Approved" ? "green" : "")">@entry.Quotation.Status</span></td>
+                            <td class="request-category">Revision @entry.Quotation.Revision</td>
+                            <td class="quotation-amount">@IndexModel.Money(entry.Quotation.Amount)</td>
+                            <td class="request-date">@entry.Quotation.PreparedOn.ToString("dd MMM yyyy")</td>
+                            <td>
+                                <a class="request-open" asp-page="Details" asp-route-id="@entry.Quotation.Id" aria-label="Open @entry.Number">
+                                    @await Html.PartialAsync("_WorkspaceIcon", "chevron")
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                    @if (Model.Total == 0)
+                    {
+                        <tr>
+                            <td colspan="6">
+                                <div class="request-empty">
+                                    @await Html.PartialAsync("_WorkspaceIcon", "search")
+                                    <h3>No matching quotations</h3>
+                                    <p>Try another customer name, reference or status.</p>
+                                    <a class="btn" asp-page="Index">Clear filters</a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="requests-table-footer">
+            <span>Showing @Model.Records.Count of @Model.Total quotations</span>
+            <nav class="request-pagination" aria-label="Quotation pages">
+                @if (Model.PageNumber > 1)
+                {
+                    <a class="btn" asp-page="Index" asp-route-pageNumber="@(Model.PageNumber - 1)" asp-route-status="@Model.Status" asp-route-search="@Model.Search" asp-route-sort="@Model.Sort">Previous</a>
+                }
+                <span>Page @Model.PageNumber of @Model.PageCount</span>
+                @if (Model.PageNumber < Model.PageCount)
+                {
+                    <a class="btn" asp-page="Index" asp-route-pageNumber="@(Model.PageNumber + 1)" asp-route-status="@Model.Status" asp-route-search="@Model.Search" asp-route-sort="@Model.Sort">Next</a>
+                }
+            </nav>
+        </div>
+    </section>
+
+    <div class="request-workflow-note">
+        @await Html.PartialAsync("_WorkspaceIcon", "help")
+        <p><strong>Approval stays in your hands.</strong> Review the scope, pricing and terms before approving a quotation.</p>
+    </div>
+</div>

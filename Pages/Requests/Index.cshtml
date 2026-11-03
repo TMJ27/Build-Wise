@@ -1,0 +1,58 @@
+@page
+@model BuildWise.Web.Pages.Requests.IndexModel
+@{
+    ViewData["Title"] = "Requests";
+    ViewData["ActiveSection"] = "requests";
+    ViewData["AccountName"] = "Tawanda M.";
+    ViewData["AccountRole"] = "Business owner";
+}
+@section Styles { <link rel="stylesheet" href="~/css/requests.css" asp-append-version="true" /> }
+<div class="requests-page">
+    <header class="requests-heading">
+        <div><div class="eyebrow">CUSTOMER WORKSPACE</div><h1>Every request starts here.</h1><p>Keep the details together, shape the scope and move work forward.</p></div>
+        <a class="btn primary" asp-page="Create">@await Html.PartialAsync("_WorkspaceIcon", "plus")<span>New request</span></a>
+    </header>
+    <div class="request-summary" aria-label="Request summary">
+        @foreach (var item in new[] { ("all", "Total requests", "file"), ("Needs clarification", "Need clarification", "alert"), ("Scope review", "In scope review", "edit"), ("Ready to quote", "Ready to quote", "check") })
+        {
+            <a asp-page="Index" asp-route-status="@item.Item1" class="request-summary-card @(Model.Status == item.Item1 ? "selected" : null)">
+                <span class="summary-icon">@await Html.PartialAsync("_WorkspaceIcon", item.Item3)</span><span><span class="summary-label">@item.Item2</span><strong>@Model.Count(item.Item1).ToString("D2")</strong></span>
+            </a>
+        }
+    </div>
+    <section class="panel requests-panel" aria-labelledby="request-list-heading">
+        <div class="requests-panel-heading"><div><h2 id="request-list-heading">Request register</h2><p>From the first conversation to an approved quotation.</p></div><span class="badge">@Model.All.Count requests</span></div>
+        <nav class="request-tabs" aria-label="Request status">
+            <a asp-page="Index" asp-route-search="@Model.Search" asp-route-category="@Model.Category" asp-route-sort="@Model.Sort" class="@(Model.Status == "all" ? "active" : null)" aria-current="@(Model.Status == "all" ? "page" : null)">All requests <span>@Model.All.Count</span></a>
+            @foreach (var status in BuildWise.Web.Pages.Requests.IndexModel.Statuses)
+            {
+                <a asp-page="Index" asp-route-status="@status" asp-route-search="@Model.Search" asp-route-category="@Model.Category" asp-route-sort="@Model.Sort" class="@(Model.Status == status ? "active" : null)" aria-current="@(Model.Status == status ? "page" : null)">@status <span>@Model.Count(status)</span></a>
+            }
+        </nav>
+        <form method="get" class="requests-filters" role="search">
+            <input type="hidden" asp-for="Status" />
+            <label class="request-search">@await Html.PartialAsync("_WorkspaceIcon", "search")<span class="visually-hidden">Search requests</span><input asp-for="Search" type="search" maxlength="120" placeholder="Search request, customer or reference…" /></label>
+            <label class="request-filter"><span>Service</span><select asp-for="Category"><option value="all">All services</option>@foreach (var category in Model.Categories) { <option value="@category">@category</option> }</select></label>
+            <label class="request-filter"><span>Sort by</span><select asp-for="Sort"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="customer">Customer name</option></select></label>
+            <button class="btn" type="submit">Apply filters</button>
+            @if (Model.Search != "" || Model.Category != "all" || Model.Status != "all" || Model.Sort != "newest") { <a class="request-clear" asp-page="Index">Clear filters</a> }
+        </form>
+        <div class="table-wrap requests-table-wrap" tabindex="0" role="region" aria-label="Request register; scroll horizontally on smaller screens">
+            <table class="requests-table"><thead><tr><th>Request / customer</th><th>Service</th><th>Status</th><th>Created</th><th><span class="visually-hidden">View details</span></th></tr></thead><tbody>
+                @foreach (var request in Model.Records)
+                {
+                    <tr><td><a asp-page="Details" asp-route-id="@request.Id"><strong>@request.Title</strong><small>@request.Customer <span>· REQ-@request.Id</span></small></a></td><td class="request-category">@request.Category</td><td><span class="badge @request.BadgeClass">@request.Status</span></td><td class="request-date">@request.CreatedOn.ToString("dd MMM yyyy", System.Globalization.CultureInfo.InvariantCulture)</td><td><a class="request-open" asp-page="Details" asp-route-id="@request.Id" aria-label="Open @request.Title">@await Html.PartialAsync("_WorkspaceIcon", "chevron")</a></td></tr>
+                }
+                @if (Model.Total == 0) { <tr><td colspan="5"><div class="request-empty">@await Html.PartialAsync("_WorkspaceIcon", "search")<h3>No matching requests</h3><p>Try a different customer name, reference or service.</p><a class="btn" asp-page="Index">Clear filters</a></div></td></tr> }
+            </tbody></table>
+        </div>
+        <div class="requests-table-footer"><span>@(Model.Total == 0 ? "0 requests" : $"Showing {(Model.PageNumber - 1) * 8 + 1}–{Math.Min(Model.PageNumber * 8, Model.Total)} of {Model.Total} requests")</span>
+            <nav class="request-pagination" aria-label="Request pages">
+                @if (Model.PageNumber > 1) { <a class="btn" asp-page="Index" asp-route-pageNumber="@(Model.PageNumber - 1)" asp-route-status="@Model.Status" asp-route-category="@Model.Category" asp-route-search="@Model.Search" asp-route-sort="@Model.Sort">Previous</a> }
+                <span>Page @Model.PageNumber of @Model.PageCount</span>
+                @if (Model.PageNumber < Model.PageCount) { <a class="btn" asp-page="Index" asp-route-pageNumber="@(Model.PageNumber + 1)" asp-route-status="@Model.Status" asp-route-category="@Model.Category" asp-route-search="@Model.Search" asp-route-sort="@Model.Sort">Next @await Html.PartialAsync("_WorkspaceIcon", "chevron")</a> }
+            </nav>
+        </div>
+    </section>
+    <div class="request-workflow-note">@await Html.PartialAsync("_WorkspaceIcon", "help")<p><strong>A clear scope makes a stronger quotation.</strong> Confirm the missing details before preparing costs for your customer.</p></div>
+</div>

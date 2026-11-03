@@ -1,7 +1,25 @@
+using BuildWise.Data;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
+builder.Services.AddDbContext<BuildWiseDbContext>(options =>
+{
+    var connectionString = builder.Configuration.GetConnectionString("BuildWise")
+        ?? throw new InvalidOperationException(
+            "The BuildWise database connection string is not configured.");
+
+    options.UseSqlServer(connectionString);
+});
+
+builder.Services.AddSingleton<BuildWise.Web.Services.AccessWorkspace>();
+builder.Services.AddSingleton<BuildWise.Web.Services.CompanyWorkspace>();
+builder.Services.AddSingleton<BuildWise.Web.Services.CatalogueWorkspace>();
+builder.Services.AddSingleton<BuildWise.Web.Services.CustomerWorkspace>();
+builder.Services.AddSingleton<BuildWise.Web.Services.RequestWorkspace>();
+builder.Services.AddSingleton<BuildWise.Web.Services.QuotationWorkspace>();
 
 var app = builder.Build();
 

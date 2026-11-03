@@ -1,0 +1,342 @@
+.catalogue-filter-panel .request-tabs {
+    padding-top: 20px;
+}
+
+.catalogue-filter-panel .requests-filters {
+    border-bottom: 0;
+}
+
+.catalogue-results-heading,
+.catalogue-card-top,
+.catalogue-card-footer,
+.catalogue-section-heading,
+.catalogue-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.catalogue-actions,
+.catalogue-section-heading {
+    flex-wrap: wrap;
+}
+
+.catalogue-results-heading h2 {
+    margin: 0;
+}
+
+.catalogue-results-heading > span {
+    font-size: 12px;
+    color: #64748b;
+}
+
+.catalogue-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px;
+}
+
+.catalogue-card {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    margin: 0;
+    padding: 24px;
+}
+
+.catalogue-service-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    background: #f8eee8;
+    color: #aa6248;
+    border-radius: 10px;
+}
+
+.catalogue-service-icon .icon {
+    width: 22px;
+    height: 22px;
+}
+
+.catalogue-service-code {
+    margin: 20px 0 8px;
+    color: #64748b;
+    font-size: 11px;
+    letter-spacing: .6px;
+    text-transform: uppercase;
+}
+
+.catalogue-card h2 {
+    font-size: 18px;
+    margin-bottom: 10px;
+    overflow-wrap: anywhere;
+}
+
+.catalogue-card h2 a:hover {
+    color: #aa6248;
+}
+
+.catalogue-service-description {
+    margin: 0 0 18px;
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.8;
+    overflow-wrap: anywhere;
+}
+
+.catalogue-card-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 22px;
+}
+
+.catalogue-card-tags span {
+    background: #f2f5f9;
+    color: #61748f;
+    font-size: 11px;
+    line-height: 1.5;
+    padding: 4px 8px;
+    border-radius: 5px;
+}
+
+.catalogue-card-tags .catalogue-assessment-tag {
+    background: #f8eee8;
+    color: #985b44;
+}
+
+.catalogue-card-footer {
+    border-top: 1px solid var(--line);
+    padding-top: 16px;
+    margin-top: auto;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: #64748b;
+}
+
+.catalogue-card-footer a {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: #985b44;
+    font-weight: 600;
+}
+
+.catalogue-card-footer .icon {
+    width: 14px;
+    height: 14px;
+}
+
+.catalogue-detail-grid,
+.catalogue-editor {
+    display: grid;
+    grid-template-columns: minmax(0, 1.9fr) minmax(280px, 1fr);
+    align-items: start;
+    gap: 24px;
+}
+
+.catalogue-editor {
+    margin: 0;
+}
+
+.catalogue-column {
+    display: grid;
+    gap: 24px;
+    min-width: 0;
+}
+
+.catalogue-detail-grid > *,
+.catalogue-editor > * {
+    min-width: 0;
+}
+
+.catalogue-copy {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.catalogue-muted,
+.catalogue-section-heading p,
+.catalogue-field-help {
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+.catalogue-section-heading p {
+    margin: 5px 0 0;
+}
+
+.catalogue-field-help {
+    margin: 0 0 18px;
+}
+
+.catalogue-scope-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 26px;
+}
+
+.catalogue-scope-columns > * {
+    min-width: 0;
+}
+
+.catalogue-list {
+    padding-left: 18px;
+    margin: 16px 0 0;
+    color: #52637a;
+    font-size: 13px;
+    line-height: 1.8;
+}
+
+.catalogue-list li {
+    padding-left: 3px;
+    margin-bottom: 12px;
+    overflow-wrap: anywhere;
+}
+
+.catalogue-numbered-list {
+    list-style: none;
+    counter-reset: catalogue-step;
+    padding: 0;
+    margin: 20px 0 0;
+}
+
+.catalogue-numbered-list li {
+    counter-increment: catalogue-step;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    border-top: 1px solid var(--line);
+    padding: 16px 0;
+    color: #52637a;
+    font-size: 13px;
+    line-height: 1.7;
+    overflow-wrap: anywhere;
+}
+
+.catalogue-numbered-list li::before {
+    content: counter(catalogue-step, decimal-leading-zero);
+    color: #8a6a5c;
+    background: #f8eee8;
+    border-radius: 6px;
+    padding: 2px 7px;
+    font-size: 11px;
+    flex-shrink: 0;
+}
+
+.catalogue-numbered-list li:last-child {
+    padding-bottom: 0;
+}
+
+.catalogue-dependency {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 0;
+    border-top: 1px solid var(--line);
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.catalogue-dependency strong {
+    display: block;
+    font-weight: 600;
+}
+
+.catalogue-dependency small {
+    display: block;
+    color: #64748b;
+    margin-top: 5px;
+    font-size: 11px;
+}
+
+.catalogue-dependency .icon {
+    margin-left: auto;
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+.catalogue-checkbox {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    margin: 18px 0 0;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.catalogue-checkbox input {
+    width: 16px;
+    height: 16px;
+    margin-top: 3px;
+    flex: 0 0 16px;
+    accent-color: #aa6248;
+}
+
+.catalogue-checkbox strong {
+    display: block;
+    font-weight: 600;
+    color: #334b69;
+}
+
+.catalogue-checkbox small {
+    display: block;
+    color: #64748b;
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+.catalogue-dependency-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 18px;
+}
+
+.catalogue-editor .request-form h2 {
+    margin-top: 0;
+}
+
+.catalogue-editor .field label {
+    line-height: 1.6;
+}
+
+.catalogue-editor .field .catalogue-field-help {
+    font-size: 12px;
+    margin: 0 0 10px;
+}
+
+.catalogue-availability-form {
+    margin: 18px 0 0;
+}
+
+@media (max-width: 1150px) {
+    .catalogue-detail-grid,
+    .catalogue-editor {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 700px) {
+    .catalogue-grid,
+    .catalogue-scope-columns,
+    .catalogue-dependency-options {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .catalogue-card {
+        padding: 22px 18px;
+    }
+
+    .catalogue-actions {
+        justify-content: flex-start;
+    }
+
+    .catalogue-filter-panel .request-tabs {
+        padding-top: 18px;
+    }
+}

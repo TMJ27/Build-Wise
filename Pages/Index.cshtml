@@ -1,4 +1,123 @@
 @page
 @model IndexModel
-@{ ViewData["Title"] = "Workspace"; }
-<div id="app"></div><div id="toast" role="status" aria-live="polite"></div><dialog id="modal"><div id="modal-content"></div></dialog>
+@{
+    ViewData["Title"] = "Overview";
+    ViewData["NativeDashboard"] = true;
+    ViewData["ActiveSection"] = "dashboard";
+    ViewData["AccountName"] = "Tawanda M.";
+    ViewData["AccountRole"] = "Business owner";
+    ViewData["BusinessName"] = "Mavambo Projects";
+    var metrics = new[] {
+        ("Open requests", Model.OpenRequests.ToString("D2"), "file", $"{Model.ClarificationCount} need clarification"),
+        ("Draft quotations", Model.DraftCount.ToString("D2"), "edit", $"{IndexModel.Money(Model.DraftValue)} in preparation"),
+        ("Approved quotations", Model.ApprovedCount.ToString("D2"), "check", $"{IndexModel.Money(Model.ApprovedValue)} approved value"),
+        ("Customers", Model.CustomerCount.ToString("D2"), "users", $"{Model.ActiveServiceCount} active catalogue services")
+    };
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
+}
+<div class="v2-greeting">
+    <div><div class="eyebrow">@IndexModel.Date(Model.Today, "dddd, d MMMM yyyy")</div>
+        <h1>Good morning, Tawanda<span class="dashboard-accent">.</span></h1>
+        <p>@Model.OpenRequests open requests. @Model.DraftCount quotations to finish. Let’s move the work forward.</p>
+    </div>
+    <div class="actions">
+        <form method="get" asp-page="/Index" class="dashboard-filters">
+            <input type="hidden" name="Tab" value="@Model.Tab" /><input type="hidden" name="Search" value="@Model.Search" />
+            <label class="db-range">@await Html.PartialAsync("_WorkspaceIcon", "clock")
+                <select asp-for="Range" aria-label="Dashboard date range"><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="all">All time</option></select>
+            </label>
+            <button class="btn" type="submit">Apply</button>
+        </form>
+        <a class="btn primary" href="@Model.ScreenUrl("new-request")">@await Html.PartialAsync("_WorkspaceIcon", "plus")<span>New request</span></a>
+    </div>
+</div>
+<div class="v2-feature-grid">
+    <section class="v2-hero db-hero"><div class="eyebrow">YOUR EXPERTISE. A CLEARER NEXT STEP.</div>
+        <h2>Good work starts<br />with a clear scope.</h2>
+        <p>@Model.ClarificationCount requests need a little more detail.<br />Pick up the conversation and build from there.</p>
+        <a class="btn primary" href="@Model.ScreenUrl("requests")">@await Html.PartialAsync("_WorkspaceIcon", "arrow")<span>Review requests</span></a>
+        @await Html.PartialAsync("_BlueprintIllustration")
+    </section>
+    <section class="v2-queue"><div class="v2-queue-head"><h2>Needs your attention</h2><span class="badge">@Model.Attention.Count next steps</span></div>
+        <div class="v2-queue-items">
+            @foreach (var item in Model.Attention)
+            {
+                <a class="attention-item" href="@Model.ScreenUrl($"{item.Route}/{item.Request.Id}")">
+                    <span class="square @item.Tone">@await Html.PartialAsync("_WorkspaceIcon", item.Icon)</span>
+                    <div><h3>@item.Title</h3><p>@item.Request.Customer · @item.Request.Title</p></div>
+                    <span class="db-next">@await Html.PartialAsync("_WorkspaceIcon", "chevron")</span>
+                </a>
+            }
+            @if (Model.Attention.Count == 0) { <p class="db-empty">No pending actions in this period.</p> }
+        </div>
+    </section>
+</div>
+<div class="v2-metrics">
+    @foreach (var metric in metrics)
+    {
+        <div class="v2-metric"><div class="v2-metric-label">@await Html.PartialAsync("_WorkspaceIcon", metric.Item3)@metric.Item1</div>
+            <div class="v2-metric-value"><b>@metric.Item2</b></div><p>@metric.Item4</p></div>
+    }
+</div>
+<div class="db-analytics">
+    <section class="panel"><div class="panel-head"><div><h2>Quotation activity</h2><p>Prepared and approved over the last 7 days.</p></div><span class="badge">@Model.Quotations.Count in selected period</span></div>
+        <div class="panel-body"><div class="db-chart" role="img" aria-label="Daily prepared and approved quotation counts">
+            @foreach (var day in Model.Days)
+            {
+                <div class="db-chart-day"><div class="db-chart-bars">
+                    <span class="db-chart-bar" style="height:@(day.Prepared * 100 / Model.MaximumDayCount)%" title="@IndexModel.Date(day.Date, "ddd"): @day.Prepared prepared">@if (day.Prepared > 0) { <i>@day.Prepared</i> }</span>
+                    <span class="db-chart-bar approved" style="height:@(day.Approved * 100 / Model.MaximumDayCount)%" title="@IndexModel.Date(day.Date, "ddd"): @day.Approved approved">@if (day.Approved > 0) { <i>@day.Approved</i> }</span>
+                </div><small>@IndexModel.Date(day.Date, "ddd")</small></div>
+            }
+        </div><div class="db-chart-footer"><span><i></i>Prepared</span><span><i class="approved"></i>Approved</span><b>Approved value <strong>@IndexModel.Money(Model.ApprovedValue)</strong></b></div></div>
+    </section>
+    <section class="panel"><div class="panel-head"><div><h2>Requests by service</h2><p>Where your customers need you.</p></div><span class="badge">@Model.Requests.Count total</span></div>
+        <div class="panel-body db-category-list">
+            @foreach (var category in Model.Categories)
+            {
+                <div class="db-category"><div><span>@category.Name</span><b>@category.Count @(category.Count == 1 ? "request" : "requests")</b></div>
+                    <div class="db-progress"><span style="width:@(category.Percentage)%;background:@category.Colour"></span></div></div>
+            }
+        </div>
+    </section>
+</div>
+<div class="v2-lower"><div>
+    <section class="panel"><div class="panel-head"><nav class="db-tabs" aria-label="Recent record type">
+        <a asp-page="/Index" asp-route-range="@Model.Range" asp-route-tab="requests" class="@(Model.Tab == "requests" ? "active" : null)" aria-current="@(Model.Tab == "requests" ? "page" : null)">Recent requests <span>@Model.Requests.Count</span></a>
+        <a asp-page="/Index" asp-route-range="@Model.Range" asp-route-tab="quotations" class="@(Model.Tab == "quotations" ? "active" : null)" aria-current="@(Model.Tab == "quotations" ? "page" : null)">Quotations <span>@Model.Quotations.Count</span></a>
+    </nav><form method="get" asp-page="/Index" class="db-search" role="search">
+        <input type="hidden" name="Range" value="@Model.Range" /><input type="hidden" name="Tab" value="@Model.Tab" />
+        <input type="search" name="Search" value="@Model.Search" maxlength="120" placeholder="Find a record…" aria-label="Search dashboard records" />
+        <button type="submit" class="icon-btn" aria-label="Search records">@await Html.PartialAsync("_WorkspaceIcon", "search")</button>
+    </form></div>
+    @await Html.PartialAsync("_DashboardRecords", Model)
+    </section>
+    <section class="panel"><div class="panel-head"><div><h2>Your quotation pipeline</h2><p>Current requests · @Model.RangeCaption</p></div></div><div class="panel-body">
+        <div class="v2-pipeline">
+            @for (var i = 0; i < Model.Stages.Count; i++)
+            {
+                var stage = Model.Stages[i];
+                if (i > 0) { <span aria-hidden="true">→</span> }
+                <div><a href="@Model.ScreenUrl(stage.FirstRequestId.HasValue ? $"{stage.Route}/{stage.FirstRequestId}" : "requests")"><b>@stage.Count.ToString("D2")</b><span>@stage.Name</span></a></div>
+            }
+        </div><div class="v2-note">Your approval turns a draft into a commitment. <a href="@Model.ScreenUrl("quotations")">Review quotations →</a></div>
+    </div></section>
+</div><aside>
+    <section class="panel"><div class="panel-head"><div><h2>Latest activity</h2><p>A little progress, recorded.</p></div></div><div class="panel-body">
+        @foreach (var activity in Model.Activity)
+        {
+            <a class="activity" href="@Model.ScreenUrl(activity.Route)"><span class="avatar">@await Html.PartialAsync("_WorkspaceIcon", activity.Icon)</span><div><p><b>@activity.Title</b><br />@activity.Detail</p><small>@IndexModel.Date(activity.Date, "d MMM")</small></div></a>
+        }
+    </div></section>
+    <section class="panel"><div class="panel-head"><h2>Ready for the next conversation?</h2></div><div class="panel-body"><p class="db-help-text">Your catalogue has @Model.ActiveServiceCount services ready to bring clarity to the next customer request.</p><a class="btn soft small" href="@Model.ScreenUrl("catalogue")">@await Html.PartialAsync("_WorkspaceIcon", "box")<span>Open service catalogue</span></a></div></section>
+</aside></div>
+<template id="dashboard-notifications">
+    <h2>Workspace activity</h2>
+    @foreach (var activity in Model.Activity)
+    {
+        <a class="activity" href="@Model.ScreenUrl(activity.Route)"><span class="avatar">@await Html.PartialAsync("_WorkspaceIcon", activity.Icon)</span><div><p><b>@activity.Title</b><br />@activity.Detail</p><small>@IndexModel.Date(activity.Date, "d MMM")</small></div></a>
+    }
+    <div class="actions" style="margin-top:22px"><button type="button" class="btn" data-workspace-dialog-close>Close</button></div>
+</template>

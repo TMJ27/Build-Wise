@@ -1,0 +1,182 @@
+@page
+@model BuildWise.Web.Pages.Configuration.ProfileModel
+@{
+    ViewData["Title"] = "Business profile";
+    ViewData["ActiveSection"] = "settings";
+    ViewData["AccountName"] = "Tawanda M.";
+    ViewData["AccountRole"] = "Business owner";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/requests.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/configuration.css" asp-append-version="true" />
+}
+
+<div class="requests-page configuration-page">
+    <header class="requests-heading">
+        <div>
+            <div class="eyebrow">CONFIGURATION / BUSINESS PROFILE</div>
+            <h1>Make this workspace yours.</h1>
+            <p>Your company identity and quotation preferences, kept together.</p>
+        </div>
+        <button class="btn primary" type="submit" form="business-profile-form">
+            @await Html.PartialAsync("_WorkspaceIcon", "check")
+            <span>Save changes</span>
+        </button>
+    </header>
+
+    @if (TempData["ProfileMessage"] is string message)
+    {
+        <div class="request-success" role="status">
+            @await Html.PartialAsync("_WorkspaceIcon", "check")
+            @message
+        </div>
+    }
+
+    <div class="configuration-grid">
+        <form method="post" enctype="multipart/form-data" id="business-profile-form" class="configuration-column">
+            <input type="hidden" asp-for="Input.Version" />
+            <div asp-validation-summary="All" class="request-validation configuration-errors" role="alert"></div>
+
+            <section class="panel request-detail-panel request-form configuration-section">
+                <div class="configuration-section-title">
+                    <span class="summary-icon">@await Html.PartialAsync("_WorkspaceIcon", "business")</span>
+                    <div><h2>Company details</h2><p>How your business appears on customer documents.</p></div>
+                </div>
+                <div class="request-form-fields">
+                    <div class="field request-form-wide">
+                        <label asp-for="Input.Name">Company name <span>*</span></label>
+                        <input asp-for="Input.Name" required maxlength="30" autocomplete="organization" data-preview="name" />
+                        <span asp-validation-for="Input.Name"></span>
+                    </div>
+                    <div class="field">
+                        <label asp-for="Input.Email">Email address <span>*</span></label>
+                        <input asp-for="Input.Email" type="email" required maxlength="50" autocomplete="email" data-preview="email" />
+                        <span asp-validation-for="Input.Email"></span>
+                    </div>
+                    <div class="field">
+                        <label asp-for="Input.Phone">Phone number <span>*</span></label>
+                        <input asp-for="Input.Phone" type="tel" required maxlength="20" autocomplete="tel" data-preview="phone" />
+                        <span asp-validation-for="Input.Phone"></span>
+                    </div>
+                    <div class="field request-form-wide">
+                        <label asp-for="Input.Address">Business address <span>*</span></label>
+                        <textarea asp-for="Input.Address" required maxlength="500" rows="3" autocomplete="street-address" data-preview="address"></textarea>
+                        <span asp-validation-for="Input.Address"></span>
+                    </div>
+                    <div class="field">
+                        <label asp-for="Input.RegistrationNumber">Registration number <small>Optional</small></label>
+                        <input asp-for="Input.RegistrationNumber" maxlength="50" placeholder="Business registration number" />
+                        <span asp-validation-for="Input.RegistrationNumber"></span>
+                    </div>
+                    <div class="field">
+                        <label asp-for="Input.TaxNumber">Tax number <small>Optional</small></label>
+                        <input asp-for="Input.TaxNumber" maxlength="50" placeholder="Business tax number" />
+                        <span asp-validation-for="Input.TaxNumber"></span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel request-detail-panel configuration-section">
+                <div class="configuration-section-title">
+                    <span class="summary-icon">@await Html.PartialAsync("_WorkspaceIcon", "box")</span>
+                    <div><h2>Company logo</h2><p>Add a familiar identity to your quotations.</p></div>
+                </div>
+                <div class="configuration-logo-upload">
+                    <div class="configuration-logo-frame" aria-hidden="true">
+                        <img src="@Model.Profile.LogoDataUrl" alt="" class="configuration-logo-image" hidden="@(Model.Profile.LogoDataUrl is null)" />
+                        <span class="configuration-initials" hidden="@(Model.Profile.LogoDataUrl is not null)">@Model.Profile.Initials</span>
+                    </div>
+                    <div class="configuration-upload-controls">
+                        <label asp-for="Logo">Choose a logo</label>
+                        <input asp-for="Logo" type="file" accept="image/png,image/jpeg" aria-describedby="logo-guidance" />
+                        <p id="logo-guidance">PNG or JPEG, up to 2 MB. A square or wide logo works well.</p>
+                        <span asp-validation-for="Logo" class="field-validation-error"></span>
+                        <span id="logo-client-error" class="field-validation-error" role="status"></span>
+                        @if (Model.Profile.LogoDataUrl is not null)
+                        {
+                            <label class="configuration-checkbox">
+                                <input asp-for="RemoveLogo" />
+                                <span>Remove current logo</span>
+                            </label>
+                        }
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel request-detail-panel request-form configuration-section">
+                <div class="configuration-section-title">
+                    <span class="summary-icon">@await Html.PartialAsync("_WorkspaceIcon", "quote")</span>
+                    <div><h2>Quotation defaults</h2><p>A starting point for each new quotation.</p></div>
+                </div>
+                <div class="request-form-fields">
+                    <div class="field">
+                        <label for="quotation-currency">Quotation currency</label>
+                        <input id="quotation-currency" value="USD — US Dollar" readonly />
+                    </div>
+                    <div class="field">
+                        <label asp-for="Input.DefaultValidityDays">Default validity <span>*</span></label>
+                        <div class="configuration-number-field">
+                            <input asp-for="Input.DefaultValidityDays" type="number" min="1" max="365" required />
+                            <span>days</span>
+                        </div>
+                        <span asp-validation-for="Input.DefaultValidityDays"></span>
+                    </div>
+                    <div class="field request-form-wide">
+                        <label asp-for="Input.DefaultTerms">Default terms <span>*</span></label>
+                        <textarea asp-for="Input.DefaultTerms" required maxlength="2000" rows="4"></textarea>
+                        <span asp-validation-for="Input.DefaultTerms"></span>
+                    </div>
+                    <div class="field request-form-wide">
+                        <label asp-for="Input.DefaultExclusions">Default exclusions <span>*</span></label>
+                        <textarea asp-for="Input.DefaultExclusions" required maxlength="2000" rows="4"></textarea>
+                        <span asp-validation-for="Input.DefaultExclusions"></span>
+                    </div>
+                </div>
+                <div class="configuration-save-row">
+                    <p>Review the defaults when preparing each quotation.</p>
+                    <div class="configuration-actions">
+                        <button class="btn" type="reset">Reset changes</button>
+                        <button class="btn primary" type="submit">Save changes</button>
+                    </div>
+                </div>
+            </section>
+        </form>
+
+        <aside class="configuration-column">
+            <section class="panel request-detail-panel configuration-preview-panel">
+                <div class="configuration-preview-heading">
+                    <h2>Document identity</h2>
+                    <span class="badge">Preview</span>
+                </div>
+                <p class="configuration-muted">How your details appear on a quotation.</p>
+                <div class="configuration-document-preview">
+                    <div class="configuration-preview-logo">
+                        <img src="@Model.Profile.LogoDataUrl" alt="Company logo preview" class="configuration-logo-image" hidden="@(Model.Profile.LogoDataUrl is null)" />
+                        <span class="configuration-initials" hidden="@(Model.Profile.LogoDataUrl is not null)">@Model.Profile.Initials</span>
+                    </div>
+                    <h3 data-preview-output="name">@Model.Input.Name</h3>
+                    <p data-preview-output="address">@Model.Input.Address</p>
+                    <p data-preview-output="email">@Model.Input.Email</p>
+                    <p data-preview-output="phone">@Model.Input.Phone</p>
+                    <div class="configuration-preview-rule"></div>
+                    <span class="configuration-preview-caption">QUOTATION</span>
+                    <div class="configuration-preview-lines" aria-hidden="true"><span></span><span></span><span></span></div>
+                </div>
+            </section>
+
+            <section class="request-workflow-note request-form-help">
+                @await Html.PartialAsync("_WorkspaceIcon", "help")
+                <div>
+                    <h2>One consistent identity.</h2>
+                    <p>Save your company details once and use them when preparing new quotations.</p>
+                    <p class="configuration-note-spacing">Existing quotations keep their saved company details. Review every new document before approval.</p>
+                </div>
+            </section>
+        </aside>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/business-profile.js" asp-append-version="true"></script>
+}

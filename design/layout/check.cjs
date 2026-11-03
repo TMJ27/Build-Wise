@@ -1,0 +1,41 @@
+const {chromium}=require('C:/Users/PC/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
+const fs=require('node:fs');
+(async()=>{
+ const browser=await chromium.launch({headless:true,channel:'msedge'});
+ const page=await browser.newPage({viewport:{width:1440,height:1000}});
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ fs.mkdirSync('design/layout',{recursive:true});
+ for(const route of ['/','/design-two','/Privacy','/Error']){
+   const response=await page.goto('http://localhost:5180'+route);
+   if(response.status()!==200)throw Error(route+' returned '+response.status());
+   if(await page.locator('.workspace-header').count()!==1||await page.locator('.v2-rail').count()!==1)throw Error('Duplicate or missing layout: '+route);
+   if(await page.locator('main#main-content').count()!==1)throw Error('Missing main landmark');
+ }
+ await page.goto('http://localhost:5180/#/new-request');
+ await page.locator('#request-form').waitFor();
+ if(await page.locator('#workspace-navigation a[aria-current=page]').textContent()!=='Requests')throw Error('Active navigation mismatch');
+ if(!await page.locator('#workspace-breadcrumbs').textContent().then(s=>s.includes('New request')))throw Error('Breadcrumb mismatch');
+ await page.screenshot({path:'design/layout/BuildWise-Layout.png',fullPage:true});
+ await page.locator('#workspace-account summary').click();
+ if(!await page.locator('#workspace-account-menu').isVisible())throw Error('Account menu failed');
+ await page.keyboard.press('Escape');
+ if(await page.locator('#workspace-account-menu').isVisible())throw Error('Account menu Escape failed');
+ await page.keyboard.press('Tab');
+ await page.locator('.skip-link').focus();await page.keyboard.press('Enter');
+ if(!await page.locator('#main-content').evaluate(el=>document.activeElement===el))throw Error('Skip link failed');
+ if(!page.url().endsWith('#/new-request'))throw Error('Skip link changed screen');
+ await page.setViewportSize({width:390,height:844});
+ await page.locator('[data-workspace-menu]').click();
+ if(await page.locator('[data-workspace-menu]').getAttribute('aria-expanded')!=='true')throw Error('Mobile menu state failed');
+ await page.locator('#workspace-navigation').getByRole('link',{name:'Customers',exact:true}).click();
+ await page.waitForURL('**/#/customers');
+ if(await page.locator('[data-workspace-menu]').getAttribute('aria-expanded')!=='false')throw Error('Mobile menu did not close');
+ await page.screenshot({path:'design/layout/BuildWise-Layout-Mobile.png',fullPage:true});
+ if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1))throw Error('Mobile overflow');
+ await page.goto('http://localhost:5180/#/sign-in');
+ if(await page.locator('.workspace-header').isVisible())throw Error('Sign-in should use full width');
+ await page.goto('http://localhost:5180/design-one#/dashboard');
+ if(await page.locator('.sidebar').count()!==1||await page.locator('.workspace-header').count()!==0)throw Error('First design was not preserved');
+ await browser.close();if(errors.length)throw Error(errors.join('\n'));
+ console.log('Layout checks passed: native pages, one server shell, active navigation, breadcrumbs, account menu, skip link, mobile menu and full-width sign-in.');
+})().catch(e=>{console.error(e);process.exit(1)});

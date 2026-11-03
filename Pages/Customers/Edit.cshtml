@@ -1,0 +1,91 @@
+@page "{id:int?}"
+@model BuildWise.Web.Pages.Customers.EditModel
+@{
+    ViewData["Title"] = Model.Existing is null ? "Add customer" : "Edit customer";
+    ViewData["ActiveSection"] = "customers";
+    ViewData["AccountName"] = "Tawanda M.";
+    ViewData["AccountRole"] = "Business owner";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/requests.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/customers.css" asp-append-version="true" />
+}
+
+<div class="requests-page customers-page">
+    <a class="request-back" asp-page="Index">← Back to customers</a>
+    <header class="requests-heading">
+        <div>
+            <div class="eyebrow">CUSTOMER DETAILS</div>
+            <h1>@(Model.Existing is null ? "Make a new connection." : "Keep the details up to date.")</h1>
+            <p>@(Model.Existing is null ? "Add the person or business behind the next request." : Model.Existing.Name)</p>
+        </div>
+    </header>
+
+    <div class="request-detail-grid">
+        <form method="post" class="panel request-detail-panel request-form customer-form" asp-route-id="@Model.Existing?.Id">
+            <h2>Customer information</h2>
+            <div asp-validation-summary="All" class="request-validation" role="alert"></div>
+            <div class="request-form-fields">
+                <div class="field request-form-wide">
+                    <label asp-for="Input.Name">Full name or business name <span>*</span></label>
+                    <input asp-for="Input.Name" required maxlength="100" autocomplete="name" placeholder="e.g. Tendai Moyo" />
+                    <span asp-validation-for="Input.Name"></span>
+                </div>
+                <div class="field request-form-wide">
+                    <label asp-for="Input.Type">Customer type <span>*</span></label>
+                    <select asp-for="Input.Type">
+                        <option value="Individual">Individual</option>
+                        <option value="Business">Business</option>
+                    </select>
+                    <span asp-validation-for="Input.Type"></span>
+                </div>
+                <div class="field">
+                    <label asp-for="Input.Email">Email address</label>
+                    <input asp-for="Input.Email" type="email" maxlength="200" autocomplete="email" placeholder="customer@example.com" />
+                    <span asp-validation-for="Input.Email"></span>
+                </div>
+                <div class="field">
+                    <label asp-for="Input.Phone">Phone number</label>
+                    <input asp-for="Input.Phone" type="tel" maxlength="40" autocomplete="tel" placeholder="+263 77 123 4567" />
+                    <span asp-validation-for="Input.Phone"></span>
+                </div>
+                <div class="field request-form-wide">
+                    <label asp-for="Input.Address">Address / location</label>
+                    <input asp-for="Input.Address" maxlength="200" autocomplete="street-address" placeholder="Street address or area" />
+                    <span asp-validation-for="Input.Address"></span>
+                </div>
+                <div class="field request-form-wide">
+                    <label asp-for="Input.Notes">Customer notes</label>
+                    <textarea asp-for="Input.Notes" rows="4" maxlength="2000" placeholder="Contact preferences, site access or useful context…"></textarea>
+                    <span asp-validation-for="Input.Notes"></span>
+                </div>
+            </div>
+            <div class="request-form-actions">
+                <button class="btn primary" type="submit">@(Model.Existing is null ? "Add customer" : "Save changes")</button>
+                @if (Model.Existing is not null)
+                {
+                    <a class="btn" asp-page="Details" asp-route-id="@Model.Existing.Id">Cancel</a>
+                }
+                else
+                {
+                    <a class="btn" asp-page="Index">Cancel</a>
+                }
+            </div>
+        </form>
+
+        <aside class="request-workflow-note request-form-help">
+            @await Html.PartialAsync("_WorkspaceIcon", "users")
+            <div>
+                <h2>One customer. A connected history.</h2>
+                <p>Keep contact details here so future requests start with the right information.</p>
+                <ul>
+                    <li>Use the customer’s full name or business name.</li>
+                    <li>Add the best contact details available.</li>
+                    <li>Keep site addresses specific to each request.</li>
+                </ul>
+                <p>Fields marked * are required.</p>
+            </div>
+        </aside>
+    </div>
+</div>

@@ -1,0 +1,38 @@
+const {chromium}=require('C:/Users/PC/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
+const fs=require('node:fs');
+(async()=>{
+  const browser=await chromium.launch({headless:true,channel:'msedge'});
+  const page=await browser.newPage({viewport:{width:1440,height:1100}});
+  const errors=[];page.on('pageerror',e=>errors.push(e.message));
+  await page.goto('http://localhost:5180/design-two#/dashboard');
+  await page.locator('#dashboard-range').waitFor();
+  fs.mkdirSync('design/dashboard',{recursive:true});
+  await page.screenshot({path:'design/dashboard/BuildWise-Dashboard.png',fullPage:true});
+  const numbers=await page.locator('.v2-metric-value b').allTextContents();
+  if(numbers.join(',')!=='08,02,05,10')throw Error('Unexpected summary totals: '+numbers);
+  await page.locator('#dashboard-search').fill('Rudo');
+  if(await page.locator('#dashboard-records tbody tr').count()!==1)throw Error('Request search failed');
+  await page.locator('[data-dashboard-tab="quotes"]').click();
+  await page.locator('#dashboard-search').fill('Pinewood');
+  if(await page.locator('#dashboard-records tbody tr').count()!==2)throw Error('Quotation search failed');
+  await page.locator('#dashboard-search').fill('');
+  await page.locator('#dashboard-records a').first().click();
+  await page.waitForURL('**/design-two#/quote/*');
+  await page.goto('http://localhost:5180/design-two#/dashboard');
+  await page.locator('#dashboard-range').selectOption('7');
+  await page.locator('#dashboard-range').selectOption('all');
+  await page.locator('[data-dashboard-tab="requests"]').click();
+  await page.getByRole('link',{name:'New request',exact:true}).last().click();
+  await page.waitForURL('**/design-two#/new-request');
+  await page.setViewportSize({width:390,height:844});
+  await page.goto('http://localhost:5180/design-two#/dashboard');
+  await page.locator('#dashboard-range').waitFor();
+  await page.screenshot({path:'design/dashboard/BuildWise-Dashboard-Mobile.png',fullPage:true});
+  if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1))throw Error('Mobile page overflow');
+  await page.locator('[data-workspace-menu]').click();
+  if(!await page.locator('.v2-main-nav').isVisible())throw Error('Mobile navigation did not open');
+  await browser.close();
+  if(errors.length)throw Error(errors.join('\n'));
+  console.log('Dashboard totals, record search, quotation links, date filters, new request, mobile navigation and overflow checks passed.');
+})().catch(e=>{console.error(e);process.exit(1)});
+

@@ -1,0 +1,36 @@
+@{
+    var activeSection = ViewData["ActiveSection"]?.ToString() ?? "dashboard";
+    var navigation = new[] {
+        (Route: "dashboard", Title: "Overview", Icon: "grid", Page: "/Index"),
+        (Route: "requests", Title: "Requests", Icon: "file", Page: "/Requests/Index"),
+        (Route: "quotations", Title: "Quotations", Icon: "quote", Page: "/Quotations/Index"),
+        (Route: "customers", Title: "Customers", Icon: "users", Page: "/Customers/Index"),
+        (Route: "catalogue", Title: "Service catalogue", Icon: "box", Page: "/Services/Index")
+    };
+    var configuration = new[] {
+        (Route: "settings", Title: "Business profile", Icon: "business", Page: "/Configuration/Profile"),
+        (Route: "settings-access", Title: "Access & integrations", Icon: "integration", Page: "/Configuration/Access")
+    };
+}
+<aside class="v2-rail workspace-sidebar" id="workspace-navigation" aria-label="Workspace navigation">
+    <a class="btn primary workspace-new-request" asp-page="/Requests/Create">@await Html.PartialAsync("_WorkspaceIcon", "plus")<span>New request</span></a>
+    <nav class="workspace-nav-group" aria-label="Main navigation">
+        <div class="workspace-nav-heading">WORKSPACE</div>
+        @foreach (var item in navigation)
+        {
+            var target = Url.Page(item.Page);
+            @if (target is not null) { <a href="@target" data-nav-section="@item.Route" class="@(activeSection == item.Route ? "active" : null)" aria-current="@(activeSection == item.Route ? "page" : null)">@await Html.PartialAsync("_WorkspaceIcon", item.Icon)<span>@item.Title</span></a> }
+            else { <span class="workspace-nav-pending" aria-disabled="true" title="This page has not been built yet">@await Html.PartialAsync("_WorkspaceIcon", item.Icon)<span>@item.Title</span></span> }
+        }
+    </nav>
+    <nav class="workspace-nav-group workspace-configuration" aria-label="Configuration">
+        <div class="workspace-nav-heading">CONFIGURATION</div>
+        @foreach (var item in configuration)
+        {
+            var target = Url.Page(item.Page);
+            @if (target is not null) { <a href="@target" data-nav-section="@item.Route" class="@(activeSection == item.Route ? "active" : null)" aria-current="@(activeSection == item.Route ? "page" : null)">@await Html.PartialAsync("_WorkspaceIcon", item.Icon)<span>@item.Title</span></a> }
+            else { <span class="workspace-nav-pending" aria-disabled="true" title="This page has not been built yet">@await Html.PartialAsync("_WorkspaceIcon", item.Icon)<span>@item.Title</span></span> }
+        }
+    </nav>
+</aside>
+<button type="button" class="workspace-nav-backdrop" tabindex="-1" aria-label="Close workspace navigation"></button>

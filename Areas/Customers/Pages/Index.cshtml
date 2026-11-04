@@ -1,0 +1,163 @@
+@page
+@model BuildWise.Web.Areas.Customers.Pages.IndexModel
+@{
+    ViewData["Title"] = "Customers";
+    ViewData["AccountName"] = "Tawanda M.";
+    ViewData["AccountRole"] = "Business owner";
+
+    ViewData["PageTitle"] = "Good work starts with people.";
+    ViewData["PageSubTitle"] = "Customer details, conversations and work history, kept together.";
+}
+
+@section actionbar {
+    <a class="btn primary" asp-page="Edit">
+        @await Html.PartialAsync("_WorkspaceIcon", "plus")
+        <span>Add customer</span>
+    </a>
+}
+
+<div class="requests-page customers-page">
+
+    <div class="request-summary" aria-label="Customer summary">
+        <div class="request-summary-card">
+            <span class="summary-icon">@await Html.PartialAsync("_WorkspaceIcon", "users")</span>
+            <span><span class="summary-label">Total customers</span><strong>@Model.All.Count.ToString("D2")</strong></span>
+        </div>
+        <div class="request-summary-card">
+            <span class="summary-icon">@await Html.PartialAsync("_WorkspaceIcon", "file")</span>
+            <span><span class="summary-label">With open requests</span><strong>@Model.ActiveCount.ToString("D2")</strong></span>
+        </div>
+        <a class="request-summary-card" asp-page="Index" asp-route-type="Business">
+            <span class="summary-icon">@await Html.PartialAsync("_WorkspaceIcon", "business")</span>
+            <span><span class="summary-label">Businesses</span><strong>@Model.BusinessCount.ToString("D2")</strong></span>
+        </a>
+        <a class="request-summary-card" asp-page="Index" asp-route-type="Individual">
+            <span class="summary-icon">@await Html.PartialAsync("_WorkspaceIcon", "users")</span>
+            <span><span class="summary-label">Individuals</span><strong>@Model.IndividualCount.ToString("D2")</strong></span>
+        </a>
+    </div>
+
+    <section class="panel requests-panel" aria-labelledby="customer-list-heading">
+        <div class="requests-panel-heading">
+            <div>
+                <h2 id="customer-list-heading">Customer directory</h2>
+                <p>The people and businesses behind your requests.</p>
+            </div>
+            <span class="badge">@Model.All.Count customers</span>
+        </div>
+
+        <nav class="request-tabs" aria-label="Customer type">
+            @foreach (var tab in new[] { ("all", "All customers", Model.All.Count), ("Individual", "Individuals", Model.IndividualCount), ("Business", "Businesses", Model.BusinessCount) })
+            {
+                <a asp-page="Index"
+                   asp-route-type="@tab.Item1"
+                   asp-route-search="@Model.Search"
+                   asp-route-sort="@Model.Sort"
+                   class="@(Model.Type == tab.Item1 ? "active" : null)"
+                   aria-current="@(Model.Type == tab.Item1 ? "page" : null)">
+                    @tab.Item2 <span>@tab.Item3</span>
+                </a>
+            }
+        </nav>
+
+        <form method="get" class="requests-filters" role="search">
+            <input type="hidden" asp-for="Type" />
+            <label class="request-search">
+                @await Html.PartialAsync("_WorkspaceIcon", "search")
+                <span class="visually-hidden">Search customers</span>
+                <input asp-for="Search" type="search" maxlength="120" placeholder="Search name, email, phone or location…" />
+            </label>
+            <label class="request-filter">
+                <span>Sort by</span>
+                <select asp-for="Sort">
+                    <option value="name">Name A–Z</option>
+                    <option value="requests">Most requests</option>
+                    <option value="recent">Latest request</option>
+                </select>
+            </label>
+            <button class="btn" type="submit">Apply filters</button>
+            @if (Model.Search != "" || Model.Type != "all" || Model.Sort != "name")
+            {
+                <a class="request-clear" asp-page="Index">Clear filters</a>
+            }
+        </form>
+
+        <div class="table-wrap requests-table-wrap" tabindex="0" role="region" aria-label="Customers; scroll horizontally on smaller screens">
+            <table class="requests-table customer-table">
+                <thead>
+                    <tr>
+                        <th>Customer</th>
+                        <th>Contact details</th>
+                        <th>Location</th>
+                        <th>Requests</th>
+                        <th><span class="visually-hidden">Open customer</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in Model.Records)
+                    {
+                        <tr>
+                            <td>
+                                <a class="customer-identity" asp-page="Details" asp-route-id="@row.Customer.Id">
+                                    <span class="customer-avatar" aria-hidden="true">@row.Customer.Initials</span>
+                                    <span><strong>@row.Customer.Name</strong><small>@row.Customer.Type</small></span>
+                                </a>
+                            </td>
+                            <td>
+                                @if (row.Customer.Email != "")
+                                {
+                                    <a class="customer-email" href="mailto:@row.Customer.Email">@row.Customer.Email</a>
+                                }
+                                else
+                                {
+                                    <span class="customer-muted">No email recorded</span>
+                                }
+                                <small>@(row.Customer.Phone == "" ? "No phone recorded" : row.Customer.Phone)</small>
+                            </td>
+                            <td class="customer-muted">@(row.Customer.Address == "" ? "Not recorded" : row.Customer.Address)</td>
+                            <td><strong>@row.RequestCount</strong><small>@row.OpenRequests open</small></td>
+                            <td>
+                                <a class="request-open" asp-page="Details" asp-route-id="@row.Customer.Id" aria-label="Open @row.Customer.Name">
+                                    @await Html.PartialAsync("_WorkspaceIcon", "chevron")
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                    @if (Model.Total == 0)
+                    {
+                        <tr>
+                            <td colspan="5">
+                                <div class="request-empty">
+                                    @await Html.PartialAsync("_WorkspaceIcon", "search")
+                                    <h3>No matching customers</h3>
+                                    <p>Try another name, contact detail or customer type.</p>
+                                    <a class="btn" asp-page="Index">Clear filters</a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="requests-table-footer">
+            <span>Showing @Model.Records.Count of @Model.Total customers</span>
+            <nav class="request-pagination" aria-label="Customer pages">
+                @if (Model.PageNumber > 1)
+                {
+                    <a class="btn" asp-page="Index" asp-route-pageNumber="@(Model.PageNumber - 1)" asp-route-type="@Model.Type" asp-route-search="@Model.Search" asp-route-sort="@Model.Sort">Previous</a>
+                }
+                <span>Page @Model.PageNumber of @Model.PageCount</span>
+                @if (Model.PageNumber < Model.PageCount)
+                {
+                    <a class="btn" asp-page="Index" asp-route-pageNumber="@(Model.PageNumber + 1)" asp-route-type="@Model.Type" asp-route-search="@Model.Search" asp-route-sort="@Model.Sort">Next</a>
+                }
+            </nav>
+        </div>
+    </section>
+
+    <div class="request-workflow-note">
+        @await Html.PartialAsync("_WorkspaceIcon", "help")
+        <p><strong>Keep the conversation connected.</strong> Open a customer’s profile to find their requests and quotations, or start a new request with their details already filled in.</p>
+    </div>
+</div>

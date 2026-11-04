@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
     const browser = await chromium.launch({ headless: true, channel: 'msedge' });
     try {
         const page = await browser.newPage({ viewport: { width: 390, height: 844 }, reducedMotion: 'reduce' });
-        await page.goto('http://localhost:5191/Configuration/Profile');
+        await page.goto('http://localhost:5191/Configuration/Profile/Edit');
         const bounds = await page.locator('#workspace-navigation').boundingBox();
         assert(bounds.x + bounds.width <= 1);
         assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false);

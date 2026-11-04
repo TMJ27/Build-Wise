@@ -7,14 +7,14 @@ async function run() {
     try {
         const origin = 'http://localhost:5191';
         const page = await browser.newPage({ javaScriptEnabled: false, viewport: { width: 1440, height: 1000 } });
-        assert.equal((await page.goto(`${origin}/Configuration/Profile`)).status(), 200);
+        assert.equal((await page.goto(`${origin}/Configuration/Profile/Edit`)).status(), 200);
         assert.equal(await page.locator('#workspace-navigation a.active').innerText(), 'Business profile');
         assert.equal(await page.locator('input[name="Input.Name"]').inputValue(), 'Mavambo Projects');
         assert.equal(await page.locator('.configuration-document-preview h3').innerText(), 'Mavambo Projects');
         await page.screenshot({ path: 'design/configuration/BuildWise-Business-Profile.png' });
 
         const stale = await browser.newPage({ javaScriptEnabled: false });
-        await stale.goto(`${origin}/Configuration/Profile`);
+        await stale.goto(`${origin}/Configuration/Profile/Edit`);
         await page.locator('#business-profile-form').evaluate(form => form.noValidate = true);
         await page.locator('input[name="Input.Name"]').fill('');
         await page.locator('#business-profile-form').getByRole('button', { name: 'Save changes', exact: true }).click();
@@ -65,7 +65,7 @@ async function run() {
         assert(await page.locator('.quotation-company-logo').isVisible());
         const savedPreview = page.url();
 
-        await page.goto(`${origin}/Configuration/Profile`);
+        await page.goto(`${origin}/Configuration/Profile/Edit`);
         await page.locator('input[type="checkbox"][name="RemoveLogo"]').check();
         await page.locator('input[name="Input.Name"]').fill('Mavambo Projects');
         await page.locator('#business-profile-form').getByRole('button', { name: 'Save changes', exact: true }).click();
@@ -77,7 +77,7 @@ async function run() {
         const live = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
         const errors = [];
         live.on('pageerror', error => errors.push(error.message));
-        await live.goto(`${origin}/Configuration/Profile`);
+        await live.goto(`${origin}/Configuration/Profile/Edit`);
         await live.locator('input[name="Input.Name"]').fill('Unsaved preview name');
         assert.equal(await live.locator('[data-preview-output="name"]').innerText(), 'Unsaved preview name');
         await live.getByRole('button', { name: 'Reset changes', exact: true }).click();
@@ -92,7 +92,7 @@ async function run() {
         await live.screenshot({ path: 'design/configuration/BuildWise-Business-Profile-Mobile.png' });
         await live.locator('[data-workspace-menu]').click();
         await live.getByRole('link', { name: 'Business profile', exact: true }).click();
-        assert(new URL(live.url()).pathname === '/Configuration/Profile');
+        assert(new URL(live.url()).pathname === '/Configuration/Profile/Edit');
         await live.setViewportSize({ width: 1440, height: 580 });
         await live.locator('#main-content').evaluate(element => element.scrollTop = 240);
         assert(await live.locator('#main-content').evaluate(element => element.scrollTop) > 0);

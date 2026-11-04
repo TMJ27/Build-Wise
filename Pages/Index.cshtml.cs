@@ -78,13 +78,13 @@ public class IndexModel(
         var parts = route.Split('/');
         return parts[0] switch
         {
-            "requests" => Url.Page("/Requests/Index")!,
-            "new-request" => Url.Page("/Requests/Create")!,
-            "request" or "clarify" or "scope" => Url.Page("/Requests/Details", new { id = parts.ElementAtOrDefault(1) })!,
+            "requests" => Url.Page("/Index", new { area = "Requests" })!,
+            "new-request" => Url.Page("/Create", new { area = "Requests" })!,
+            "request" or "clarify" or "scope" => Url.Page("/Details", new { area = "Requests", id = parts.ElementAtOrDefault(1) })!,
             "quote-edit" => QuotationEditorUrl(parts.ElementAtOrDefault(1)),
-            "catalogue" => "/Services",
-            "quotations" => Url.Page("/Quotations/Index")!,
-            "quote" => Url.Page("/Quotations/Details", new { id = parts.ElementAtOrDefault(1) })!,
+            "catalogue" => Url.Page("/Index", new { area = "Services" })!,
+            "quotations" => Url.Page("/Index", new { area = "Quotations" })!,
+            "quote" => Url.Page("/Details", new { area = "Quotations", id = parts.ElementAtOrDefault(1) })!,
             _ => "/"
         };
     }
@@ -96,11 +96,11 @@ public class IndexModel(
         if (existing is not null)
         {
             return existing.Quotation.Status == "Draft"
-                ? Url.Page("/Quotations/Edit", new { id = existing.Quotation.Id })!
-                : Url.Page("/Quotations/Details", new { id = existing.Quotation.Id })!;
+                ? Url.Page("/Edit", new { area = "Quotations", id = existing.Quotation.Id })!
+                : Url.Page("/Details", new { area = "Quotations", id = existing.Quotation.Id })!;
         }
 
-        return Url.Page("/Quotations/Edit", new { requestId })!;
+        return Url.Page("/Edit", new { area = "Quotations", requestId })!;
     }
     public static string Money(decimal amount) => amount.ToString("C2", CultureInfo.GetCultureInfo("en-US"));
     public static string Date(DateOnly date, string format = "dd MMM yyyy") => date.ToString(format, CultureInfo.GetCultureInfo("en-GB"));

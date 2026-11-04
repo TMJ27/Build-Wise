@@ -3,7 +3,6 @@
 @{
     ViewData["Title"] = "Overview";
     ViewData["NativeDashboard"] = true;
-    ViewData["ActiveSection"] = "dashboard";
     ViewData["AccountName"] = "Tawanda M.";
     ViewData["AccountRole"] = "Business owner";
     ViewData["BusinessName"] = "Mavambo Projects";
@@ -13,26 +12,22 @@
         ("Approved quotations", Model.ApprovedCount.ToString("D2"), "check", $"{IndexModel.Money(Model.ApprovedValue)} approved value"),
         ("Customers", Model.CustomerCount.ToString("D2"), "users", $"{Model.ActiveServiceCount} active catalogue services")
     };
+    ViewData["PageTitle"] = "Good morning, Tawanda.";
+    ViewData["PageSubTitle"] = $"{Model.OpenRequests} open requests. {Model.DraftCount} quotations to finish. Let’s move the work forward.";
+    ViewData["PageHeaderClass"] = "v2-greeting";
 }
-@section Styles {
-    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
+
+@section actionbar {
+    <form method="get" asp-page="/Index" class="dashboard-filters">
+        <input type="hidden" name="Tab" value="@Model.Tab" /><input type="hidden" name="Search" value="@Model.Search" />
+        <label class="db-range">@await Html.PartialAsync("_WorkspaceIcon", "clock")
+            <select asp-for="Range" aria-label="Dashboard date range"><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="all">All time</option></select>
+        </label>
+        <button class="btn" type="submit">Apply</button>
+    </form>
+    <a class="btn primary" href="@Model.ScreenUrl("new-request")">@await Html.PartialAsync("_WorkspaceIcon", "plus")<span>New request</span></a>
 }
-<div class="v2-greeting">
-    <div><div class="eyebrow">@IndexModel.Date(Model.Today, "dddd, d MMMM yyyy")</div>
-        <h1>Good morning, Tawanda<span class="dashboard-accent">.</span></h1>
-        <p>@Model.OpenRequests open requests. @Model.DraftCount quotations to finish. Let’s move the work forward.</p>
-    </div>
-    <div class="actions">
-        <form method="get" asp-page="/Index" class="dashboard-filters">
-            <input type="hidden" name="Tab" value="@Model.Tab" /><input type="hidden" name="Search" value="@Model.Search" />
-            <label class="db-range">@await Html.PartialAsync("_WorkspaceIcon", "clock")
-                <select asp-for="Range" aria-label="Dashboard date range"><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="all">All time</option></select>
-            </label>
-            <button class="btn" type="submit">Apply</button>
-        </form>
-        <a class="btn primary" href="@Model.ScreenUrl("new-request")">@await Html.PartialAsync("_WorkspaceIcon", "plus")<span>New request</span></a>
-    </div>
-</div>
+
 <div class="v2-feature-grid">
     <section class="v2-hero db-hero"><div class="eyebrow">YOUR EXPERTISE. A CLEARER NEXT STEP.</div>
         <h2>Good work starts<br />with a clear scope.</h2>
@@ -67,8 +62,8 @@
             @foreach (var day in Model.Days)
             {
                 <div class="db-chart-day"><div class="db-chart-bars">
-                    <span class="db-chart-bar" style="height:@(day.Prepared * 100 / Model.MaximumDayCount)%" title="@IndexModel.Date(day.Date, "ddd"): @day.Prepared prepared">@if (day.Prepared > 0) { <i>@day.Prepared</i> }</span>
-                    <span class="db-chart-bar approved" style="height:@(day.Approved * 100 / Model.MaximumDayCount)%" title="@IndexModel.Date(day.Date, "ddd"): @day.Approved approved">@if (day.Approved > 0) { <i>@day.Approved</i> }</span>
+                    <span class="db-chart-bar" style="--chart-height:@(day.Prepared * 100 / Model.MaximumDayCount)%" title="@IndexModel.Date(day.Date, "ddd"): @day.Prepared prepared">@if (day.Prepared > 0) { <i>@day.Prepared</i> }</span>
+                    <span class="db-chart-bar approved" style="--chart-height:@(day.Approved * 100 / Model.MaximumDayCount)%" title="@IndexModel.Date(day.Date, "ddd"): @day.Approved approved">@if (day.Approved > 0) { <i>@day.Approved</i> }</span>
                 </div><small>@IndexModel.Date(day.Date, "ddd")</small></div>
             }
         </div><div class="db-chart-footer"><span><i></i>Prepared</span><span><i class="approved"></i>Approved</span><b>Approved value <strong>@IndexModel.Money(Model.ApprovedValue)</strong></b></div></div>
@@ -78,7 +73,7 @@
             @foreach (var category in Model.Categories)
             {
                 <div class="db-category"><div><span>@category.Name</span><b>@category.Count @(category.Count == 1 ? "request" : "requests")</b></div>
-                    <div class="db-progress"><span style="width:@(category.Percentage)%;background:@category.Colour"></span></div></div>
+                    <div class="db-progress"><span style="--progress-width:@(category.Percentage)%;--progress-colour:@category.Colour"></span></div></div>
             }
         </div>
     </section>
@@ -119,5 +114,5 @@
     {
         <a class="activity" href="@Model.ScreenUrl(activity.Route)"><span class="avatar">@await Html.PartialAsync("_WorkspaceIcon", activity.Icon)</span><div><p><b>@activity.Title</b><br />@activity.Detail</p><small>@IndexModel.Date(activity.Date, "d MMM")</small></div></a>
     }
-    <div class="actions" style="margin-top:22px"><button type="button" class="btn" data-workspace-dialog-close>Close</button></div>
+    <div class="actions workspace-dialog-actions"><button type="button" class="btn" data-workspace-dialog-close>Close</button></div>
 </template>

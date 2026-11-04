@@ -15,7 +15,7 @@ builder.Services.AddDbContext<BuildWiseDbContext>(options =>
 });
 
 builder.Services.AddSingleton<BuildWise.Web.Services.AccessWorkspace>();
-builder.Services.AddSingleton<BuildWise.Web.Services.CompanyWorkspace>();
+builder.Services.AddScoped<BuildWise.Web.Services.CompanyService>();
 builder.Services.AddSingleton<BuildWise.Web.Services.CatalogueWorkspace>();
 builder.Services.AddSingleton<BuildWise.Web.Services.CustomerWorkspace>();
 builder.Services.AddSingleton<BuildWise.Web.Services.RequestWorkspace>();
@@ -34,6 +34,8 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseRouting();
+
+app.UseStaticFiles();
 
 app.UseAuthorization();
 

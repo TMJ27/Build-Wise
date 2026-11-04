@@ -1,37 +1,69 @@
-# BuildWise native Razor workspace
+# BuildWise Razor Pages structure
 
-## Database access
+The default ASP.NET Core Razor Pages structure is retained:
 
-The scaffolded BuildWise.Data.BuildWiseDbContext is registered in Program.cs with AddDbContext and the SQL Server provider. It is scoped to each web request; do not store it in a static field or inject it into the singleton sample workspaces. Inject BuildWiseDbContext into page models or scoped services when replacing the sample stores with database queries.
-
-The development connection string is ConnectionStrings:BuildWise in appsettings.Development.json and targets .\SQLEXPRESS / Build-Wise with Windows authentication. Other environments must provide ConnectionStrings__BuildWise through environment configuration or an equivalent configuration source. Registration does not create, migrate or change the database. The existing pages still use sample stores until individually connected.
-
-Example constructor injection and query:
-
-```csharp
-private readonly BuildWiseDbContext _database;
-
-public IndexModel(BuildWiseDbContext database)
-{
-    _database = database;
-}
-
-// Inside an asynchronous page handler (requires Microsoft.EntityFrameworkCore):
-var clients = await _database.Clients.AsNoTracking().ToListAsync();
+```text
+Pages/
+  Index.cshtml / Index.cshtml.cs
+  Error.cshtml / Error.cshtml.cs
+  Privacy.cshtml / Privacy.cshtml.cs
+  Shared/
+  _ViewImports.cshtml
+  _ViewStart.cshtml
+Areas/
+  Configuration/
+    Pages/
+    ViewModels/
+  Customers/
+    Pages/
+    ViewModels/
+  Requests/
+    Pages/
+    ViewModels/
+  Quotations/
+    Pages/
+    ViewModels/
+  Services/
+    Pages/
+    ViewModels/
+ViewModels/
+  Dashboard/
+  Layout/
+Services/
+BuildWise.Data/
+wwwroot/
 ```
 
-The dashboard is rendered by Pages/Index.cshtml and its page model. Requests are rendered by Pages/Requests/Index.cshtml, with native Details and Create pages in that folder. The shared layout loads blueprint.css for the approved colour scheme and workspace.css for the sidebar, header, buttons and independent scrolling.
+The dashboard lives at `/`. Module routes include `/Requests`, `/Customers`, `/Quotations`, `/Services`, `/Configuration/Profile/Details` and `/Configuration/Access`. There is no Workspace Area or root redirect to a Workspace route.
 
-Navigation uses Razor page URLs. No prototype renderer or hash router is loaded. Navigation items whose native pages have not been implemented remain visible as disabled labels until those pages are added.
+Each Area has its own Pages/_ViewImports.cshtml and Pages/_ViewStart.cshtml. All Areas use /Pages/Shared/_Layout.cshtml. Cross-Area navigation specifies asp-area and asp-page; within an Area, relative page names keep the current Area. The shared brand/dashboard link explicitly uses an empty Area. Module view models are stored outside their Pages folders in Areas/<module>/ViewModels. Shared dashboard/layout models remain in the root ViewModels folder.
 
-CompanyWorkspace, AccessWorkspace, CustomerWorkspace, RequestWorkspace, QuotationWorkspace and CatalogueWorkspace are shared, in-memory sample sources registered as singletons. Records are validated server-side and appear in their registers and the dashboard during the current application run; changes reset when the application restarts. Replace these stores with database persistence when backend integration is implemented.
+## Database and current application state
 
-Access and integrations uses Pages/Configuration/Access.cshtml, Member.cshtml and Integration.cshtml. Team member settings use Guid IDs, duplicate email validation, owner-edit protection and concurrent-save checks. The AI and email pages save non-secret preferences and continue to show Not connected; saving does not verify a connection or send an email. Authentication, actual role enforcement and external AI/email connections are not implemented by these design pages.
+BuildWise.Data.BuildWiseDbContext is registered as a scoped SQL Server context. The development connection string is ConnectionStrings:BuildWise in appsettings.Development.json. Other environments must provide that connection through configuration. Do not inject the scoped context into singleton sample workspaces.
 
-Business profile configuration uses Pages/Configuration/Profile.cshtml. It supports company contact/registration details, PNG/JPEG logo uploads up to 2 MB, logo removal, validity defaults, terms and exclusions. The page includes a live document identity preview and protects against stale concurrent saves. The quotation currency remains USD, matching the existing pricing screens. New quotations copy the company configuration and logo; existing quotations retain their company snapshot. New quotation editors prefill the saved terms/exclusions, and previews show the stored company identity and validity. The profile and uploaded logo are held in memory until SQL Server/storage integration is implemented.
+The company profile page uses BuildWiseDbContext directly for the real deployment company. DefaultTerms maps to DefaultQuotationTerms, and the company Guid is preserved between the details and edit pages. The base-currency select reads the Currency table and rejects submitted codes that are not in that register. Its list reloads for invalid submissions. CompanyService is a scoped database reader used by other company-dependent pages.
 
-The service catalogue uses Pages/Services/Index.cshtml, Details.cshtml and Edit.cshtml. It supports active/all/archived views, search and category filters, service definitions, inclusions/exclusions, clarification prompts, work stages, dependencies and availability changes. New catalogue records use Guid IDs. Duplicate service codes and circular dependencies are rejected. A service's Start request link prefills its name and category on the native request form. The scaffolded BuildWise.Data entities are not altered by this design implementation, and these screens do not yet write to SQL Server.
+AccessWorkspace, CatalogueWorkspace, CustomerWorkspace, RequestWorkspace and QuotationWorkspace still keep sample state in memory. Authentication, database persistence for those stores, and external AI/email connections remain separate backend work. AI/email settings do not verify a connection or send mail.
 
-Customers use Pages/Customers/Index.cshtml, Details.cshtml and Edit.cshtml. The directory supports search, customer type filters, sorting and pagination. Profiles include contact details, notes, requests and quotations. Request records store a stable CustomerId, so renaming a customer preserves their work history and updates customer names on existing request and quotation views. New request forms can prefill contact details using the customerId query parameter.
+The layout keeps the approved light background, navy sidebar, muted terracotta accents, content-sized buttons and independently scrolling navigation/content panes. No prototype renderer or hash router is loaded.
 
-Quotations use Pages/Quotations/Index.cshtml, Details.cshtml, Edit.cshtml and Preview.cshtml. The editor supports draft creation and edits, item addition/removal, terms and exclusions. Only requests ready to quote and without an existing quotation can start a new quotation. Draft approval requires an explicit provider confirmation and updates the linked request status. Approved quotations cannot be edited. The preview supports the browser's Print / Save PDF action through dedicated print styles.
+## Application styling
+
+All application CSS lives in `wwwroot/css/site.css`, loaded once by the shared layout. Pages do not load module stylesheets or define Styles sections. Font Awesome remains a separate vendor dependency.
+
+The root design tokens and shared component rules control typography, buttons, forms, tables, cards, navigation, tabs, alerts and dialogs. Change these shared rules for application-wide adjustments. Page-specific layouts and responsive rules also belong in site.css. Inline chart custom properties supply dynamic data values only.
+
+Previous stylesheets are inactive backups under `design/archived-styles`; edit site.css for current styling.
+
+## Page headings and actions
+
+Every page sets `ViewData["PageTitle"]` and, when needed, `ViewData["PageSubTitle"]`. The shared layout renders the page heading once. Put header buttons, status badges and back links in `@section actionbar`; do not duplicate the heading in the page body. Dynamic heading values are assigned after any local variables they depend on. `Title` remains the browser tab title.
+
+Breadcrumbs follow the CutWise header pattern. Pages supply parent items through `ViewData["Breadcrumbs"]` using `BreadcrumbItem` objects. The shared `_Breadcrumbs` partial adds the Overview link and the current `Title` (or optional `BreadcrumbTitle`). Parent items with local URLs are links; labels such as Configuration remain plain text. On narrow screens the header shows the current breadcrumb. The sidebar reads the current Area and page route to select the active item and open Configuration; pages do not set navigation state in ViewData.
+
+Company profile navigation opens Areas/Configuration/Pages/Profile/Details.cshtml. This read-only page loads SQL Server company data and links to Profile/Edit.cshtml with the saved company Guid. The edit form retains the ID in its bound input, returns to ProfileDetails after saving, and includes Cancel/Back links to the details page. When the company table is empty, the details page offers Add company profile.
+
+Configuration is a native expandable sidebar menu containing Profile, Users, User groups and Currency. It starts open on configuration pages. Users and User groups are read-only SQL-backed registers; account creation and group editing remain separate work. The Currency page adds and edits real currency records using parameterized SQL. Fields are Id (Guid), Name, Code, Symbol, CreatorId (Guid FK to User) and CreationDate. Code and creator are fixed after creation; the app records CreationDate in UTC. The creator selector uses real user records and prefills the authenticated user ID when available. An existing user is required before a currency can be added. database/CreateCurrency.sql creates the table without inserting sample rows.
+
+Configuration modules are grouped under Areas/Configuration/Pages/Profile, Users, UserGroups, Currency and Access. Their view models are grouped in matching folders under Areas/Configuration/ViewModels. Index pages provide module registers; Profile has Details and Edit pages. The root Pages folder and shared layout remain in their standard locations.

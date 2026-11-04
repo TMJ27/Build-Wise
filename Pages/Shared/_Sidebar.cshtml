@@ -1,36 +1,101 @@
 @{
-    var activeSection = ViewData["ActiveSection"]?.ToString() ?? "dashboard";
-    var navigation = new[] {
-        (Route: "dashboard", Title: "Overview", Icon: "grid", Page: "/Index"),
-        (Route: "requests", Title: "Requests", Icon: "file", Page: "/Requests/Index"),
-        (Route: "quotations", Title: "Quotations", Icon: "quote", Page: "/Quotations/Index"),
-        (Route: "customers", Title: "Customers", Icon: "users", Page: "/Customers/Index"),
-        (Route: "catalogue", Title: "Service catalogue", Icon: "box", Page: "/Services/Index")
-    };
-    var configuration = new[] {
-        (Route: "settings", Title: "Business profile", Icon: "business", Page: "/Configuration/Profile"),
-        (Route: "settings-access", Title: "Access & integrations", Icon: "integration", Page: "/Configuration/Access")
-    };
+    var currentArea = ViewContext.RouteData.Values["area"]?.ToString() ?? "";
+    var currentPage = ViewContext.RouteData.Values["page"]?.ToString() ?? "";
+    var isDashboard = currentArea == "" && currentPage == "/Index";
+    var isRequests = currentArea == "Requests";
+    var isQuotations = currentArea == "Quotations";
+    var isCustomers = currentArea == "Customers";
+    var isServices = currentArea == "Services";
+    var configurationOpen = currentArea == "Configuration";
+    var isProfile = configurationOpen && currentPage.StartsWith("/Profile/", StringComparison.OrdinalIgnoreCase);
+    var isUsers = configurationOpen && currentPage.StartsWith("/Users/", StringComparison.OrdinalIgnoreCase);
+    var isUserGroups = configurationOpen && currentPage.StartsWith("/UserGroups/", StringComparison.OrdinalIgnoreCase);
+    var isCurrency = configurationOpen && currentPage.StartsWith("/Currency/", StringComparison.OrdinalIgnoreCase);
 }
+
 <aside class="v2-rail workspace-sidebar" id="workspace-navigation" aria-label="Workspace navigation">
-    <a class="btn primary workspace-new-request" asp-page="/Requests/Create">@await Html.PartialAsync("_WorkspaceIcon", "plus")<span>New request</span></a>
+    <a class="btn primary workspace-new-request" asp-area="Requests" asp-page="/Create">
+        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+        <span>New request</span>
+    </a>
+
     <nav class="workspace-nav-group" aria-label="Main navigation">
         <div class="workspace-nav-heading">WORKSPACE</div>
-        @foreach (var item in navigation)
-        {
-            var target = Url.Page(item.Page);
-            @if (target is not null) { <a href="@target" data-nav-section="@item.Route" class="@(activeSection == item.Route ? "active" : null)" aria-current="@(activeSection == item.Route ? "page" : null)">@await Html.PartialAsync("_WorkspaceIcon", item.Icon)<span>@item.Title</span></a> }
-            else { <span class="workspace-nav-pending" aria-disabled="true" title="This page has not been built yet">@await Html.PartialAsync("_WorkspaceIcon", item.Icon)<span>@item.Title</span></span> }
-        }
+
+        <a asp-area="" asp-page="/Index"
+           class="@(isDashboard ? "active" : null)"
+           aria-current="@(isDashboard ? "page" : null)">
+            <i class="fa-solid fa-table-cells-large" aria-hidden="true"></i>
+            <span>Overview</span>
+        </a>
+
+        <a asp-area="Requests" asp-page="/Index"
+           class="@(isRequests ? "active" : null)"
+           aria-current="@(isRequests ? "page" : null)">
+            <i class="fa-solid fa-file-lines" aria-hidden="true"></i>
+            <span>Requests</span>
+        </a>
+
+        <a asp-area="Quotations" asp-page="/Index"
+           class="@(isQuotations ? "active" : null)"
+           aria-current="@(isQuotations ? "page" : null)">
+            <i class="fa-solid fa-file-invoice-dollar" aria-hidden="true"></i>
+            <span>Quotations</span>
+        </a>
+
+        <a asp-area="Customers" asp-page="/Index"
+           class="@(isCustomers ? "active" : null)"
+           aria-current="@(isCustomers ? "page" : null)">
+            <i class="fa-solid fa-users" aria-hidden="true"></i>
+            <span>Customers</span>
+        </a>
+
+        <a asp-area="Services" asp-page="/Index"
+           class="@(isServices ? "active" : null)"
+           aria-current="@(isServices ? "page" : null)">
+            <i class="fa-solid fa-boxes-stacked" aria-hidden="true"></i>
+            <span>Service catalogue</span>
+        </a>
     </nav>
+
     <nav class="workspace-nav-group workspace-configuration" aria-label="Configuration">
-        <div class="workspace-nav-heading">CONFIGURATION</div>
-        @foreach (var item in configuration)
-        {
-            var target = Url.Page(item.Page);
-            @if (target is not null) { <a href="@target" data-nav-section="@item.Route" class="@(activeSection == item.Route ? "active" : null)" aria-current="@(activeSection == item.Route ? "page" : null)">@await Html.PartialAsync("_WorkspaceIcon", item.Icon)<span>@item.Title</span></a> }
-            else { <span class="workspace-nav-pending" aria-disabled="true" title="This page has not been built yet">@await Html.PartialAsync("_WorkspaceIcon", item.Icon)<span>@item.Title</span></span> }
-        }
+        <details class="workspace-config-dropdown" open="@configurationOpen">
+            <summary>
+                <i class="fa-solid fa-gear" aria-hidden="true"></i>
+                <span>Configuration</span>
+                <i class="fa-solid fa-chevron-down configuration-chevron" aria-hidden="true"></i>
+            </summary>
+            <div class="workspace-config-items">
+                <a asp-area="Configuration" asp-page="/Profile/Details" asp-route-id=""
+                   class="@(isProfile ? "active" : null)"
+                   aria-current="@(isProfile ? "page" : null)">
+                    <i class="fa-solid fa-building" aria-hidden="true"></i>
+                    <span>Profile</span>
+                </a>
+
+                <a asp-area="Configuration" asp-page="/Users/Index" asp-route-id=""
+                   class="@(isUsers ? "active" : null)"
+                   aria-current="@(isUsers ? "page" : null)">
+                    <i class="fa-solid fa-users" aria-hidden="true"></i>
+                    <span>Users</span>
+                </a>
+
+                <a asp-area="Configuration" asp-page="/UserGroups/Index" asp-route-id=""
+                   class="@(isUserGroups ? "active" : null)"
+                   aria-current="@(isUserGroups ? "page" : null)">
+                    <i class="fa-solid fa-users-gear" aria-hidden="true"></i>
+                    <span>User groups</span>
+                </a>
+
+                <a asp-area="Configuration" asp-page="/Currency/Index" asp-route-id=""
+                   class="@(isCurrency ? "active" : null)"
+                   aria-current="@(isCurrency ? "page" : null)">
+                    <i class="fa-solid fa-coins" aria-hidden="true"></i>
+                    <span>Currency</span>
+                </a>
+            </div>
+        </details>
     </nav>
 </aside>
+
 <button type="button" class="workspace-nav-backdrop" tabindex="-1" aria-label="Close workspace navigation"></button>

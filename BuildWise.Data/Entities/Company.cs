@@ -21,13 +21,11 @@ public partial class Company
 
     public string? LogoStorageKey { get; set; }
 
-    public string DefaultCurrency { get; set; } = null!;
+    public string? DefaultCurrency { get; set; }
 
     public string? DefaultQuotationTerms { get; set; }
 
     public int DefaultValidityDays { get; set; }
-
-    public bool? IsActive { get; set; }
 
     public DateTime CreationDate { get; set; }
 

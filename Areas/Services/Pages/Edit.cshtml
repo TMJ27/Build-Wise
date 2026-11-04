@@ -1,0 +1,147 @@
+@page "{id:guid?}"
+@model BuildWise.Web.Areas.Services.Pages.EditModel
+@using BuildWise.Web.Services
+@{
+    ViewData["Title"] = Model.Existing is null ? "Add service" : "Edit service";
+    ViewData["AccountName"] = "Tawanda M.";
+    ViewData["AccountRole"] = "Business owner";
+
+    ViewData["PageTitle"] = Model.Existing is null ? "Define the work you offer." : "Keep your expertise up to date.";
+    ViewData["PageSubTitle"] = "Clear service definitions make each request easier to understand and quote.";
+    ViewData["Breadcrumbs"] = new BreadcrumbItem[]
+    {
+        new("Service catalogue", Url.Page("/Index", new { area = "Services" }))
+    };
+}
+
+@section actionbar {
+    <a class="btn" asp-page="Index">← Back to catalogue</a>
+}
+
+<div class="requests-page catalogue-page">
+
+    <form method="post" class="catalogue-editor" asp-route-id="@Model.Existing?.Id">
+        <div class="catalogue-column">
+            <section class="panel request-detail-panel request-form">
+                <h2>Service details</h2>
+                <div asp-validation-summary="All" class="request-validation" role="alert"></div>
+                <div class="request-form-fields">
+                    <div class="field">
+                        <label asp-for="Input.Code">Service code <span>*</span></label>
+                        <input asp-for="Input.Code" required maxlength="30" placeholder="e.g. ELE-001" />
+                        <span asp-validation-for="Input.Code"></span>
+                    </div>
+                    <div class="field">
+                        <label asp-for="Input.Category">Category <span>*</span></label>
+                        <select asp-for="Input.Category" required>
+                            <option value="">Select a category</option>
+                            @foreach (var category in CatalogueWorkspace.Categories)
+                            {
+                                <option>@category</option>
+                            }
+                        </select>
+                        <span asp-validation-for="Input.Category"></span>
+                    </div>
+                    <div class="field request-form-wide">
+                        <label asp-for="Input.Name">Service name <span>*</span></label>
+                        <input asp-for="Input.Name" required maxlength="150" placeholder="e.g. Electrical installation" />
+                        <span asp-validation-for="Input.Name"></span>
+                    </div>
+                    <div class="field request-form-wide">
+                        <label asp-for="Input.Description">Description <span>*</span></label>
+                        <textarea asp-for="Input.Description" required maxlength="3000" rows="4" placeholder="Describe the service and the work it covers."></textarea>
+                        <span asp-validation-for="Input.Description"></span>
+                    </div>
+                    <div class="field request-form-wide">
+                        <label asp-for="Input.Unit">Measurement unit</label>
+                        <select asp-for="Input.Unit">
+                            @foreach (var unit in CatalogueWorkspace.Units)
+                            {
+                                <option>@unit</option>
+                            }
+                        </select>
+                        <span asp-validation-for="Input.Unit"></span>
+                    </div>
+                </div>
+                <label class="catalogue-checkbox">
+                    <input asp-for="Input.RequiresSiteAssessment" />
+                    <span><strong>Requires a site assessment</strong><small>Inspect the site before confirming the final scope and quantities.</small></span>
+                </label>
+                <label class="catalogue-checkbox">
+                    <input asp-for="Input.IsActive" />
+                    <span><strong>Active service</strong><small>Available for new customer requests.</small></span>
+                </label>
+            </section>
+
+            <section class="panel request-detail-panel request-form">
+                <h2>Inclusions &amp; exclusions</h2>
+                <p class="catalogue-field-help">Enter one item per line. Be specific about what the service covers.</p>
+                <div class="field">
+                    <label asp-for="Input.Inclusions">What’s included <span>*</span></label>
+                    <textarea asp-for="Input.Inclusions" required maxlength="10000" rows="4" placeholder="Inspection of the agreed work areas&#10;Installation of agreed fittings"></textarea>
+                    <span asp-validation-for="Input.Inclusions"></span>
+                </div>
+                <div class="field">
+                    <label asp-for="Input.Exclusions">What’s excluded</label>
+                    <textarea asp-for="Input.Exclusions" maxlength="10000" rows="4" placeholder="Work outside the agreed areas&#10;Specialist equipment unless specified"></textarea>
+                    <span asp-validation-for="Input.Exclusions"></span>
+                </div>
+            </section>
+
+            <section class="panel request-detail-panel request-form">
+                <h2>Questions &amp; work stages</h2>
+                <div class="field">
+                    <label asp-for="Input.Questions">Clarification questions</label>
+                    <p class="catalogue-field-help">What should be confirmed with the customer? Enter one question per line.</p>
+                    <textarea asp-for="Input.Questions" maxlength="10000" rows="4" placeholder="Which areas need work?&#10;Are drawings or measurements available?"></textarea>
+                    <span asp-validation-for="Input.Questions"></span>
+                </div>
+                <div class="field">
+                    <label asp-for="Input.Stages">Normal work stages <span>*</span></label>
+                    <p class="catalogue-field-help">Enter the stages in order, one per line.</p>
+                    <textarea asp-for="Input.Stages" required maxlength="10000" rows="4" placeholder="Assessment and preparation&#10;Complete the agreed work&#10;Inspection and handover"></textarea>
+                    <span asp-validation-for="Input.Stages"></span>
+                </div>
+            </section>
+
+            <section class="panel request-detail-panel">
+                <h2>Service dependencies</h2>
+                <p class="catalogue-field-help">Select work that normally needs to happen before this service.</p>
+                <div class="catalogue-dependency-options">
+                    @foreach (var service in Model.AvailableDependencies)
+                    {
+                        <label class="catalogue-checkbox">
+                            <input type="checkbox" name="Input.DependencyIds" value="@service.Id" checked="@(Model.Input.DependencyIds.Contains(service.Id) ? "checked" : null)" />
+                            <span><strong>@service.Name</strong><small>@service.Code · @(service.IsActive ? "Active" : "Archived")</small></span>
+                        </label>
+                    }
+                </div>
+                <div class="request-form-actions">
+                    <button class="btn primary" type="submit">@(Model.Existing is null ? "Add service" : "Save changes")</button>
+                    @if (Model.Existing is not null)
+                    {
+                        <a class="btn" asp-page="Details" asp-route-id="@Model.Existing.Id">Cancel</a>
+                    }
+                    else
+                    {
+                        <a class="btn" asp-page="Index">Cancel</a>
+                    }
+                </div>
+            </section>
+        </div>
+
+        <aside class="request-workflow-note request-form-help">
+            @await Html.PartialAsync("_WorkspaceIcon", "box")
+            <div>
+                <h2>Clear defaults. Better conversations.</h2>
+                <p>Write details you can reuse, then adapt them to the actual request when reviewing the scope.</p>
+                <ul>
+                    <li>Define clear inclusions and exclusions.</li>
+                    <li>Ask for information you need to plan the work.</li>
+                    <li>Keep the stages in their normal sequence.</li>
+                </ul>
+                <p>Fields marked * are required.</p>
+            </div>
+        </aside>
+    </form>
+</div>

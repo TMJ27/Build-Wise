@@ -1,0 +1,107 @@
+@page "{id:int}"
+@model BuildWise.Web.Areas.Quotations.Pages.DetailsModel
+@{
+    ViewData["Title"] = Model.Entry.Number;
+    ViewData["AccountName"] = "Tawanda M.";
+    ViewData["AccountRole"] = "Business owner";
+    var quotation = Model.Entry.Quotation;
+
+    ViewData["PageTitle"] = Model.Entry.Number;
+    ViewData["PageSubTitle"] = $"{Model.SourceRequest.Request.Title} · {Model.SourceRequest.Request.Customer}";
+    ViewData["Breadcrumbs"] = new BreadcrumbItem[]
+    {
+        new("Quotations", Url.Page("/Index", new { area = "Quotations" }))
+    };
+}
+
+@section actionbar {
+    <div class="quotation-actions">
+        @if (quotation.Status == "Draft")
+        {
+            <a class="btn" asp-page="Edit" asp-route-id="@quotation.Id">
+                @await Html.PartialAsync("_WorkspaceIcon", "edit")
+                <span>Edit draft</span>
+            </a>
+        }
+        <a class="btn primary" asp-page="Preview" asp-route-id="@quotation.Id">
+            @await Html.PartialAsync("_WorkspaceIcon", "file")
+            <span>Preview quotation</span>
+        </a>
+    </div>
+    <a class="btn" asp-page="Index">← Back to quotations</a>
+}
+
+<div class="requests-page quotations-page">
+
+    @if (TempData["QuotationMessage"] is string message)
+    {
+        <div class="request-success" role="status">
+            @await Html.PartialAsync("_WorkspaceIcon", "check")
+            @message
+        </div>
+    }
+
+    <div class="quotation-detail-grid">
+        <div class="quotation-column">
+            <section class="panel request-detail-panel">
+                <div class="quotation-overview-heading">
+                    <h2>Quotation overview</h2>
+                    <span class="badge @(quotation.Status == "Approved" ? "green" : "")">@quotation.Status</span>
+                </div>
+                <div class="quotation-total">@BuildWise.Web.Pages.IndexModel.Money(quotation.Amount)<span>USD · Total quotation value</span></div>
+                <dl>
+                    <div>
+                        <dt>Customer</dt>
+                        <dd>
+                            <a asp-area="Customers" asp-page="/Details" asp-route-id="@Model.SourceRequest.CustomerId">@Model.SourceRequest.Request.Customer</a>
+                        </dd>
+                    </div>
+                    <div><dt>Site location</dt><dd>@Model.SourceRequest.Location</dd></div>
+                    <div><dt>Prepared on</dt><dd>@quotation.PreparedOn.ToString("dd MMM yyyy")</dd></div>
+                    <div><dt>Source request</dt><dd><a asp-area="Requests" asp-page="/Details" asp-route-id="@quotation.RequestId">REQ-@quotation.RequestId →</a></dd></div>
+                </dl>
+            </section>
+
+            <section class="panel requests-panel">
+                <div class="requests-panel-heading"><h2>Scope &amp; pricing</h2><span class="badge">@Model.Entry.Lines.Count items</span></div>
+                @await Html.PartialAsync("_QuotationLines", Model.Entry)
+            </section>
+
+            <section class="panel request-detail-panel">
+                <h2>Terms &amp; exclusions</h2>
+                <h3>Terms and validity</h3>
+                <p class="quotation-copy">@Model.Entry.Terms</p>
+                <h3>Exclusions</h3>
+                <p class="quotation-copy">@Model.Entry.Exclusions</p>
+            </section>
+        </div>
+
+        <aside class="quotation-column">
+            <section class="request-workflow-note quotation-status-note">
+                @await Html.PartialAsync("_WorkspaceIcon", quotation.Status == "Approved" ? "check" : "edit")
+                <div>
+                    <h2>@(quotation.Status == "Approved" ? "Ready when you are." : "Your approval comes next.")</h2>
+                    <p>@(quotation.Status == "Approved" ? "This quotation has been approved by the provider. Open the preview to print or save a PDF." : "Check the work, prices and terms. A draft remains editable until you approve it.")</p>
+                    <a class="btn soft" asp-page="Preview" asp-route-id="@quotation.Id">Open document</a>
+                </div>
+            </section>
+
+            @if (quotation.Status == "Draft")
+            {
+                <form method="post" asp-page-handler="Approve" asp-route-id="@quotation.Id" class="panel request-detail-panel quotation-approval">
+                    <h2>Provider approval</h2>
+                    <p>Approve this version once you are satisfied with its scope and pricing.</p>
+                    <div asp-validation-summary="All" class="request-validation" role="alert"></div>
+                    <label class="quotation-confirm">
+                        <input type="checkbox" name="confirm" value="true" required />
+                        <span>I have reviewed the scope, prices and terms.</span>
+                    </label>
+                    <button class="btn primary" type="submit">
+                        @await Html.PartialAsync("_WorkspaceIcon", "check")
+                        <span>Approve quotation</span>
+                    </button>
+                </form>
+            }
+        </aside>
+    </div>
+</div>

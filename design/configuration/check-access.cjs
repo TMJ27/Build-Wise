@@ -48,8 +48,8 @@ async function run() {
         const inactiveRow = page.locator('.access-team-table tbody tr').filter({ hasText: 'Chipo Dube' });
         assert((await inactiveRow.innerText()).includes('Inactive'));
         assert((await inactiveRow.innerText()).includes('No approval access'));
-        assert.equal((await page.request.get(`${origin}/Configuration/Member/b17d0000-0000-4000-9000-000000000001`)).status(), 403);
-        assert.equal((await page.request.get(`${origin}/Configuration/Member/00000000-0000-0000-0000-000000000000`)).status(), 404);
+        assert.equal((await page.request.get(`${origin}/Configuration/Access/Member/b17d0000-0000-4000-9000-000000000001`)).status(), 403);
+        assert.equal((await page.request.get(`${origin}/Configuration/Access/Member/00000000-0000-0000-0000-000000000000`)).status(), 404);
 
         await page.getByRole('link', { name: 'Configure AI', exact: true }).click();
         await page.screenshot({ path: 'design/configuration/BuildWise-AI-Preferences.png' });
@@ -82,7 +82,7 @@ async function run() {
         const emailCard = page.locator('.access-integration-card').filter({ has: page.getByRole('heading', { name: 'Email delivery', exact: true }) });
         assert.equal(await emailCard.locator('.badge').innerText(), 'Not connected');
         assert((await emailCard.innerText()).includes('Preferences saved'));
-        assert.equal((await page.request.get(`${origin}/Configuration/Integration/unknown`)).status(), 404);
+        assert.equal((await page.request.get(`${origin}/Configuration/Access/Integration/unknown`)).status(), 404);
 
         const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, reducedMotion: 'reduce' });
         const errors = [];
@@ -93,9 +93,9 @@ async function run() {
         });
         for (const [route, name] of [
             ['/Configuration/Access', 'Access'],
-            ['/Configuration/Member', 'Member'],
-            ['/Configuration/Integration/ai', 'AI'],
-            ['/Configuration/Integration/email', 'Email']
+            ['/Configuration/Access/Member', 'Member'],
+            ['/Configuration/Access/Integration/ai', 'AI'],
+            ['/Configuration/Access/Integration/email', 'Email']
         ]) {
             await mobile.goto(`${origin}${route}`);
             assert.equal(await mobile.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false, route);

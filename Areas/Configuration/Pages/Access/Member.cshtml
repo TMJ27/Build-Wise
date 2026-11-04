@@ -1,0 +1,72 @@
+@page "{id:guid?}"
+@model BuildWise.Web.Areas.Configuration.Pages.Access.MemberModel
+@using BuildWise.Web.Services
+@{
+    ViewData["Title"] = Model.Existing is null ? "Add team member" : "Edit team member";
+    ViewData["AccountName"] = "Tawanda M.";
+    ViewData["AccountRole"] = "Business owner";
+
+    ViewData["PageTitle"] = Model.Existing is null ? "Add someone to your team." : "Keep the right access in place.";
+    ViewData["PageSubTitle"] = Model.Existing?.Name ?? "Set out this team member’s details and role.";
+    ViewData["Breadcrumbs"] = new BreadcrumbItem[]
+    {
+        new("Configuration"),
+        new("Access & integrations", Url.Page("/Access/Index", new { area = "Configuration", id = (Guid?)null }))
+    };
+}
+
+@section actionbar {
+    <a class="btn" asp-page="/Access/Index">← Back to access &amp; integrations</a>
+}
+
+<div class="requests-page access-page">
+
+    <div class="configuration-grid">
+        <form method="post" class="panel request-detail-panel request-form access-form" asp-route-id="@Model.Existing?.Id">
+            <input type="hidden" asp-for="Input.Version" />
+            <h2>Team member details</h2>
+            <div asp-validation-summary="All" class="request-validation" role="alert"></div>
+            <div class="field">
+                <label asp-for="Input.Name">Full name <span>*</span></label>
+                <input asp-for="Input.Name" required maxlength="100" autocomplete="name" />
+                <span asp-validation-for="Input.Name"></span>
+            </div>
+            <div class="field">
+                <label asp-for="Input.Email">Email address <span>*</span></label>
+                <input asp-for="Input.Email" type="email" required maxlength="100" autocomplete="email" />
+                <span asp-validation-for="Input.Email"></span>
+            </div>
+            <div class="field">
+                <label asp-for="Input.Role">Team role <span>*</span></label>
+                <select asp-for="Input.Role" required>
+                    @foreach (var role in AccessWorkspace.EditableRoles)
+                    {
+                        <option>@role</option>
+                    }
+                </select>
+                <span asp-validation-for="Input.Role"></span>
+            </div>
+            <label class="access-checkbox">
+                <input asp-for="Input.IsActive" />
+                <span><strong>Active team member</strong><small>Keep this member included in your active team.</small></span>
+            </label>
+            <div class="request-form-actions">
+                <button class="btn primary" type="submit">@(Model.Existing is null ? "Add team member" : "Save changes")</button>
+                <a class="btn" asp-page="/Access/Index">Cancel</a>
+            </div>
+        </form>
+
+        <aside class="request-workflow-note request-form-help">
+            @await Html.PartialAsync("_WorkspaceIcon", "shield")
+            <div>
+                <h2>Choose a role for the work.</h2>
+                <ul>
+                    <li><strong>Administrator:</strong> workspace management and quotation approval.</li>
+                    <li><strong>Estimator:</strong> requests, scope preparation and draft quotations.</li>
+                    <li><strong>Viewer:</strong> reviewing records.</li>
+                </ul>
+                <p>Adding a member here does not send an invitation email.</p>
+            </div>
+        </aside>
+    </div>
+</div>

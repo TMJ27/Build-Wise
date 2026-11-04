@@ -1,0 +1,35 @@
+@page
+@model BuildWise.Web.Areas.Configuration.Pages.UserGroups.IndexModel
+@{
+    ViewData["Title"] = "User groups";
+
+    ViewData["PageTitle"] = "User groups";
+    ViewData["PageSubTitle"] = "The groups used to organise system users.";
+    ViewData["Breadcrumbs"] = new BreadcrumbItem[]
+    {
+        new("Configuration")
+    };
+}
+
+<div class="requests-page configuration-page">
+    
+    <section class="panel configuration-section">
+        <div class="configuration-preview-heading"><h2>Group register</h2><span class="badge">@Model.Groups.Count groups</span></div>
+        <div class="table-wrap">
+            <table class="configuration-table configuration-groups-table">
+                <caption class="sr-only">User groups</caption>
+                <thead><tr><th>Name</th><th>Users</th><th>Creation date</th></tr></thead>
+                <tbody>
+                    @foreach (var group in Model.Groups)
+                    {
+                        <tr><td>@group.Name</td><td>@group.UserCount</td><td>@group.CreationDate.ToString("dd MMM yyyy")</td></tr>
+                    }
+                    @if (Model.Groups.Count == 0)
+                    {
+                        <tr><td colspan="3">No user groups have been added.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>

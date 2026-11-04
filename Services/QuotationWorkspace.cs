@@ -1,4 +1,5 @@
 using BuildWise.Web.ViewModels.Dashboard;
+using BuildWise.Web.Areas.Quotations.ViewModels;
 
 namespace BuildWise.Web.Services;
 
@@ -6,13 +7,11 @@ namespace BuildWise.Web.Services;
 public sealed class QuotationWorkspace
 {
     private readonly object sync = new();
-    private readonly CompanyWorkspace company;
     private readonly Dictionary<int, QuotationEntry> quotations;
     private int nextId = 128;
 
-    public QuotationWorkspace(CompanyWorkspace company)
+    public QuotationWorkspace()
     {
-        this.company = company;
         quotations = DashboardSampleData.Quotations.ToDictionary(
             quotation => quotation.Id,
             quotation => new QuotationEntry(
@@ -20,7 +19,7 @@ public sealed class QuotationWorkspace
                 [new QuotationLine("Labour and materials as specified in the agreed scope", 1, quotation.Amount)],
                 "Valid for 14 days. Work starts after the scope, access and payment arrangements are confirmed.",
                 "Additional work and changes to the agreed scope will be quoted separately.",
-                company.Initial));
+                null));
     }
 
     public IReadOnlyList<QuotationEntry> All
@@ -50,7 +49,8 @@ public sealed class QuotationWorkspace
         int requestId,
         IReadOnlyList<QuotationLine> lines,
         string terms,
-        string exclusions)
+        string exclusions,
+        CompanySnapshotViewModel companySnapshot)
     {
         lock (sync)
         {
@@ -80,7 +80,7 @@ public sealed class QuotationWorkspace
                 Array.AsReadOnly(lines.ToArray()),
                 terms.Trim(),
                 exclusions.Trim(),
-                existing?.CompanySnapshot ?? company.Current);
+                existing?.CompanySnapshot ?? companySnapshot);
 
             return quotationId;
         }
@@ -115,7 +115,7 @@ public sealed record QuotationEntry(
     IReadOnlyList<QuotationLine> Lines,
     string Terms,
     string Exclusions,
-    CompanyProfile CompanySnapshot)
+    CompanySnapshotViewModel? CompanySnapshot)
 {
     public string Number => $"BW-2026-{Quotation.Id:D4}";
 }

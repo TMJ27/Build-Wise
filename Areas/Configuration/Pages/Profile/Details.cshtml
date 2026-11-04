@@ -1,0 +1,97 @@
+@page "{id:guid?}"
+@model BuildWise.Web.Areas.Configuration.Pages.Profile.DetailsModel
+@{
+    ViewData["Title"] = "Company profile";
+    ViewData["AccountName"] = User.FindFirst("name")?.Value ?? User.Identity?.Name ?? "Your account";
+    var company = Model.Company;
+
+    ViewData["PageTitle"] = "Company profile";
+    ViewData["PageSubTitle"] = "Your saved company details and quotation preferences.";
+    ViewData["Breadcrumbs"] = new BreadcrumbItem[]
+    {
+        new("Configuration"),
+        new("Profile", Url.Page("/Profile/Details", new { area = "Configuration", id = (Guid?)null }))
+    };
+}
+
+@section actionbar {
+    @if (company is not null)
+    {
+        <a class="btn primary" asp-page="/Profile/Edit" asp-route-id="@company.Id">
+            <i class="fa-solid fa-pen" aria-hidden="true"></i>
+            <span>Edit profile</span>
+        </a>
+    }
+}
+
+<div class="requests-page configuration-page profile-details">
+
+    @if (TempData["ProfileMessage"] is string message)
+    {
+        <div class="request-success" role="status">@message</div>
+    }
+
+    @if (company is null)
+    {
+        <section class="panel request-detail-panel configuration-section">
+            <h2>Add your company details</h2>
+            <p class="configuration-muted">Save your company profile to display its contact details, logo and quotation preferences here.</p>
+            <a class="btn primary profile-create-link" asp-page="/Profile/Edit" asp-route-id="">
+                <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                <span>Add company profile</span>
+            </a>
+        </section>
+    }
+    else
+    {
+        <div class="configuration-grid">
+            <div class="configuration-column">
+                <section class="panel request-detail-panel configuration-section">
+                    <div class="profile-identity">
+                        <div class="configuration-logo-frame">
+                            @if (!string.IsNullOrWhiteSpace(company.LogoStorageKey))
+                            {
+                                <img src="@company.LogoStorageKey" alt="Company logo" class="configuration-logo-image" />
+                            }
+                            else
+                            {
+                                <i class="fa-solid fa-building" aria-hidden="true"></i>
+                            }
+                        </div>
+                        <div>
+                            <h2>@company.Name</h2>
+                            <p class="configuration-muted">Company details</p>
+                        </div>
+                    </div>
+
+                    <dl class="profile-detail-list">
+                        <div><dt>Email address</dt><dd>@company.Email</dd></div>
+                        <div><dt>Phone number</dt><dd>@company.Phone</dd></div>
+                        <div class="profile-detail-wide"><dt>Business address</dt><dd>@company.Address</dd></div>
+                        <div><dt>Registration number</dt><dd>@(string.IsNullOrWhiteSpace(company.RegistrationNumber) ? "Not provided" : company.RegistrationNumber)</dd></div>
+                        <div><dt>Tax number</dt><dd>@(string.IsNullOrWhiteSpace(company.TaxNumber) ? "Not provided" : company.TaxNumber)</dd></div>
+                    </dl>
+                </section>
+
+                <section class="panel request-detail-panel configuration-section">
+                    <h2>Quotation defaults</h2>
+                    <dl class="profile-detail-list">
+                        <div><dt>Base currency</dt><dd>@(string.IsNullOrWhiteSpace(company.DefaultCurrency) ? "Not set" : company.DefaultCurrency)</dd></div>
+                        <div><dt>Default validity</dt><dd>@company.DefaultValidityDays days</dd></div>
+                        <div class="profile-detail-wide"><dt>Default terms</dt><dd>@(string.IsNullOrWhiteSpace(company.DefaultQuotationTerms) ? "Not set" : company.DefaultQuotationTerms)</dd></div>
+                    </dl>
+                </section>
+            </div>
+
+            <aside class="configuration-column">
+                <section class="panel request-detail-panel configuration-section">
+                    <h2>Profile record</h2>
+                    <dl class="profile-detail-list profile-record-list">
+                        <div><dt>Created</dt><dd>@company.CreationDate.ToString("dd MMM yyyy, HH:mm")</dd></div>
+                        <div><dt>Last updated</dt><dd>@(company.LastUpdated?.ToString("dd MMM yyyy, HH:mm") ?? "Not updated")</dd></div>
+                    </dl>
+                </section>
+            </aside>
+        </div>
+    }
+</div>

@@ -1,0 +1,74 @@
+.user-upsert-form {
+    display: grid;
+    gap: 16px;
+}
+
+.user-upsert .configuration-grid {
+    gap: 16px;
+}
+
+.user-upsert .configuration-section {
+    padding: 20px;
+}
+
+.user-upsert .configuration-section-title {
+    margin-bottom: 18px;
+}
+
+.user-upsert .field {
+    gap: 6px;
+    margin-bottom: 14px;
+}
+
+.user-upsert .field:last-child {
+    margin-bottom: 0;
+}
+
+.user-upsert .configuration-muted {
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.user-active-toggle {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    cursor: pointer;
+}
+
+.user-active-toggle input {
+    flex: 0 0 auto;
+    margin: 3px 0 0;
+    accent-color: #aa6248;
+}
+
+.user-active-toggle strong {
+    display: block;
+    color: #233b58;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.user-active-toggle small {
+    display: block;
+    margin-top: 5px;
+    color: #64748b;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.user-upsert-actions {
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+@media (max-width: 600px) {
+    .user-upsert .request-form-fields {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

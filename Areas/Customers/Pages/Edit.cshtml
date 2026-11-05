@@ -13,10 +13,6 @@
     };
 }
 
-@section actionbar {
-    <a class="btn" asp-page="Index">← Back to customers</a>
-}
-
 <div class="requests-page customers-page">
 
     <div class="request-detail-grid">
@@ -60,19 +56,11 @@
             </div>
             <div class="request-form-actions">
                 <button class="btn primary" type="submit">@(Model.Existing is null ? "Add customer" : "Save changes")</button>
-                @if (Model.Existing is not null)
-                {
-                    <a class="btn" asp-page="Details" asp-route-id="@Model.Existing.Id">Cancel</a>
-                }
-                else
-                {
-                    <a class="btn" asp-page="Index">Cancel</a>
-                }
             </div>
         </form>
 
         <aside class="request-workflow-note request-form-help">
-            @await Html.PartialAsync("_WorkspaceIcon", "users")
+            <i class="icon fa-solid fa-users" aria-hidden="true"></i>
             <div>
                 <h2>One customer. A connected history.</h2>
                 <p>Keep contact details here so future requests start with the right information.</p>

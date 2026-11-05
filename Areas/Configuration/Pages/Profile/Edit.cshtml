@@ -22,10 +22,9 @@
 
 @section actionbar {
     <button class="btn primary" type="submit" form="business-profile-form">
-        @await Html.PartialAsync("_WorkspaceIcon", "check")
+        <i class="icon fa-solid fa-check" aria-hidden="true"></i>
         <span>Save changes</span>
     </button>
-    <a class="btn" asp-page="/Profile/Details" asp-route-id="@Model.Company?.Id">← Back to company profile</a>
 }
 
 <div class="requests-page configuration-page">
@@ -33,7 +32,7 @@
     @if (TempData["ProfileMessage"] is string message)
     {
         <div class="request-success" role="status">
-            @await Html.PartialAsync("_WorkspaceIcon", "check")
+            <i class="icon fa-solid fa-check" aria-hidden="true"></i>
             @message
         </div>
     }
@@ -45,7 +44,7 @@
 
             <section class="panel request-detail-panel request-form configuration-section">
                 <div class="configuration-section-title">
-                    <span class="summary-icon">@await Html.PartialAsync("_WorkspaceIcon", "business")</span>
+                    <span class="summary-icon"><i class="icon fa-solid fa-building" aria-hidden="true"></i></span>
                     <div><h2>Company details</h2><p>How your business appears on customer documents.</p></div>
                 </div>
                 <div class="request-form-fields">
@@ -84,7 +83,7 @@
 
             <section class="panel request-detail-panel configuration-section">
                 <div class="configuration-section-title">
-                    <span class="summary-icon">@await Html.PartialAsync("_WorkspaceIcon", "box")</span>
+                    <span class="summary-icon"><i class="icon fa-solid fa-box" aria-hidden="true"></i></span>
                 </div>
 
                 <div class="configuration-logo-upload">
@@ -111,7 +110,7 @@
 
             <section class="panel request-detail-panel request-form configuration-section">
                 <div class="configuration-section-title">
-                    <span class="summary-icon">@await Html.PartialAsync("_WorkspaceIcon", "quote")</span>
+                    <span class="summary-icon"><i class="icon fa-solid fa-file-invoice-dollar" aria-hidden="true"></i></span>
                     <div><h2>Quotation defaults</h2><p>A starting point for each new quotation.</p></div>
                 </div>
                 <div class="request-form-fields">
@@ -144,7 +143,6 @@
                 <div class="configuration-save-row">
                     <p>Review the defaults when preparing each quotation.</p>
                     <div class="configuration-actions">
-                        <a class="btn" asp-page="/Profile/Details" asp-route-id="@Model.Company?.Id">Cancel</a>
                         <button class="btn" type="reset">Reset changes</button>
                         <button class="btn primary" type="submit">Save changes</button>
                     </div>
@@ -175,7 +173,7 @@
             </section>
 
             <section class="request-workflow-note request-form-help">
-                @await Html.PartialAsync("_WorkspaceIcon", "help")
+                <i class="icon fa-solid fa-circle-question" aria-hidden="true"></i>
                 <div>
                     <h2>One consistent identity.</h2>
                     <p>Save your company details once and use them when preparing new quotations.</p>
@@ -186,6 +184,3 @@
     </div>
 </div>
 
-@section Scripts {
-    <script src="~/js/business-profile.js" asp-append-version="true"></script>
-}

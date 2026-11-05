@@ -15,6 +15,4 @@ public sealed class CurrencyInputViewModel
     [Required, StringLength(10)]
     public string Symbol { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Select the creator.")]
-    public Guid? CreatorId { get; set; }
 }

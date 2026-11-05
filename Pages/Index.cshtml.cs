@@ -10,9 +10,8 @@ public class IndexModel(
     BuildWise.Web.Services.QuotationWorkspace quotations,
     BuildWise.Web.Services.CatalogueWorkspace catalogue) : PageModel
 {
-    [BindProperty(SupportsGet = true)] public string Range { get; set; } = "30";
+    [BindProperty(SupportsGet = true)] public string Range { get; set; } = "7";
     [BindProperty(SupportsGet = true)] public string Tab { get; set; } = "requests";
-    [BindProperty(SupportsGet = true)] public string Search { get; set; } = string.Empty;
 
     public DateOnly Today => DashboardSampleData.Today;
     public IReadOnlyList<DashboardRequest> Requests { get; private set; } = [];
@@ -20,6 +19,22 @@ public class IndexModel(
     public IReadOnlyList<DashboardRequest> VisibleRequests { get; private set; } = [];
     public IReadOnlyList<DashboardQuotation> VisibleQuotations { get; private set; } = [];
     public IReadOnlyList<DashboardCategory> Categories { get; private set; } = [];
+    public IReadOnlyList<DashboardCategory> ChartCategories
+    {
+        get
+        {
+            if (Categories.Count <= 5)
+            {
+                return Categories;
+            }
+
+            var categories = Categories.Take(5).ToList();
+            var remaining = Categories.Skip(5).ToArray();
+            categories.Add(new DashboardCategory("Other", remaining.Sum(category => category.Count),
+                remaining.Sum(category => category.Percentage), "#cbd5e1"));
+            return categories;
+        }
+    }
     public IReadOnlyList<DashboardDay> Days { get; private set; } = [];
     public IReadOnlyList<DashboardStage> Stages { get; private set; } = [];
     public IReadOnlyList<DashboardAttention> Attention { get; private set; } = [];
@@ -34,24 +49,35 @@ public class IndexModel(
     public int ActiveServiceCount => catalogue.All.Count(service => service.IsActive);
     public int MaximumDayCount => Math.Max(1, Days.Select(d => d.Prepared).DefaultIfEmpty(0).Max());
     public string RangeCaption => Range == "all" ? "All time" : $"Last {Range} days";
+    public string PeriodCaption => $"{Date(Today.AddDays(-6))} – {Date(Today)}";
+
+    public IActionResult OnGetRecords()
+    {
+        OnGet();
+        Response.Headers["X-Dashboard-Records"] = "true";
+        return Partial("_DashboardRecords", this);
+    }
 
     public void OnGet()
     {
-        Range = Range is "7" or "30" or "all" ? Range : "30";
+        Range = Range is "7" or "30" or "all" ? Range : "7";
         Tab = Tab == "quotations" ? "quotations" : "requests";
-        Search = (Search ?? string.Empty).Trim();
-        if (Search.Length > 120) Search = Search[..120];
         // Render the normalised values rather than an invalid query-string value
         // retained by model binding (notably for the range select element).
         ModelState.Remove(nameof(Range));
         ModelState.Remove(nameof(Tab));
-        ModelState.Remove(nameof(Search));
         Requests = workspace.Requests.Where(r => InRange(r.CreatedOn))
             .OrderByDescending(r => r.CreatedOn).ThenByDescending(r => r.Id).ToArray();
         Quotations = quotations.All.Select(entry => entry.Quotation).Where(q => InRange(q.PreparedOn))
             .OrderByDescending(q => q.PreparedOn).ThenByDescending(q => q.Id).ToArray();
-        VisibleRequests = Requests.Where(r => Matches($"{r.Title} {r.Customer} {r.Id}")).ToArray();
-        VisibleQuotations = Quotations.Where(q => Matches($"{q.Id} {RequestFor(q.RequestId).Title} {RequestFor(q.RequestId).Customer}")).ToArray();
+        VisibleRequests = workspace.Requests
+            .Where(request => request.CreatedOn >= Today.AddDays(-6) && request.CreatedOn <= Today)
+            .OrderByDescending(request => request.CreatedOn).ThenByDescending(request => request.Id)
+            .ToArray();
+        VisibleQuotations = quotations.All.Select(entry => entry.Quotation)
+            .Where(quotation => quotation.PreparedOn >= Today.AddDays(-6) && quotation.PreparedOn <= Today)
+            .OrderByDescending(quotation => quotation.PreparedOn).ThenByDescending(quotation => quotation.Id)
+            .ToArray();
         string[] colours = ["#637d9d", "#aa6248", "#839a8e", "#a394b6", "#a5b6c7"];
         Categories = Requests.GroupBy(r => r.Category).OrderByDescending(g => g.Count())
             .Select((g, i) => new DashboardCategory(g.Key, g.Count(), g.Count() * 100 / Math.Max(1, Requests.Count), colours[i % colours.Length])).ToArray();
@@ -63,12 +89,12 @@ public class IndexModel(
             Requests.Count(r => r.Status == s.Item2), Requests.FirstOrDefault(r => r.Status == s.Item2)?.Id)).ToArray();
         Attention = Stages.Take(3).Where(s => s.FirstRequestId.HasValue).Select(s => new DashboardAttention(
             s.Name == "Clarify" ? "Confirm the missing details" : s.Name == "Review" ? "Review a proposed scope" : "Prepare the next quotation",
-            s.Name == "Clarify" ? "alert" : s.Name == "Review" ? "check" : "file",
+            s.Name == "Clarify" ? "fa-triangle-exclamation" : s.Name == "Review" ? "fa-check" : "fa-file-lines",
             s.Name == "Clarify" ? "orange" : s.Name == "Review" ? "violet" : string.Empty,
             s.Route, Requests.First(r => r.Id == s.FirstRequestId))).ToArray();
-        Activity = Requests.Select(r => new DashboardActivity("Request captured", $"{r.Customer} · {r.Title}", "file", $"request/{r.Id}", r.CreatedOn))
+        Activity = Requests.Select(r => new DashboardActivity("Request captured", $"{r.Customer} · {r.Title}", "fa-file-lines", $"request/{r.Id}", r.CreatedOn))
             .Concat(Quotations.Select(q => new DashboardActivity(q.Status == "Approved" ? "Quotation approved" : "Quotation drafted",
-                $"BW-2026-{q.Id:D4} · {Money(q.Amount)}", q.Status == "Approved" ? "check" : "edit", $"quote/{q.Id}", q.PreparedOn)))
+                $"BW-2026-{q.Id:D4} · {Money(q.Amount)}", q.Status == "Approved" ? "fa-check" : "fa-pen", $"quote/{q.Id}", q.PreparedOn)))
             .OrderByDescending(a => a.Date).Take(4).ToArray();
     }
 
@@ -104,6 +130,5 @@ public class IndexModel(
     }
     public static string Money(decimal amount) => amount.ToString("C2", CultureInfo.GetCultureInfo("en-US"));
     public static string Date(DateOnly date, string format = "dd MMM yyyy") => date.ToString(format, CultureInfo.GetCultureInfo("en-GB"));
-    private bool Matches(string text) => text.Contains(Search, StringComparison.OrdinalIgnoreCase);
     private bool InRange(DateOnly date) => Range == "all" || date >= Today.AddDays(1 - int.Parse(Range, CultureInfo.InvariantCulture)) && date <= Today;
 }

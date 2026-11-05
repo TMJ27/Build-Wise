@@ -1,16 +1,25 @@
 @{
     var accountName = User.FindFirst("name")?.Value ?? User.Identity?.Name ?? ViewData["AccountName"]?.ToString() ?? "Your account";
-    var accountRole = ViewData["AccountRole"]?.ToString() ?? "Workspace member";
+    var accountRole = User.Identity?.IsAuthenticated == true
+        ? "Workspace member"
+        : ViewData["AccountRole"]?.ToString() ?? "Workspace member";
     var initials = string.Concat(accountName.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(p => char.ToUpperInvariant(p[0])));
 }
 <header class="v2-header">
     <a class="brand" asp-area="" asp-page="/Index"><img src="~/brand/buildwise-mark-muted.svg" alt="" />BuildWise</a>
-    @await Html.PartialAsync("_Breadcrumbs")
     <div class="v2-header-right">
-        <button class="icon-btn notification" type="button" data-action="notifications" aria-label="Notifications">@await Html.PartialAsync("_WorkspaceIcon", "bell")</button>
+        <button class="icon-btn notification" type="button" data-action="notifications" aria-label="Notifications"><i class="icon fa-solid fa-bell" aria-hidden="true"></i></button>
         <span class="v2-divider" aria-hidden="true"></span>
         <span class="avatar" aria-hidden="true">@initials</span>
         <div class="v2-owner"><b class="workspace-account-name">@accountName</b><small class="workspace-account-role">@accountRole</small></div>
-        <button class="icon-btn v2-mobile-menu" type="button" data-workspace-menu aria-controls="workspace-navigation" aria-expanded="false" aria-label="Open workspace navigation">@await Html.PartialAsync("_WorkspaceIcon", "menu")</button>
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <form method="post" asp-area="Identity" asp-page="/Account/Logout">
+                <button class="icon-btn" type="submit" aria-label="Sign out" title="Sign out">
+                    <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
+                </button>
+            </form>
+        }
+        <button class="icon-btn v2-mobile-menu" type="button" data-workspace-menu aria-controls="workspace-navigation" aria-expanded="false" aria-label="Open workspace navigation"><i class="icon fa-solid fa-bars" aria-hidden="true"></i></button>
     </div>
 </header>

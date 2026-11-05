@@ -10,15 +10,11 @@
     var isProfile = configurationOpen && currentPage.StartsWith("/Profile/", StringComparison.OrdinalIgnoreCase);
     var isUsers = configurationOpen && currentPage.StartsWith("/Users/", StringComparison.OrdinalIgnoreCase);
     var isUserGroups = configurationOpen && currentPage.StartsWith("/UserGroups/", StringComparison.OrdinalIgnoreCase);
-    var isCurrency = configurationOpen && currentPage.StartsWith("/Currency/", StringComparison.OrdinalIgnoreCase);
+    var isCurrency = configurationOpen && currentPage.StartsWith("/Currencies/", StringComparison.OrdinalIgnoreCase);
 }
 
 <aside class="v2-rail workspace-sidebar" id="workspace-navigation" aria-label="Workspace navigation">
-    <a class="btn primary workspace-new-request" asp-area="Requests" asp-page="/Create">
-        <i class="fa-solid fa-plus" aria-hidden="true"></i>
-        <span>New request</span>
-    </a>
-
+   
     <nav class="workspace-nav-group" aria-label="Main navigation">
         <div class="workspace-nav-heading">WORKSPACE</div>
 
@@ -87,7 +83,7 @@
                     <span>User groups</span>
                 </a>
 
-                <a asp-area="Configuration" asp-page="/Currency/Index" asp-route-id=""
+                <a asp-area="Configuration" asp-page="/Currencies/Index" asp-route-id=""
                    class="@(isCurrency ? "active" : null)"
                    aria-current="@(isCurrency ? "page" : null)">
                     <i class="fa-solid fa-coins" aria-hidden="true"></i>

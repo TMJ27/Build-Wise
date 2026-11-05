@@ -15,10 +15,9 @@
 
 @section actionbar {
     <button class="btn primary" type="button" id="print-quotation">
-        @await Html.PartialAsync("_WorkspaceIcon", "file")
+        <i class="icon fa-solid fa-file-lines" aria-hidden="true"></i>
         <span>Print / Save PDF</span>
     </button>
-    <a class="btn" asp-page="Details" asp-route-id="@Model.Entry.Quotation.Id">← Back to quotation</a>
 }
 
 <div class="requests-page quotations-page">
@@ -91,6 +90,3 @@
     }
 </div>
 
-@section Scripts {
-    <script src="~/js/quotation-preview.js" asp-append-version="true"></script>
-}

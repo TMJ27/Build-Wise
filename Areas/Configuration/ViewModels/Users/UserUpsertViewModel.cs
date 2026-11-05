@@ -22,5 +22,4 @@ public sealed class UserUpsertViewModel
 
     public bool IsActive { get; set; } = true;
 
-    public IReadOnlyList<UserGroupOptionViewModel> UserGroups { get; set; } = [];
 }

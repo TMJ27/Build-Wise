@@ -1,4 +1,5 @@
 using BuildWise.Data;
+using BuildWise.Web.Services.GeneratedNumbers;
 using BuildWise.Web.Areas.Configuration.ViewModels.Users;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +13,7 @@ public class IndexModel(BuildWiseDbContext db) : PageModel
     public async Task OnGetAsync()
     {
       Users = await db.Users.ToListAsync();
+      await db.ApplyUserNumbersAsync(Users);
     }
 
 }

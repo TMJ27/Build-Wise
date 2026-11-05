@@ -16,18 +16,17 @@
 @section actionbar {
     <div class="catalogue-actions">
         <a class="btn" asp-page="Edit" asp-route-id="@Model.Service.Id">
-            @await Html.PartialAsync("_WorkspaceIcon", "edit")
+            <i class="icon fa-solid fa-pen" aria-hidden="true"></i>
             <span>Edit service</span>
         </a>
         @if (Model.Service.IsActive)
         {
             <a class="btn primary" asp-area="Requests" asp-page="/Create" asp-route-serviceId="@Model.Service.Id">
-                @await Html.PartialAsync("_WorkspaceIcon", "plus")
+                <i class="icon fa-solid fa-plus" aria-hidden="true"></i>
                 <span>Start request</span>
             </a>
         }
     </div>
-    <a class="btn" asp-page="Index">← Back to catalogue</a>
 }
 
 <div class="requests-page catalogue-page">
@@ -35,7 +34,7 @@
     @if (TempData["CatalogueMessage"] is string message)
     {
         <div class="request-success" role="status">
-            @await Html.PartialAsync("_WorkspaceIcon", "check")
+            <i class="icon fa-solid fa-check" aria-hidden="true"></i>
             @message
         </div>
     }
@@ -113,7 +112,7 @@
 
         <aside class="catalogue-column">
             <section class="request-workflow-note request-form-help">
-                @await Html.PartialAsync("_WorkspaceIcon", "help")
+                <i class="icon fa-solid fa-circle-question" aria-hidden="true"></i>
                 <div>
                     <h2>A catalogue you can stand behind.</h2>
                     <p>These details provide a starting point. Review the actual site, quantities and customer requirements before approving a quotation.</p>
@@ -127,7 +126,7 @@
                 {
                     <a class="catalogue-dependency" asp-page="Details" asp-route-id="@dependency.Id">
                         <span><strong>@dependency.Name</strong><small>@dependency.Code · @(dependency.IsActive ? "Active" : "Archived")</small></span>
-                        @await Html.PartialAsync("_WorkspaceIcon", "chevron")
+                        <i class="icon fa-solid fa-chevron-right" aria-hidden="true"></i>
                     </a>
                 }
                 @if (Model.Dependencies.Count == 0)

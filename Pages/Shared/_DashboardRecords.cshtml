@@ -1,36 +1,61 @@
 @model BuildWise.Web.Pages.IndexModel
 @using BuildWise.Web.Pages
+<div class="table-period" data-view-all-url="@Model.ScreenUrl(Model.Tab == "requests" ? "requests" : "quotations")">
+    <span>Last 7 days</span>
+    <span>@Model.PeriodCaption</span>
+</div>
 <div class="table-wrap" id="dashboard-records">
     <table>
-        <thead><tr><th>@(Model.Tab == "requests" ? "Request / customer" : "Quotation / customer")</th><th>Status</th><th>@(Model.Tab == "requests" ? "Created" : "Value (USD)")</th><th><span class="visually-hidden">Open record</span></th></tr></thead>
+        <thead><tr>
+                        <th scope="col">ID</th><th>@(Model.Tab == "requests" ? "Request / customer" : "Quotation / customer")</th><th>Status</th><th>@(Model.Tab == "requests" ? "Created" : "Value (USD)")</th></tr></thead>
         <tbody>
         @if (Model.Tab == "requests")
         {
             @foreach (var request in Model.VisibleRequests.Take(6))
             {
-                <tr><td><a href="@Model.ScreenUrl($"request/{request.Id}")"><strong>@request.Title</strong><small>@request.Customer · REQ-@request.Id</small></a></td>
+                <tr>
+                    <td>
+                        <a class="record-link record-id" href="@Model.ScreenUrl($"request/{request.Id}")">
+                            @request.RequestNumber
+                            <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                        </a>
+                    </td>
+                    <td>
+                        <strong>@request.Title</strong>
+                        <small>@request.Customer</small>
+                    </td>
                     <td><span class="badge @request.BadgeClass">@request.Status</span></td><td class="muted">@IndexModel.Date(request.CreatedOn)</td>
-                    <td><a href="@Model.ScreenUrl($"request/{request.Id}")" aria-label="Open @request.Title">@await Html.PartialAsync("_WorkspaceIcon", "chevron")</a></td></tr>
+                    </tr>
             }
-            @if (Model.VisibleRequests.Count == 0) { <tr><td colspan="4" class="empty">No requests match your search.</td></tr> }
+            @if (Model.VisibleRequests.Count == 0) { <tr><td colspan="4" class="empty">No requests in the last 7 days.</td></tr> }
         }
         else
         {
             @foreach (var quotation in Model.VisibleQuotations.Take(6))
             {
                 var request = Model.RequestFor(quotation.RequestId);
-                <tr><td><a href="@Model.ScreenUrl($"quote/{quotation.Id}")"><strong>BW-2026-@quotation.Id.ToString("D4")</strong><small>@request.Customer · @request.Title</small></a></td>
+                <tr>
+                    <td>
+                        <a class="record-link record-id" href="@Model.ScreenUrl($"quote/{quotation.Id}")">
+                            @quotation.QuotationNumber
+                            <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                        </a>
+                    </td>
+                    <td>
+                        <strong>@request.Title</strong>
+                        <small>@request.Customer</small>
+                    </td>
                     <td><span class="badge @(quotation.Status == "Approved" ? "green" : "")">@quotation.Status</span></td><td>@IndexModel.Money(quotation.Amount)</td>
-                    <td><a href="@Model.ScreenUrl($"quote/{quotation.Id}")" aria-label="Open quotation @quotation.Id">@await Html.PartialAsync("_WorkspaceIcon", "chevron")</a></td></tr>
+                    </tr>
             }
-            @if (Model.VisibleQuotations.Count == 0) { <tr><td colspan="4" class="empty">No quotations match your search.</td></tr> }
+            @if (Model.VisibleQuotations.Count == 0) { <tr><td colspan="4" class="empty">No quotations in the last 7 days.</td></tr> }
         }
         </tbody>
     </table>
 </div>
 <div class="table-foot">
     @if (Model.Tab == "requests")
-    { <span>Showing @Math.Min(6, Model.VisibleRequests.Count) of @Model.VisibleRequests.Count requests</span><a href="@Model.ScreenUrl("requests")">View all requests →</a> }
+    { <span>Showing @Math.Min(6, Model.VisibleRequests.Count) of @Model.VisibleRequests.Count requests</span> }
     else
-    { <span>Showing @Math.Min(6, Model.VisibleQuotations.Count) of @Model.VisibleQuotations.Count quotations</span><a href="@Model.ScreenUrl("quotations")">View all quotations →</a> }
+    { <span>Showing @Math.Min(6, Model.VisibleQuotations.Count) of @Model.VisibleQuotations.Count quotations</span> }
 </div>

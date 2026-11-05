@@ -19,16 +19,15 @@
         @if (quotation.Status == "Draft")
         {
             <a class="btn" asp-page="Edit" asp-route-id="@quotation.Id">
-                @await Html.PartialAsync("_WorkspaceIcon", "edit")
+                <i class="icon fa-solid fa-pen" aria-hidden="true"></i>
                 <span>Edit draft</span>
             </a>
         }
         <a class="btn primary" asp-page="Preview" asp-route-id="@quotation.Id">
-            @await Html.PartialAsync("_WorkspaceIcon", "file")
+            <i class="icon fa-solid fa-file-lines" aria-hidden="true"></i>
             <span>Preview quotation</span>
         </a>
     </div>
-    <a class="btn" asp-page="Index">← Back to quotations</a>
 }
 
 <div class="requests-page quotations-page">
@@ -36,7 +35,7 @@
     @if (TempData["QuotationMessage"] is string message)
     {
         <div class="request-success" role="status">
-            @await Html.PartialAsync("_WorkspaceIcon", "check")
+            <i class="icon fa-solid fa-check" aria-hidden="true"></i>
             @message
         </div>
     }
@@ -78,7 +77,7 @@
 
         <aside class="quotation-column">
             <section class="request-workflow-note quotation-status-note">
-                @await Html.PartialAsync("_WorkspaceIcon", quotation.Status == "Approved" ? "check" : "edit")
+                <i class="icon fa-solid @(quotation.Status == "Approved" ? "fa-check" : "fa-pen")" aria-hidden="true"></i>
                 <div>
                     <h2>@(quotation.Status == "Approved" ? "Ready when you are." : "Your approval comes next.")</h2>
                     <p>@(quotation.Status == "Approved" ? "This quotation has been approved by the provider. Open the preview to print or save a PDF." : "Check the work, prices and terms. A draft remains editable until you approve it.")</p>
@@ -97,7 +96,7 @@
                         <span>I have reviewed the scope, prices and terms.</span>
                     </label>
                     <button class="btn primary" type="submit">
-                        @await Html.PartialAsync("_WorkspaceIcon", "check")
+                        <i class="icon fa-solid fa-check" aria-hidden="true"></i>
                         <span>Approve quotation</span>
                     </button>
                 </form>

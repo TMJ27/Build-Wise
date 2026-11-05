@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using BuildWise.Data;
+using BuildWise.Web.Services.GeneratedNumbers;
 using Microsoft.EntityFrameworkCore;
 using BuildWise.Web.Areas.Configuration.ViewModels.Users;
 
@@ -14,11 +15,13 @@ namespace BuildWise.Web.Areas.Configuration.Pages.Users
 
         public async Task<IActionResult> OnGet(Guid? id)
         {
-            Person = db.Users.FirstOrDefault(x => x.Id == id);
+            Person = await db.Users.AsNoTracking().Include(user => user.Group).FirstOrDefaultAsync(x => x.Id == id);
             if(Person == null)
             {
                 return NotFound();
             }
+
+            await db.ApplyUserNumberAsync(Person);
 
             return Page();
 

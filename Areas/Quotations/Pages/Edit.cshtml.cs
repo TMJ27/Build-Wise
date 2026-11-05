@@ -1,4 +1,6 @@
 using BuildWise.Web.Services;
+using BuildWise.Data;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using BuildWise.Web.ViewModels.Dashboard;
@@ -9,7 +11,7 @@ namespace BuildWise.Web.Areas.Quotations.Pages;
 public class EditModel(
     QuotationWorkspace quotations,
     RequestWorkspace requests,
-    CompanyService company) : PageModel
+    BuildWiseDbContext db) : PageModel
 {
     [BindProperty]
     public QuotationInputViewModel Input { get; set; } = new();
@@ -43,7 +45,7 @@ public class EditModel(
         }
         else
         {
-            var profile = await company.GetCurrentAsync(HttpContext.RequestAborted);
+            var profile = await db.Companies.AsNoTracking().SingleOrDefaultAsync(HttpContext.RequestAborted);
             Input.Terms = profile?.DefaultQuotationTerms ?? string.Empty;
 
             if (AvailableRequests.Any(request => request.Id == requestId))
@@ -80,7 +82,7 @@ public class EditModel(
             return Page();
         }
 
-        var profile = await company.GetCurrentAsync(HttpContext.RequestAborted);
+        var profile = await db.Companies.AsNoTracking().SingleOrDefaultAsync(HttpContext.RequestAborted);
 
         if (profile is null)
         {

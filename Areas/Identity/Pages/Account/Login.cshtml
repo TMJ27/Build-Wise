@@ -1,0 +1,49 @@
+@page
+@model BuildWise.Web.Areas.Identity.Pages.Account.LoginModel
+@{
+    ViewData["Title"] = "Sign in";
+    ViewData["PageTitle"] = "A good place to get to work.";
+    ViewData["PageSubTitle"] = "Sign in to your BuildWise account.";
+    ViewData["UseFullWidthLayout"] = true;
+}
+
+<div class="auth-layout">
+    <aside class="auth-brand-panel">
+        <div class="auth-brand">
+            <img src="~/brand/buildwise-mark-muted.svg" alt="" />
+            <span>BuildWise</span>
+        </div>
+        <div>
+            <h2>Your expertise.<br />A clearer way to bring it together.</h2>
+            <p>Keep your customers, requests and quotations in one place.</p>
+        </div>
+        <small>© @DateTime.Now.Year BuildWise</small>
+    </aside>
+    <div class="auth-content">
+        <section class="auth-card">
+            <h1>@ViewData["PageTitle"]</h1>
+            <p>@ViewData["PageSubTitle"]</p>
+            <form method="post" class="configuration-column">
+                <input type="hidden" asp-for="ReturnUrl" />
+                <div asp-validation-summary="All" class="configuration-errors" role="alert"></div>
+                @if (!string.IsNullOrWhiteSpace(Model.SignInDiagnostic))
+                {
+                    <div class="request-validation" role="status">
+                        <strong>Development diagnostic</strong>
+                        <p>@Model.SignInDiagnostic</p>
+                    </div>
+                }
+                @if (!Model.IsConfigured)
+                {
+                    <div class="request-validation" role="status">
+                        Sign-in is being set up. Please contact your administrator.
+                    </div>
+                }
+                <button class="btn primary" type="submit" disabled="@(!Model.IsConfigured)">
+                    <i class="fa-solid fa-arrow-right-to-bracket" aria-hidden="true"></i>
+                    <span>Sign in</span>
+                </button>
+            </form>
+        </section>
+    </div>
+</div>

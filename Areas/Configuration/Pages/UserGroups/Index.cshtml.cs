@@ -1,19 +1,19 @@
 using BuildWise.Data;
-using BuildWise.Web.Areas.Configuration.ViewModels.UserGroups;
+using BuildWise.Web.Services.GeneratedNumbers;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 
 namespace BuildWise.Web.Areas.Configuration.Pages.UserGroups;
 
-public class IndexModel(BuildWiseDbContext context) : PageModel
+public class IndexModel(BuildWiseDbContext db) : PageModel
 {
-    public IReadOnlyList<UserGroupRowViewModel> Groups { get; private set; } = [];
+  
+    public IReadOnlyList<UserGroup> UserGroups { get; set; } = new List<UserGroup>();
+
 
     public async Task OnGetAsync()
     {
-        Groups = await context.UserGroups.AsNoTracking()
-            .OrderBy(group => group.Name)
-            .Select(group => new UserGroupRowViewModel(group.Name, group.Users.Count, group.CreationDate))
-            .ToListAsync();
+        UserGroups = await db.UserGroups.ToListAsync();
+        await db.ApplyUserGroupNumbersAsync(UserGroups);
     }
 }

@@ -13,6 +13,8 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["BuildWise.Web.csproj", "."]
+COPY ["BuildWise.Data/BuildWise.Data.csproj", "BuildWise.Data/"]
+COPY ["BuildWise.Lib/BuildWise.Lib.csproj", "BuildWise.Lib/"]
 RUN dotnet restore "./BuildWise.Web.csproj"
 COPY . .
 WORKDIR "/src/."

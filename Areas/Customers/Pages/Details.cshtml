@@ -17,15 +17,14 @@
 @section actionbar {
     <div class="customer-actions">
         <a class="btn" asp-page="Edit" asp-route-id="@Model.Customer.Id">
-            @await Html.PartialAsync("_WorkspaceIcon", "edit")
+            <i class="icon fa-solid fa-pen" aria-hidden="true"></i>
             <span>Edit customer</span>
         </a>
         <a class="btn primary" asp-area="Requests" asp-page="/Create" asp-route-customerId="@Model.Customer.Id">
-            @await Html.PartialAsync("_WorkspaceIcon", "plus")
+            <i class="icon fa-solid fa-plus" aria-hidden="true"></i>
             <span>New request</span>
         </a>
     </div>
-    <a class="btn" asp-page="Index">← Back to customers</a>
 }
 
 <div class="requests-page customers-page">
@@ -33,7 +32,7 @@
     @if (TempData["CustomerMessage"] is string message)
     {
         <div class="request-success" role="status">
-            @await Html.PartialAsync("_WorkspaceIcon", "check")
+            <i class="icon fa-solid fa-check" aria-hidden="true"></i>
             @message
         </div>
     }
@@ -104,10 +103,10 @@
                     <table class="requests-table customer-history-table">
                         <thead>
                             <tr>
+                        <th scope="col">ID</th>
                                 <th>@(Model.Tab == "requests" ? "Request" : "Quotation")</th>
                                 <th>Status</th>
                                 <th>@(Model.Tab == "requests" ? "Created" : "Value (USD)")</th>
-                                <th><span class="visually-hidden">Open record</span></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -117,14 +116,17 @@
                                 {
                                     <tr>
                                         <td>
-                                            <a asp-area="Requests" asp-page="/Details" asp-route-id="@request.Id">
-                                                <strong>@request.Title</strong>
-                                                <small>REQ-@request.Id · @request.Category</small>
+                                            <a class="record-link record-id" asp-area="Requests" asp-page="/Details" asp-route-id="@request.Id">
+                                                @request.RequestNumber
+                                                <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
                                             </a>
+                                        </td>
+                                        <td>
+                                            <strong>@request.Title</strong>
+                                                <small>REQ-@request.Id · @request.Category</small>
                                         </td>
                                         <td><span class="badge @request.BadgeClass">@request.Status</span></td>
                                         <td class="request-date">@request.CreatedOn.ToString("dd MMM yyyy")</td>
-                                        <td><a class="request-open" asp-area="Requests" asp-page="/Details" asp-route-id="@request.Id" aria-label="Open @request.Title">@await Html.PartialAsync("_WorkspaceIcon", "chevron")</a></td>
                                     </tr>
                                 }
                             }
@@ -134,14 +136,17 @@
                                 {
                                     <tr>
                                         <td>
-                                            <a asp-area="Quotations" asp-page="/Details" asp-route-id="@entry.Quotation.Id">
-                                                <strong>@entry.Number</strong>
-                                                <small>Revision @entry.Quotation.Revision</small>
+                                            <a class="record-link record-id" asp-area="Quotations" asp-page="/Details" asp-route-id="@entry.Quotation.Id">
+                                                @entry.Number
+                                                <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
                                             </a>
+                                        </td>
+                                        <td>
+                                            <strong>@entry.Number</strong>
+                                                <small>Revision @entry.Quotation.Revision</small>
                                         </td>
                                         <td><span class="badge @(entry.Quotation.Status == "Approved" ? "green" : "")">@entry.Quotation.Status</span></td>
                                         <td class="customer-money">@BuildWise.Web.Pages.IndexModel.Money(entry.Quotation.Amount)</td>
-                                        <td><a class="request-open" asp-area="Quotations" asp-page="/Details" asp-route-id="@entry.Quotation.Id" aria-label="Open @entry.Number">@await Html.PartialAsync("_WorkspaceIcon", "chevron")</a></td>
                                     </tr>
                                 }
                             }
@@ -151,7 +156,7 @@
                                 <tr>
                                     <td colspan="4">
                                         <div class="request-empty">
-                                            @await Html.PartialAsync("_WorkspaceIcon", "file")
+                                            <i class="icon fa-solid fa-file-lines" aria-hidden="true"></i>
                                             <h3>@(Model.Tab == "requests" ? "No requests yet" : "No quotations yet")</h3>
                                             <p>@(Model.Tab == "requests" ? "Start a request to capture the work this customer needs." : "Quotations will appear here when their requests are ready to quote.")</p>
                                             @if (Model.Tab == "requests")

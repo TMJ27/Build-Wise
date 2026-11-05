@@ -2,6 +2,8 @@ namespace BuildWise.Web.ViewModels.Dashboard;
 
 public sealed record DashboardRequest(int Id, string Title, string Customer, string Category, string Status, DateOnly CreatedOn)
 {
+    public string RequestNumber => $"REQ-{Id:D4}";
+
     public string BadgeClass => Status switch
     {
         "Needs clarification" => "amber", "Scope review" => "purple", "Ready to quote" => "green",
@@ -9,7 +11,10 @@ public sealed record DashboardRequest(int Id, string Title, string Customer, str
     };
 }
 
-public sealed record DashboardQuotation(int Id, int RequestId, string Status, decimal Amount, int Revision, DateOnly PreparedOn);
+public sealed record DashboardQuotation(int Id, int RequestId, string Status, decimal Amount, int Revision, DateOnly PreparedOn)
+{
+    public string QuotationNumber => $"BW-2026-{Id:D4}";
+}
 public sealed record DashboardActivity(string Title, string Detail, string Icon, string Route, DateOnly Date);
 public sealed record DashboardCategory(string Name, int Count, int Percentage, string Colour);
 public sealed record DashboardDay(DateOnly Date, int Prepared, int Approved);

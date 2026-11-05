@@ -12,7 +12,7 @@
 
 @section actionbar {
     <a class="btn primary" asp-page="Edit">
-        @await Html.PartialAsync("_WorkspaceIcon", "plus")
+        <i class="icon fa-solid fa-plus" aria-hidden="true"></i>
         <span>Create quotation</span>
     </a>
 }
@@ -21,19 +21,19 @@
 
     <div class="request-summary quotation-summary" aria-label="Quotation summary">
         <a class="request-summary-card" asp-page="Index">
-            <span class="summary-icon">@await Html.PartialAsync("_WorkspaceIcon", "quote")</span>
+            <span class="summary-icon"><i class="icon fa-solid fa-file-invoice-dollar" aria-hidden="true"></i></span>
             <span><span class="summary-label">Total quotations</span><strong>@Model.All.Count.ToString("D2")</strong></span>
         </a>
         <a class="request-summary-card" asp-page="Index" asp-route-status="Draft">
-            <span class="summary-icon">@await Html.PartialAsync("_WorkspaceIcon", "edit")</span>
+            <span class="summary-icon"><i class="icon fa-solid fa-pen" aria-hidden="true"></i></span>
             <span><span class="summary-label">Draft quotations</span><strong>@Model.DraftCount.ToString("D2")</strong></span>
         </a>
         <a class="request-summary-card" asp-page="Index" asp-route-status="Approved">
-            <span class="summary-icon">@await Html.PartialAsync("_WorkspaceIcon", "check")</span>
+            <span class="summary-icon"><i class="icon fa-solid fa-check" aria-hidden="true"></i></span>
             <span><span class="summary-label">Approved quotations</span><strong>@Model.ApprovedCount.ToString("D2")</strong></span>
         </a>
         <div class="request-summary-card quotation-value-card">
-            <span class="summary-icon">@await Html.PartialAsync("_WorkspaceIcon", "quote")</span>
+            <span class="summary-icon"><i class="icon fa-solid fa-file-invoice-dollar" aria-hidden="true"></i></span>
             <span><span class="summary-label">Approved value · USD</span><strong>@IndexModel.Money(Model.ApprovedValue)</strong></span>
         </div>
     </div>
@@ -64,7 +64,7 @@
         <form method="get" class="requests-filters" role="search">
             <input type="hidden" asp-for="Status" />
             <label class="request-search">
-                @await Html.PartialAsync("_WorkspaceIcon", "search")
+                <i class="icon fa-solid fa-magnifying-glass" aria-hidden="true"></i>
                 <span class="visually-hidden">Search quotations</span>
                 <input asp-for="Search" type="search" maxlength="120" placeholder="Search quotation, customer or request…" />
             </label>
@@ -87,12 +87,12 @@
             <table class="requests-table quotation-table">
                 <thead>
                     <tr>
+                        <th scope="col">ID</th>
                         <th>Quotation / customer</th>
                         <th>Status</th>
                         <th>Revision</th>
                         <th>Value (USD)</th>
                         <th>Prepared</th>
-                        <th><span class="visually-hidden">View quotation</span></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -101,20 +101,19 @@
                         var request = Model.RequestFor(entry);
                         <tr>
                             <td>
-                                <a asp-page="Details" asp-route-id="@entry.Quotation.Id">
-                                    <strong>@entry.Number</strong>
-                                    <small>@request.Customer · @request.Title</small>
+                                <a class="record-link record-id" asp-page="Details" asp-route-id="@entry.Quotation.Id">
+                                    @entry.Number
+                                    <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
                                 </a>
+                            </td>
+                            <td>
+                                <strong>@request.Title</strong>
+                                <small>@request.Customer</small>
                             </td>
                             <td><span class="badge @(entry.Quotation.Status == "Approved" ? "green" : "")">@entry.Quotation.Status</span></td>
                             <td class="request-category">Revision @entry.Quotation.Revision</td>
                             <td class="quotation-amount">@IndexModel.Money(entry.Quotation.Amount)</td>
                             <td class="request-date">@entry.Quotation.PreparedOn.ToString("dd MMM yyyy")</td>
-                            <td>
-                                <a class="request-open" asp-page="Details" asp-route-id="@entry.Quotation.Id" aria-label="Open @entry.Number">
-                                    @await Html.PartialAsync("_WorkspaceIcon", "chevron")
-                                </a>
-                            </td>
                         </tr>
                     }
                     @if (Model.Total == 0)
@@ -122,7 +121,7 @@
                         <tr>
                             <td colspan="6">
                                 <div class="request-empty">
-                                    @await Html.PartialAsync("_WorkspaceIcon", "search")
+                                    <i class="icon fa-solid fa-magnifying-glass" aria-hidden="true"></i>
                                     <h3>No matching quotations</h3>
                                     <p>Try another customer name, reference or status.</p>
                                     <a class="btn" asp-page="Index">Clear filters</a>
@@ -151,7 +150,7 @@
     </section>
 
     <div class="request-workflow-note">
-        @await Html.PartialAsync("_WorkspaceIcon", "help")
+        <i class="icon fa-solid fa-circle-question" aria-hidden="true"></i>
         <p><strong>Approval stays in your hands.</strong> Review the scope, pricing and terms before approving a quotation.</p>
     </div>
 </div>

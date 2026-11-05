@@ -12,26 +12,53 @@
 
 <div class="requests-page configuration-page">
     <section class="panel configuration-section">
-        <div class="configuration-preview-heading"><h2>User register</h2><span class="badge">@Model.Users.Count users</span></div>
+        <div class="configuration-preview-heading">
+            <h2>User register</h2>
+            <span class="badge">@Model.Users.Count users</span>
+        </div>
         <div class="table-wrap">
             <table class="configuration-table">
                 <caption class="sr-only">System users</caption>
-                <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>User group</th><th>Status</th><th>Last login</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th scope="col">ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>User group</th>
+                        <th>Status</th>
+                        <th>Last login</th>
+                    </tr>
+                </thead>
                 <tbody>
                     @foreach (var user in Model.Users)
                     {
                         <tr>
-                            <td>@user.Name</td>
+                            <td>
+                                <a class="record-link record-id" asp-area="Configuration" asp-page="/Users/Details" asp-route-id="@user.Id">
+                                    @user.UserNumber
+                                    <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                                </a>
+                            </td>
+                            <td>
+                                @(string.IsNullOrWhiteSpace(user.Name) ? user.Email : user.Name)
+                            </td>
                             <td>@user.Email</td>
                             <td>@(string.IsNullOrWhiteSpace(user.Phone) ? "Not provided" : user.Phone)</td>
-                            <td>@(user.Group ?? "Unassigned")</td>
-                            <td><span class="badge @(user.IsActive ? "green" : null)">@(user.IsActive ? "Active" : "Inactive")</span></td>
+                            <td>@(user.Group?.Name ?? "Unassigned")</td>
+                            <td>
+                                <span class="badge @(user.IsActive ? "green" : null)">
+                                    @(user.IsActive ? "Active" : "Inactive")
+                                </span>
+                            </td>
                             <td>@(user.LastLoginDate?.ToString("dd MMM yyyy, HH:mm") ?? "No login recorded")</td>
                         </tr>
                     }
                     @if (Model.Users.Count == 0)
                     {
-                        <tr><td colspan="6">No users have been added.</td></tr>
+                        <tr>
+                            <td colspan="7">No users have been added.</td>
+                        </tr>
                     }
                 </tbody>
             </table>

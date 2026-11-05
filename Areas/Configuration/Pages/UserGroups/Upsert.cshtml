@@ -1,0 +1,106 @@
+@page "{id:guid?}"
+@model BuildWise.Web.Areas.Configuration.Pages.UserGroups.UpsertModel
+@using BuildWise.Lib.Rights
+@{
+    var editing = Model.Input.Id.HasValue && Model.Input.Id != Guid.Empty;
+    ViewData["Title"] = editing ? "Edit user group" : "Add user group";
+    ViewData["PageTitle"] = ViewData["Title"];
+    ViewData["PageSubTitle"] = "Name the group and choose what its members can access.";
+    ViewData["Breadcrumbs"] = new BreadcrumbItem[]
+    {
+        new("Configuration"),
+        new("User groups", Url.Page("/UserGroups/Index", new { area = "Configuration", id = (Guid?)null }))
+    };
+
+}
+
+<div class="requests-page configuration-page">
+    @if (TempData["ErrorMessage"] is string errorMessage)
+    {
+        <div class="request-validation" role="alert">
+            <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+            <span>@errorMessage</span>
+        </div>
+    }
+
+    <form method="post" class="configuration-column" data-rights-form>
+        <input type="hidden" asp-for="Input.Id" />
+        <input type="hidden" asp-for="Input.RightsId" data-rights-value />
+
+        <div asp-validation-summary="All" class="configuration-errors" role="alert"></div>
+
+        <section class="panel configuration-section request-form">
+            <div class="configuration-section-title">
+                <span class="summary-icon">
+                    <i class="fa-solid fa-users-gear" aria-hidden="true"></i>
+                </span>
+                <div>
+                    <h2>Group details</h2>
+                    <p>Use a name that identifies the group's role.</p>
+                </div>
+            </div>
+
+            <div class="field">
+                <label asp-for="Input.Name">Group name <span>*</span></label>
+                <input asp-for="Input.Name" required maxlength="50" autocomplete="off" />
+                <span asp-validation-for="Input.Name"></span>
+            </div>
+        </section>
+
+        <section class="panel configuration-section">
+            <div class="configuration-preview-heading">
+                <div>
+                    <h2>Access rights</h2>
+                    <p class="configuration-muted" id="rights-help">
+                        Select each action members of this group may perform. Leave all unchecked for no access.
+                    </p>
+                </div>
+                <div class="actions">
+                    <button class="btn" type="button" data-rights-select-all>
+                        <i class="fa-solid fa-check-double" aria-hidden="true"></i>
+                        <span>Select all</span>
+                    </button>
+                    <button class="btn" type="button" data-rights-clear>
+                        <i class="fa-solid fa-eraser" aria-hidden="true"></i>
+                        <span>Clear all</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="permissions-grid" aria-describedby="rights-help">
+                @foreach (var group in AccessRightsHelper.GetGroups())
+                {
+                    <fieldset class="permission-group">
+                        <legend>@group.Key</legend>
+
+                        @foreach (var right in group)
+                        {
+                            var rightValue = (int)right.Value;
+                            var selected = (Model.Input.RightsId & rightValue) == rightValue;
+
+                            <label class="permission-option" for="right-@rightValue">
+                                <input type="checkbox"
+                                       id="right-@rightValue"
+                                       name="SelectedRights"
+                                       value="@rightValue"
+                                       checked="@selected"
+                                       data-rights-option />
+                                <span>@right.Name</span>
+                            </label>
+                        }
+                    </fieldset>
+                }
+            </div>
+
+            <span asp-validation-for="Input.RightsId"></span>
+        </section>
+
+        <div class="actions">
+            <button class="btn primary" type="submit">
+                <i class="fa-solid fa-check" aria-hidden="true"></i>
+                <span>@(editing ? "Save changes" : "Create user group")</span>
+            </button>
+        </div>
+    </form>
+</div>
+

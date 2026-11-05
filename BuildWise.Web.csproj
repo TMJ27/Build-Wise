@@ -4,7 +4,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <DefaultItemExcludes>$(DefaultItemExcludes);BuildWise.Data\**</DefaultItemExcludes>
+    <DefaultItemExcludes>$(DefaultItemExcludes);BuildWise.Data\**;BuildWise.Lib\**</DefaultItemExcludes>
     <UserSecretsId>a531f25f-a0a9-420c-981f-adf232ec9a91</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <DockerfileContext>.</DockerfileContext>
@@ -17,14 +17,17 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="10.0.13" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.24.2-preview.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="BuildWise.Data\BuildWise.Data.csproj" />
+    <ProjectReference Include="BuildWise.Lib\BuildWise.Lib.csproj" />
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Areas\Configuration\ViewModels\UserGroups\" />
     <Folder Include="Areas\Configuration\ViewModels\Users\" />
   </ItemGroup>
 

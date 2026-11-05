@@ -1,0 +1,66 @@
+@page "{id:guid}"
+@model BuildWise.Web.Areas.Configuration.Pages.Currencies.DetailsModel
+@{
+    ViewData["Title"] = "Currency details";
+    ViewData["PageTitle"] = "Currency details";
+    ViewData["PageSubTitle"] = "Currency information and creation record.";
+    ViewData["Breadcrumbs"] = new BreadcrumbItem[]
+    {
+        new("Configuration"),
+        new("Currencies", Url.Page("/Currencies/Index", new { area = "Configuration", id = (Guid?)null }))
+    };
+
+    var currency = Model.CurrencyDetails;
+}
+
+@section actionbar {
+    <a class="btn primary" asp-area="Configuration" asp-page="/Currencies/Upsert" asp-route-id="@currency.Id">
+        <i class="fa-solid fa-pen" aria-hidden="true"></i>
+        <span>Edit currency</span>
+    </a>
+}
+
+<div class="requests-page configuration-page profile-details">
+    @if (TempData["SuccessMessage"] is string message)
+    {
+        <div class="request-success" role="status">@message</div>
+    }
+
+    <div class="configuration-grid">
+        <section class="panel request-detail-panel configuration-section">
+            <h2>@currency.Name</h2>
+            <dl class="profile-detail-list">
+                <div>
+                    <dt>Currency ID</dt>
+                    <dd>@currency.CurrencyNumber</dd>
+                </div>
+                <div>
+                    <dt>Name</dt>
+                    <dd>@currency.Name</dd>
+                </div>
+                <div>
+                    <dt>Code</dt>
+                    <dd>@currency.Code</dd>
+                </div>
+                <div>
+                    <dt>Symbol</dt>
+                    <dd>@currency.Symbol</dd>
+                </div>
+            </dl>
+        </section>
+
+        <section class="panel request-detail-panel configuration-section">
+            <h2>Creation record</h2>
+            <dl class="profile-detail-list profile-record-list">
+                <div>
+                    <dt>Creator</dt>
+                    <dd>@currency.Creator</dd>
+                </div>
+                <div>
+                    <dt>Creation date</dt>
+                    <dd>@currency.CreationDate.ToString("dd MMM yyyy, HH:mm")</dd>
+                </div>
+            </dl>
+        </section>
+    </div>
+</div>

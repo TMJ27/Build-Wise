@@ -17,4 +17,8 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\BuildWise.Lib\BuildWise.Lib.csproj" />
+  </ItemGroup>
+
 </Project>

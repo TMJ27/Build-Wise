@@ -11,7 +11,7 @@
 
 @section actionbar {
     <a class="btn primary" asp-page="Edit">
-        @await Html.PartialAsync("_WorkspaceIcon", "plus")
+        <i class="icon fa-solid fa-plus" aria-hidden="true"></i>
         <span>Add customer</span>
     </a>
 }
@@ -20,19 +20,19 @@
 
     <div class="request-summary" aria-label="Customer summary">
         <div class="request-summary-card">
-            <span class="summary-icon">@await Html.PartialAsync("_WorkspaceIcon", "users")</span>
+            <span class="summary-icon"><i class="icon fa-solid fa-users" aria-hidden="true"></i></span>
             <span><span class="summary-label">Total customers</span><strong>@Model.All.Count.ToString("D2")</strong></span>
         </div>
         <div class="request-summary-card">
-            <span class="summary-icon">@await Html.PartialAsync("_WorkspaceIcon", "file")</span>
+            <span class="summary-icon"><i class="icon fa-solid fa-file-lines" aria-hidden="true"></i></span>
             <span><span class="summary-label">With open requests</span><strong>@Model.ActiveCount.ToString("D2")</strong></span>
         </div>
         <a class="request-summary-card" asp-page="Index" asp-route-type="Business">
-            <span class="summary-icon">@await Html.PartialAsync("_WorkspaceIcon", "business")</span>
+            <span class="summary-icon"><i class="icon fa-solid fa-building" aria-hidden="true"></i></span>
             <span><span class="summary-label">Businesses</span><strong>@Model.BusinessCount.ToString("D2")</strong></span>
         </a>
         <a class="request-summary-card" asp-page="Index" asp-route-type="Individual">
-            <span class="summary-icon">@await Html.PartialAsync("_WorkspaceIcon", "users")</span>
+            <span class="summary-icon"><i class="icon fa-solid fa-users" aria-hidden="true"></i></span>
             <span><span class="summary-label">Individuals</span><strong>@Model.IndividualCount.ToString("D2")</strong></span>
         </a>
     </div>
@@ -63,7 +63,7 @@
         <form method="get" class="requests-filters" role="search">
             <input type="hidden" asp-for="Type" />
             <label class="request-search">
-                @await Html.PartialAsync("_WorkspaceIcon", "search")
+                <i class="icon fa-solid fa-magnifying-glass" aria-hidden="true"></i>
                 <span class="visually-hidden">Search customers</span>
                 <input asp-for="Search" type="search" maxlength="120" placeholder="Search name, email, phone or location…" />
             </label>
@@ -86,11 +86,11 @@
             <table class="requests-table customer-table">
                 <thead>
                     <tr>
+                        <th scope="col">ID</th>
                         <th>Customer</th>
                         <th>Contact details</th>
                         <th>Location</th>
                         <th>Requests</th>
-                        <th><span class="visually-hidden">Open customer</span></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -98,10 +98,16 @@
                     {
                         <tr>
                             <td>
-                                <a class="customer-identity" asp-page="Details" asp-route-id="@row.Customer.Id">
-                                    <span class="customer-avatar" aria-hidden="true">@row.Customer.Initials</span>
-                                    <span><strong>@row.Customer.Name</strong><small>@row.Customer.Type</small></span>
+                                <a class="record-link record-id" asp-page="Details" asp-route-id="@row.Customer.Id">
+                                    @row.Customer.CustomerNumber
+                                    <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
                                 </a>
+                            </td>
+                            <td>
+                                <div class="customer-identity">
+<span class="customer-avatar" aria-hidden="true">@row.Customer.Initials</span>
+                                    <span><strong>@row.Customer.Name</strong><small>@row.Customer.Type</small></span>
+</div>
                             </td>
                             <td>
                                 @if (row.Customer.Email != "")
@@ -116,11 +122,6 @@
                             </td>
                             <td class="customer-muted">@(row.Customer.Address == "" ? "Not recorded" : row.Customer.Address)</td>
                             <td><strong>@row.RequestCount</strong><small>@row.OpenRequests open</small></td>
-                            <td>
-                                <a class="request-open" asp-page="Details" asp-route-id="@row.Customer.Id" aria-label="Open @row.Customer.Name">
-                                    @await Html.PartialAsync("_WorkspaceIcon", "chevron")
-                                </a>
-                            </td>
                         </tr>
                     }
                     @if (Model.Total == 0)
@@ -128,7 +129,7 @@
                         <tr>
                             <td colspan="5">
                                 <div class="request-empty">
-                                    @await Html.PartialAsync("_WorkspaceIcon", "search")
+                                    <i class="icon fa-solid fa-magnifying-glass" aria-hidden="true"></i>
                                     <h3>No matching customers</h3>
                                     <p>Try another name, contact detail or customer type.</p>
                                     <a class="btn" asp-page="Index">Clear filters</a>
@@ -157,7 +158,7 @@
     </section>
 
     <div class="request-workflow-note">
-        @await Html.PartialAsync("_WorkspaceIcon", "help")
+        <i class="icon fa-solid fa-circle-question" aria-hidden="true"></i>
         <p><strong>Keep the conversation connected.</strong> Open a customer’s profile to find their requests and quotations, or start a new request with their details already filled in.</p>
     </div>
 </div>

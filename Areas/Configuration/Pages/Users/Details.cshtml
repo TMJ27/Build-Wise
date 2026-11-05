@@ -6,10 +6,10 @@
     ViewData["PageSubTitle"] = "Contact details, group assignment and account status.";
     ViewData["AccountName"] = User.FindFirst("name")?.Value ?? User.Identity?.Name ?? "Your account";
     ViewData["Breadcrumbs"] = new BreadcrumbItem[]
-   {
+    {
         new("Configuration"),
         new("Users", Url.Page("/Users/Index", new { area = "Configuration", id = (Guid?)null }))
-   };
+    };
 
     var person = Model.Person;
     var fullName = $"{person?.Name} {person?.Surname}".Trim();
@@ -17,7 +17,7 @@
         .Split(' ', StringSplitOptions.RemoveEmptyEntries)
         .Take(2)
         .Select(part => char.ToUpperInvariant(part[0])));
-   
+
 }
 
 @section actionbar {
@@ -28,10 +28,6 @@
             <span>Edit user</span>
         </a>
     }
-    <a class="btn" asp-area="Configuration" asp-page="/Users/Index">
-        <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
-        <span>Back to users</span>
-    </a>
 }
 
 <div class="requests-page configuration-page profile-details user-details">
@@ -45,7 +41,6 @@
         <section class="panel configuration-section">
             <h2>User not found</h2>
             <p class="configuration-muted">This user is unavailable. Return to the user register to select a user.</p>
-            <a class="btn profile-create-link" asp-area="Configuration" asp-page="/Users/Index">Back to users</a>
         </section>
     }
     else
@@ -73,6 +68,10 @@
                     </div>
 
                     <dl class="profile-detail-list">
+                        <div>
+                            <dt>User ID</dt>
+                            <dd>@person.UserNumber</dd>
+                        </div>
                         <div>
                             <dt>First name</dt>
                             <dd>@(string.IsNullOrWhiteSpace(person.Name) ? "Not provided" : person.Name)</dd>

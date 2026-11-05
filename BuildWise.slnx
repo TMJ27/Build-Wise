@@ -1,4 +1,5 @@
 <Solution>
   <Project Path="BuildWise.Data/BuildWise.Data.csproj" Id="32f34c7a-b2fe-458e-b65d-9e871e6fb015" />
+  <Project Path="BuildWise.Lib/BuildWise.Lib.csproj" Id="7a5b354e-d98a-4acc-9633-7a05b5a60a8a" />
   <Project Path="BuildWise.Web.csproj" />
 </Solution>

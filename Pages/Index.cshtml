@@ -2,117 +2,289 @@
 @model IndexModel
 @{
     ViewData["Title"] = "Overview";
+    ViewData["PageTitle"] = "Overview";
+    ViewData["PageSubTitle"] = "Requests, quotations and work needing your attention.";
     ViewData["NativeDashboard"] = true;
-    ViewData["AccountName"] = "Tawanda M.";
-    ViewData["AccountRole"] = "Business owner";
-    ViewData["BusinessName"] = "Mavambo Projects";
-    var metrics = new[] {
-        ("Open requests", Model.OpenRequests.ToString("D2"), "file", $"{Model.ClarificationCount} need clarification"),
-        ("Draft quotations", Model.DraftCount.ToString("D2"), "edit", $"{IndexModel.Money(Model.DraftValue)} in preparation"),
-        ("Approved quotations", Model.ApprovedCount.ToString("D2"), "check", $"{IndexModel.Money(Model.ApprovedValue)} approved value"),
-        ("Customers", Model.CustomerCount.ToString("D2"), "users", $"{Model.ActiveServiceCount} active catalogue services")
+
+    ViewData["DashboardChartData"] = new
+    {
+        days = Model.Days.Select(day => new
+        {
+            label = IndexModel.Date(day.Date, "ddd"),
+            date = IndexModel.Date(day.Date),
+            prepared = day.Prepared,
+            approved = day.Approved
+        }),
+        categories = Model.ChartCategories.Select(category => new
+        {
+            name = category.Name,
+            count = category.Count,
+            colour = category.Colour
+        })
     };
-    ViewData["PageTitle"] = "Good morning, Tawanda.";
-    ViewData["PageSubTitle"] = $"{Model.OpenRequests} open requests. {Model.DraftCount} quotations to finish. Let’s move the work forward.";
-    ViewData["PageHeaderClass"] = "v2-greeting";
 }
 
 @section actionbar {
     <form method="get" asp-page="/Index" class="dashboard-filters">
-        <input type="hidden" name="Tab" value="@Model.Tab" /><input type="hidden" name="Search" value="@Model.Search" />
-        <label class="db-range">@await Html.PartialAsync("_WorkspaceIcon", "clock")
-            <select asp-for="Range" aria-label="Dashboard date range"><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="all">All time</option></select>
+        <input type="hidden" name="Tab" value="@Model.Tab" />
+        <label class="db-range">
+            <i class="icon fa-solid fa-clock" aria-hidden="true"></i>
+            <select asp-for="Range" aria-label="Dashboard date range">
+                <option value="7">Last 7 days</option>
+                <option value="30">Last 30 days</option>
+                <option value="all">All time</option>
+            </select>
         </label>
         <button class="btn" type="submit">Apply</button>
     </form>
-    <a class="btn primary" href="@Model.ScreenUrl("new-request")">@await Html.PartialAsync("_WorkspaceIcon", "plus")<span>New request</span></a>
+    <a class="btn primary" asp-area="Requests" asp-page="/Create">
+        <i class="icon fa-solid fa-plus" aria-hidden="true"></i>
+        <span>New request</span>
+    </a>
 }
 
-<div class="v2-feature-grid">
-    <section class="v2-hero db-hero"><div class="eyebrow">YOUR EXPERTISE. A CLEARER NEXT STEP.</div>
-        <h2>Good work starts<br />with a clear scope.</h2>
-        <p>@Model.ClarificationCount requests need a little more detail.<br />Pick up the conversation and build from there.</p>
-        <a class="btn primary" href="@Model.ScreenUrl("requests")">@await Html.PartialAsync("_WorkspaceIcon", "arrow")<span>Review requests</span></a>
-        @await Html.PartialAsync("_BlueprintIllustration")
-    </section>
-    <section class="v2-queue"><div class="v2-queue-head"><h2>Needs your attention</h2><span class="badge">@Model.Attention.Count next steps</span></div>
-        <div class="v2-queue-items">
-            @foreach (var item in Model.Attention)
-            {
-                <a class="attention-item" href="@Model.ScreenUrl($"{item.Route}/{item.Request.Id}")">
-                    <span class="square @item.Tone">@await Html.PartialAsync("_WorkspaceIcon", item.Icon)</span>
-                    <div><h3>@item.Title</h3><p>@item.Request.Customer · @item.Request.Title</p></div>
-                    <span class="db-next">@await Html.PartialAsync("_WorkspaceIcon", "chevron")</span>
-                </a>
-            }
-            @if (Model.Attention.Count == 0) { <p class="db-empty">No pending actions in this period.</p> }
+<div class="dashboard-page">
+    <div class="request-summary" aria-label="Dashboard summary">
+        <div class="request-summary-card">
+            <span class="summary-icon">
+                <i class="icon fa-solid fa-file-lines" aria-hidden="true"></i>
+            </span>
+            <span>
+                <span class="summary-label">Open requests</span>
+                <strong>@Model.OpenRequests.ToString("D2")</strong>
+            </span>
         </div>
-    </section>
-</div>
-<div class="v2-metrics">
-    @foreach (var metric in metrics)
-    {
-        <div class="v2-metric"><div class="v2-metric-label">@await Html.PartialAsync("_WorkspaceIcon", metric.Item3)@metric.Item1</div>
-            <div class="v2-metric-value"><b>@metric.Item2</b></div><p>@metric.Item4</p></div>
-    }
-</div>
-<div class="db-analytics">
-    <section class="panel"><div class="panel-head"><div><h2>Quotation activity</h2><p>Prepared and approved over the last 7 days.</p></div><span class="badge">@Model.Quotations.Count in selected period</span></div>
-        <div class="panel-body"><div class="db-chart" role="img" aria-label="Daily prepared and approved quotation counts">
-            @foreach (var day in Model.Days)
-            {
-                <div class="db-chart-day"><div class="db-chart-bars">
-                    <span class="db-chart-bar" style="--chart-height:@(day.Prepared * 100 / Model.MaximumDayCount)%" title="@IndexModel.Date(day.Date, "ddd"): @day.Prepared prepared">@if (day.Prepared > 0) { <i>@day.Prepared</i> }</span>
-                    <span class="db-chart-bar approved" style="--chart-height:@(day.Approved * 100 / Model.MaximumDayCount)%" title="@IndexModel.Date(day.Date, "ddd"): @day.Approved approved">@if (day.Approved > 0) { <i>@day.Approved</i> }</span>
-                </div><small>@IndexModel.Date(day.Date, "ddd")</small></div>
-            }
-        </div><div class="db-chart-footer"><span><i></i>Prepared</span><span><i class="approved"></i>Approved</span><b>Approved value <strong>@IndexModel.Money(Model.ApprovedValue)</strong></b></div></div>
-    </section>
-    <section class="panel"><div class="panel-head"><div><h2>Requests by service</h2><p>Where your customers need you.</p></div><span class="badge">@Model.Requests.Count total</span></div>
-        <div class="panel-body db-category-list">
-            @foreach (var category in Model.Categories)
-            {
-                <div class="db-category"><div><span>@category.Name</span><b>@category.Count @(category.Count == 1 ? "request" : "requests")</b></div>
-                    <div class="db-progress"><span style="--progress-width:@(category.Percentage)%;--progress-colour:@category.Colour"></span></div></div>
-            }
+
+        <div class="request-summary-card">
+            <span class="summary-icon">
+                <i class="icon fa-solid fa-pen" aria-hidden="true"></i>
+            </span>
+            <span>
+                <span class="summary-label">Draft quotations</span>
+                <strong>@Model.DraftCount.ToString("D2")</strong>
+            </span>
         </div>
-    </section>
+
+        <div class="request-summary-card">
+            <span class="summary-icon">
+                <i class="icon fa-solid fa-check" aria-hidden="true"></i>
+            </span>
+            <span>
+                <span class="summary-label">Approved quotations</span>
+                <strong>@Model.ApprovedCount.ToString("D2")</strong>
+            </span>
+        </div>
+
+        <div class="request-summary-card">
+            <span class="summary-icon">
+                <i class="icon fa-solid fa-users" aria-hidden="true"></i>
+            </span>
+            <span>
+                <span class="summary-label">Customers</span>
+                <strong>@Model.CustomerCount.ToString("D2")</strong>
+            </span>
+        </div>
+    </div>
+    <div class="db-analytics">
+        <section class="panel">
+            <div class="panel-head">
+                <div>
+                    <h2>Quotation activity</h2>
+                    <p>Prepared and approved over the last 7 days.</p>
+                </div>
+                <span class="badge">@Model.Quotations.Count in selected period</span>
+            </div>
+            <div class="panel-body">
+                <div class="dashboard-chart-frame">
+                    <canvas id="quotation-activity-chart" role="img" aria-label="Prepared and approved quotations over the last seven days" aria-describedby="quotation-chart-data">
+                        Daily quotation totals are listed below.
+                    </canvas>
+                </div>
+                <table id="quotation-chart-data" class="sr-only">
+                    <caption>Daily quotation counts</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Date</th>
+                            <th scope="col">Prepared</th>
+                            <th scope="col">Approved</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var day in Model.Days)
+                        {
+                            <tr>
+                                <th scope="row">@IndexModel.Date(day.Date)</th>
+                                <td>@day.Prepared</td>
+                                <td>@day.Approved</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                <div class="dashboard-chart-summary">
+                    <span>Approved value</span>
+                    <strong>@IndexModel.Money(Model.ApprovedValue)</strong>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-head">
+                <div>
+                    <h2>Requests by service</h2>
+                    <p>@(Model.Categories.Count > 5 ? "Top 5 categories and all remaining requests." : "Distribution across your service categories.")</p>
+                </div>
+                <span class="badge">@Model.Requests.Count requests</span>
+            </div>
+            <div class="panel-body">
+                @if (Model.Categories.Count == 0)
+                {
+                    <p class="db-empty">No requests in this period.</p>
+                }
+                else
+                {
+                    <div class="dashboard-chart-frame dashboard-chart-frame-doughnut">
+                        <canvas id="requests-service-chart" role="img" aria-label="Request totals by service category" aria-describedby="requests-service-legend">
+                            Category totals are listed below.
+                        </canvas>
+                    </div>
+                    <ul class="dashboard-chart-legend" id="requests-service-legend">
+                        @foreach (var category in Model.ChartCategories)
+                        {
+                            <li>
+                                <span class="dashboard-legend-dot" style="background-color: @category.Colour" aria-hidden="true"></span>
+                                <span>@category.Name</span>
+                                <strong>@category.Count</strong>
+                            </li>
+                        }
+                    </ul>
+                    <div class="dashboard-chart-summary">
+                        <span>
+                            @if (Model.Categories.Count > 5)
+                            {
+                                <text>Other includes @(Model.Categories.Count - 5) categories</text>
+                            }
+                            else
+                            {
+                                <text>@Model.Categories.Count categories</text>
+                            }
+                        </span>
+                        <a class="text-link" asp-area="Requests" asp-page="/Index">
+                            View all requests
+                            <i class="icon fa-solid fa-arrow-right" aria-hidden="true"></i>
+                        </a>
+                    </div>
+                }
+            </div>
+        </section>
+    </div>
+
+    <div class="v2-lower">
+        <div>
+            <section class="panel" data-dashboard-table>
+                <div class="panel-head">
+                    <nav class="db-tabs" aria-label="Recent record type">
+                        <a asp-page="/Index" asp-route-range="@Model.Range" asp-route-tab="requests"
+                           data-records-tab="requests"
+                           class="@(Model.Tab == "requests" ? "active" : null)"
+                           aria-current="@(Model.Tab == "requests" ? "page" : null)">
+                            Recent requests <span>@Model.VisibleRequests.Count</span>
+                        </a>
+                        <a asp-page="/Index" asp-route-range="@Model.Range" asp-route-tab="quotations"
+                           data-records-tab="quotations"
+                           class="@(Model.Tab == "quotations" ? "active" : null)"
+                           aria-current="@(Model.Tab == "quotations" ? "page" : null)">
+                            Quotations <span>@Model.VisibleQuotations.Count</span>
+                        </a>
+                    </nav>
+                    <a class="text-link" href="@Model.ScreenUrl(Model.Tab == "requests" ? "requests" : "quotations")"
+                       data-records-view-all aria-label="View all @Model.Tab">
+                        View all
+                        <i class="icon fa-solid fa-arrow-right" aria-hidden="true"></i>
+                    </a>
+                </div>
+                <p class="request-validation" role="alert" data-records-error hidden></p>
+                <div id="dashboard-records-region" aria-live="polite" aria-busy="false">
+                    @await Html.PartialAsync("_DashboardRecords", Model)
+                </div>
+            </section>
+
+        </div>
+
+        <aside>
+            <section class="panel dashboard-attention">
+                <div class="panel-head">
+                    <div>
+                        <h2>Needs attention</h2>
+                        <p>Requests waiting for your next step.</p>
+                    </div>
+                    <span class="badge">@Model.Attention.Count</span>
+                </div>
+                <div class="panel-body">
+                    @foreach (var item in Model.Attention)
+                    {
+                        <a class="attention-item" href="@Model.ScreenUrl($"{item.Route}/{item.Request.Id}")">
+                            <span class="square @item.Tone">
+                                @if (item.Route == "clarify")
+                                {
+                                    <i class="icon fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                                }
+                                else if (item.Route == "scope")
+                                {
+                                    <i class="icon fa-solid fa-list-check" aria-hidden="true"></i>
+                                }
+                                else
+                                {
+                                    <i class="icon fa-solid fa-file-invoice-dollar" aria-hidden="true"></i>
+                                }
+                            </span>
+                            <div>
+                                <h3>@item.Title</h3>
+                                <p>@item.Request.Customer · @item.Request.Title</p>
+                            </div>
+                            <i class="icon fa-solid fa-chevron-right db-next" aria-hidden="true"></i>
+                        </a>
+                    }
+                    @if (Model.Attention.Count == 0)
+                    {
+                        <p class="db-empty">No pending actions in this period.</p>
+                    }
+                </div>
+            </section>
+        </aside>
+    </div>
+
 </div>
-<div class="v2-lower"><div>
-    <section class="panel"><div class="panel-head"><nav class="db-tabs" aria-label="Recent record type">
-        <a asp-page="/Index" asp-route-range="@Model.Range" asp-route-tab="requests" class="@(Model.Tab == "requests" ? "active" : null)" aria-current="@(Model.Tab == "requests" ? "page" : null)">Recent requests <span>@Model.Requests.Count</span></a>
-        <a asp-page="/Index" asp-route-range="@Model.Range" asp-route-tab="quotations" class="@(Model.Tab == "quotations" ? "active" : null)" aria-current="@(Model.Tab == "quotations" ? "page" : null)">Quotations <span>@Model.Quotations.Count</span></a>
-    </nav><form method="get" asp-page="/Index" class="db-search" role="search">
-        <input type="hidden" name="Range" value="@Model.Range" /><input type="hidden" name="Tab" value="@Model.Tab" />
-        <input type="search" name="Search" value="@Model.Search" maxlength="120" placeholder="Find a record…" aria-label="Search dashboard records" />
-        <button type="submit" class="icon-btn" aria-label="Search records">@await Html.PartialAsync("_WorkspaceIcon", "search")</button>
-    </form></div>
-    @await Html.PartialAsync("_DashboardRecords", Model)
-    </section>
-    <section class="panel"><div class="panel-head"><div><h2>Your quotation pipeline</h2><p>Current requests · @Model.RangeCaption</p></div></div><div class="panel-body">
-        <div class="v2-pipeline">
-            @for (var i = 0; i < Model.Stages.Count; i++)
-            {
-                var stage = Model.Stages[i];
-                if (i > 0) { <span aria-hidden="true">→</span> }
-                <div><a href="@Model.ScreenUrl(stage.FirstRequestId.HasValue ? $"{stage.Route}/{stage.FirstRequestId}" : "requests")"><b>@stage.Count.ToString("D2")</b><span>@stage.Name</span></a></div>
-            }
-        </div><div class="v2-note">Your approval turns a draft into a commitment. <a href="@Model.ScreenUrl("quotations")">Review quotations →</a></div>
-    </div></section>
-</div><aside>
-    <section class="panel"><div class="panel-head"><div><h2>Latest activity</h2><p>A little progress, recorded.</p></div></div><div class="panel-body">
-        @foreach (var activity in Model.Activity)
-        {
-            <a class="activity" href="@Model.ScreenUrl(activity.Route)"><span class="avatar">@await Html.PartialAsync("_WorkspaceIcon", activity.Icon)</span><div><p><b>@activity.Title</b><br />@activity.Detail</p><small>@IndexModel.Date(activity.Date, "d MMM")</small></div></a>
-        }
-    </div></section>
-    <section class="panel"><div class="panel-head"><h2>Ready for the next conversation?</h2></div><div class="panel-body"><p class="db-help-text">Your catalogue has @Model.ActiveServiceCount services ready to bring clarity to the next customer request.</p><a class="btn soft small" href="@Model.ScreenUrl("catalogue")">@await Html.PartialAsync("_WorkspaceIcon", "box")<span>Open service catalogue</span></a></div></section>
-</aside></div>
+
 <template id="dashboard-notifications">
     <h2>Workspace activity</h2>
     @foreach (var activity in Model.Activity)
     {
-        <a class="activity" href="@Model.ScreenUrl(activity.Route)"><span class="avatar">@await Html.PartialAsync("_WorkspaceIcon", activity.Icon)</span><div><p><b>@activity.Title</b><br />@activity.Detail</p><small>@IndexModel.Date(activity.Date, "d MMM")</small></div></a>
+        <a class="activity" href="@Model.ScreenUrl(activity.Route)">
+            <span class="avatar">
+                @if (activity.Title == "Quotation approved")
+                {
+                    <i class="icon fa-solid fa-check" aria-hidden="true"></i>
+                }
+                else if (activity.Title == "Quotation drafted")
+                {
+                    <i class="icon fa-solid fa-pen" aria-hidden="true"></i>
+                }
+                else
+                {
+                    <i class="icon fa-solid fa-file-lines" aria-hidden="true"></i>
+                }
+            </span>
+            <div>
+                <p>
+                    <b>@activity.Title</b><br />
+                    @activity.Detail
+                </p>
+                <small>@IndexModel.Date(activity.Date, "d MMM")</small>
+            </div>
+        </a>
     }
-    <div class="actions workspace-dialog-actions"><button type="button" class="btn" data-workspace-dialog-close>Close</button></div>
+    <div class="actions workspace-dialog-actions">
+        <button type="button" class="btn" data-workspace-dialog-close>Close</button>
+    </div>
 </template>
+

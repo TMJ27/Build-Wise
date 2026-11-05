@@ -16,17 +16,16 @@
 
 @section actionbar {
     <span class="badge @request.BadgeClass">@request.Status</span>
-    <a class="btn" asp-page="Index">← Back to requests</a>
 }
 <div class="requests-page">
 
-    @if (TempData["RequestCreated"] is string message) { <div class="request-success" role="status">@await Html.PartialAsync("_WorkspaceIcon", "check")@message</div> }
+    @if (TempData["RequestCreated"] is string message) { <div class="request-success" role="status"><i class="icon fa-solid fa-check" aria-hidden="true"></i>@message</div> }
 
     @if (Model.Quotation is not null)
     {
         <div>
             <a class="btn" asp-area="Quotations" asp-page="/Details" asp-route-id="@Model.Quotation.Quotation.Id">
-                @await Html.PartialAsync("_WorkspaceIcon", "quote")
+                <i class="icon fa-solid fa-file-invoice-dollar" aria-hidden="true"></i>
                 <span>View quotation @Model.Quotation.Number</span>
             </a>
         </div>
@@ -35,7 +34,7 @@
     {
         <div>
             <a class="btn primary" asp-area="Quotations" asp-page="/Edit" asp-route-requestId="@request.Id">
-                @await Html.PartialAsync("_WorkspaceIcon", "plus")
+                <i class="icon fa-solid fa-plus" aria-hidden="true"></i>
                 <span>Create quotation</span>
             </a>
         </div>
@@ -43,7 +42,7 @@
     <div class="request-detail-grid">
         <section class="panel request-detail-panel"><h2>The customer’s request</h2><p class="request-description">@Model.Entry.Description</p><dl><div><dt>Service category</dt><dd>@request.Category</dd></div><div><dt>Site location</dt><dd>@Model.Entry.Location</dd></div><div><dt>Current stage</dt><dd>@request.Status</dd></div></dl></section>
         <aside class="panel request-detail-panel">
-            <span class="summary-icon">@await Html.PartialAsync("_WorkspaceIcon", "users")</span>
+            <span class="summary-icon"><i class="icon fa-solid fa-users" aria-hidden="true"></i></span>
             <h2>
                 <a asp-area="Customers" asp-page="/Details" asp-route-id="@Model.Entry.CustomerId">@request.Customer</a>
             </h2>

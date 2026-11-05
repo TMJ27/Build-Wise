@@ -1,7 +1,4 @@
 @{
-    var currentArea = ViewContext.RouteData.Values["area"]?.ToString() ?? "";
-    var currentPage = ViewContext.RouteData.Values["page"]?.ToString() ?? "";
-    var isDashboard = currentArea == "" && currentPage == "/Index";
     var breadcrumbs = ViewData["Breadcrumbs"] as IEnumerable<BreadcrumbItem> ?? [];
     var currentTitle = ViewData["BreadcrumbTitle"]?.ToString()
         ?? ViewData["Title"]?.ToString()
@@ -10,10 +7,6 @@
 
 <nav class="workspace-breadcrumbs" aria-label="Breadcrumb">
     <ol>
-        @if (!isDashboard)
-        {
-            <li><a asp-area="" asp-page="/Index">Overview</a></li>
-        }
         @foreach (var item in breadcrumbs)
         {
             <li>

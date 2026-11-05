@@ -4,7 +4,7 @@ namespace BuildWise.Data;
 
 public partial class BuildWiseDbContext
 {
-    public virtual DbSet<Currency> Currencies { get; set; }
+    /*public virtual DbSet<Currency> Currencies { get; set; }
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder)
     {
@@ -30,5 +30,5 @@ public partial class BuildWiseDbContext
                 .OnDelete(DeleteBehavior.NoAction)
                 .HasConstraintName("FK_Currency_User");
         });
-    }
+    }*/
 }

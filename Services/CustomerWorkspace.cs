@@ -103,6 +103,8 @@ public sealed record CustomerEntry(
     string Address,
     string Notes)
 {
+    public string CustomerNumber => $"CUS-{Id:D4}";
+
     public string Initials => string.Concat(Name
         .Split(' ', StringSplitOptions.RemoveEmptyEntries)
         .Take(2)

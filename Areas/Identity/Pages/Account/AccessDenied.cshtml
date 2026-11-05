@@ -1,0 +1,20 @@
+@page
+@model BuildWise.Web.Areas.Identity.Pages.Account.AccessDeniedModel
+@{
+    ViewData["Title"] = "Access unavailable";
+    ViewData["PageTitle"] = "Your account needs access.";
+    ViewData["PageSubTitle"] = "Your account needs approval or activation. Contact your administrator to arrange access.";
+    ViewData["UseFullWidthLayout"] = true;
+}
+
+<div class="auth-content auth-standalone">
+    <section class="auth-card">
+        <div class="auth-brand">
+            <img src="~/brand/buildwise-mark-muted.svg" alt="" />
+            <span>BuildWise</span>
+        </div>
+        <h1>@ViewData["PageTitle"]</h1>
+        <p>@ViewData["PageSubTitle"]</p>
+        <a class="btn" asp-area="Identity" asp-page="/Account/Login">Sign in</a>
+    </section>
+</div>

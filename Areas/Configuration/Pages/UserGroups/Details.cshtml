@@ -1,0 +1,132 @@
+@page "{id:guid}"
+@model BuildWise.Web.Areas.Configuration.Pages.UserGroups.DetailsModel
+@{
+    var group = Model.GroupDetails;
+    ViewData["Title"] = "User group details";
+    ViewData["PageTitle"] = group.Name;
+    ViewData["PageSubTitle"] = "Assigned rights, group members and creation details.";
+    ViewData["BreadcrumbTitle"] = group.Name;
+    ViewData["Breadcrumbs"] = new BreadcrumbItem[]
+    {
+        new("Configuration"),
+        new("User groups", Url.Page("/UserGroups/Index", new { area = "Configuration" }))
+    };
+}
+
+@section actionbar {
+    <a class="btn primary" asp-area="Configuration" asp-page="/UserGroups/Upsert" asp-route-id="@group.Id">
+        <i class="fa-solid fa-pen" aria-hidden="true"></i>
+        <span>Edit user group</span>
+    </a>
+}
+
+<div class="requests-page configuration-page profile-details">
+    @if (TempData["SuccessMessage"] is string successMessage)
+    {
+        <div class="request-success" role="status">@successMessage</div>
+    }
+
+    <div class="configuration-grid">
+        <section class="panel configuration-section">
+            <h2>Group details</h2>
+            <dl class="profile-detail-list">
+                <div>
+                    <dt>Group ID</dt>
+                    <dd>@group.UserGroupNumber</dd>
+                </div>
+                <div>
+                    <dt>Members</dt>
+                    <dd>@group.UserCount</dd>
+                </div>
+                <div>
+                    <dt>Assigned rights</dt>
+                    <dd>@group.AssignedRights.Count</dd>
+                </div>
+            </dl>
+        </section>
+        <section class="panel configuration-section">
+            <h2>Creation details</h2>
+            <dl class="profile-detail-list profile-record-list">
+                <div>
+                    <dt>Created by</dt>
+                    <dd>@group.CreatorName</dd>
+                </div>
+                <div>
+                    <dt>Creation date</dt>
+                    <dd>@group.CreationDate.ToString("dd MMM yyyy, HH:mm")</dd>
+                </div>
+            </dl>
+        </section>
+    </div>
+
+    <section class="panel configuration-section">
+        <h2>Assigned rights</h2>
+        @if (group.AssignedRights.Count == 0)
+        {
+            <p class="configuration-muted">No access rights have been assigned to this group.</p>
+        }
+        else
+        {
+            <div class="permissions-grid">
+                @foreach (var rightsGroup in group.AssignedRights.GroupBy(right => right.Group))
+                {
+                    <fieldset class="permission-group">
+                        <legend>@rightsGroup.Key</legend>
+                        @foreach (var right in rightsGroup)
+                        {
+                            <div class="permission-option">
+                                <i class="fa-solid fa-check" aria-hidden="true"></i>
+                                <span>@right.Name</span>
+                            </div>
+                        }
+                    </fieldset>
+                }
+            </div>
+        }
+    </section>
+
+    <section class="panel configuration-section">
+        <h2>Group members</h2>
+        <div class="table-wrap">
+            <table class="configuration-table">
+                <caption class="sr-only">Users assigned to @group.Name</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">ID</th>
+                        <th scope="col">Name</th>
+                        <th scope="col">Email</th>
+                        <th scope="col">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var member in group.Members)
+                    {
+                        <tr>
+                            <td>
+                                <a class="record-link record-id" asp-area="Configuration" asp-page="/Users/Details" asp-route-id="@member.Id">
+                                    @member.UserNumber
+                                    <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                                </a>
+                            </td>
+                            <td>
+                                @(string.IsNullOrWhiteSpace(member.Name) ? member.Email : member.Name)
+                            </td>
+                            <td>@member.Email</td>
+                            <td>
+                                <span class="badge @(member.IsActive ? "green" : null)">
+                                    @(member.IsActive ? "Active" : "Inactive")
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                    @if (group.Members.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="4">No users are assigned to this group.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>

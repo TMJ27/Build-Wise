@@ -41,13 +41,21 @@ public partial class User
 
     public DateTime? LastUpdated { get; set; }
 
+    public Guid? CreatorId { get; set; }
+
     public virtual ICollection<ClientRequest> ClientRequestConfirmedByNavigations { get; set; } = new List<ClientRequest>();
 
     public virtual ICollection<ClientRequest> ClientRequestCreators { get; set; } = new List<ClientRequest>();
 
     public virtual ICollection<Client> Clients { get; set; } = new List<Client>();
 
+    public virtual User? Creator { get; set; }
+
+    public virtual ICollection<Currency> Currencies { get; set; } = new List<Currency>();
+
     public virtual UserGroup? Group { get; set; }
+
+    public virtual ICollection<User> InverseCreator { get; set; } = new List<User>();
 
     public virtual ICollection<QuotationRevision> QuotationRevisionApprovedByUsers { get; set; } = new List<QuotationRevision>();
 

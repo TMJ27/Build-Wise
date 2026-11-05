@@ -15,13 +15,6 @@
     };
 }
 
-@section actionbar {
-    <a class="btn" asp-area="Configuration" asp-page="/Users/Index">
-        <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
-        <span>Back to users</span>
-    </a>
-}
-
 <div class="requests-page configuration-page user-upsert">
     <form method="post" class="user-upsert-form">
         <input type="hidden" asp-for="Input.Id" />
@@ -30,7 +23,9 @@
         <div class="configuration-grid">
             <section class="panel configuration-section request-form">
                 <div class="configuration-section-title">
-                    <span class="summary-icon"><i class="fa-solid fa-user" aria-hidden="true"></i></span>
+                    <span class="summary-icon">
+                        <i class="fa-solid fa-user" aria-hidden="true"></i>
+                    </span>
                     <div>
                         <h2>User details</h2>
                         <p>Fields marked with * are required.</p>
@@ -74,10 +69,6 @@
                     <label asp-for="Input.GroupId">User group</label>
                     <select asp-for="Input.GroupId" aria-describedby="user-group-help">
                         <option value="">Select a user group</option>
-                        @foreach (var group in Model.Input.UserGroups)
-                        {
-                            <option value="@group.Id">@group.Name</option>
-                        }
                     </select>
                     <span asp-validation-for="Input.GroupId"></span>
                     <p id="user-group-help" class="configuration-muted">Choose a group from your configured user groups.</p>
@@ -95,7 +86,6 @@
         </div>
 
         <div class="user-upsert-actions">
-            <a class="btn" asp-area="Configuration" asp-page="/Users/Index">Cancel</a>
             <button class="btn primary" type="submit">
                 <i class="fa-solid fa-check" aria-hidden="true"></i>
                 <span>@(editing ? "Save changes" : "Create user")</span>
@@ -104,7 +94,3 @@
     </form>
 </div>
 
-@section Scripts {
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <partial name="_ValidationScriptsPartial" />
-}

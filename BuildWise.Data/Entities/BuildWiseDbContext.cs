@@ -17,6 +17,8 @@ public partial class BuildWiseDbContext : DbContext
 
     public virtual DbSet<Company> Companies { get; set; }
 
+    public virtual DbSet<Currency> Currencies { get; set; }
+
     public virtual DbSet<Quotation> Quotations { get; set; }
 
     public virtual DbSet<QuotationItem> QuotationItems { get; set; }
@@ -112,6 +114,26 @@ public partial class BuildWiseDbContext : DbContext
             entity.Property(e => e.Phone).HasMaxLength(20);
             entity.Property(e => e.RegistrationNumber).HasMaxLength(50);
             entity.Property(e => e.TaxNumber).HasMaxLength(50);
+        });
+
+        modelBuilder.Entity<Currency>(entity =>
+        {
+            entity.ToTable("Currency");
+
+            entity.HasIndex(e => e.Code, "UQ_Currency_Code").IsUnique();
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Code).HasMaxLength(3);
+            entity.Property(e => e.CreationDate)
+                .HasDefaultValueSql("(sysutcdatetime())", "DF_Currency_CreationDate")
+                .HasColumnType("datetime");
+            entity.Property(e => e.Name).HasMaxLength(80);
+            entity.Property(e => e.Symbol).HasMaxLength(10);
+
+            entity.HasOne(d => d.Creator).WithMany(p => p.Currencies)
+                .HasForeignKey(d => d.CreatorId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Currency_User");
         });
 
         modelBuilder.Entity<Quotation>(entity =>
@@ -443,6 +465,10 @@ public partial class BuildWiseDbContext : DbContext
             entity.Property(e => e.Phone).HasMaxLength(20);
             entity.Property(e => e.SecurityStamp).HasMaxLength(50);
             entity.Property(e => e.Surname).HasMaxLength(50);
+
+            entity.HasOne(d => d.Creator).WithMany(p => p.InverseCreator)
+                .HasForeignKey(d => d.CreatorId)
+                .HasConstraintName("FK_User_User");
 
             entity.HasOne(d => d.Group).WithMany(p => p.Users)
                 .HasForeignKey(d => d.GroupId)

@@ -14,10 +14,6 @@
     };
 }
 
-@section actionbar {
-    <a class="btn" asp-page="Index">← Back to catalogue</a>
-}
-
 <div class="requests-page catalogue-page">
 
     <form method="post" class="catalogue-editor" asp-route-id="@Model.Existing?.Id">
@@ -118,20 +114,12 @@
                 </div>
                 <div class="request-form-actions">
                     <button class="btn primary" type="submit">@(Model.Existing is null ? "Add service" : "Save changes")</button>
-                    @if (Model.Existing is not null)
-                    {
-                        <a class="btn" asp-page="Details" asp-route-id="@Model.Existing.Id">Cancel</a>
-                    }
-                    else
-                    {
-                        <a class="btn" asp-page="Index">Cancel</a>
-                    }
                 </div>
             </section>
         </div>
 
         <aside class="request-workflow-note request-form-help">
-            @await Html.PartialAsync("_WorkspaceIcon", "box")
+            <i class="icon fa-solid fa-box" aria-hidden="true"></i>
             <div>
                 <h2>Clear defaults. Better conversations.</h2>
                 <p>Write details you can reuse, then adapt them to the actual request when reviewing the scope.</p>

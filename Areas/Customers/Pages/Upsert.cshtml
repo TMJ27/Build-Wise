@@ -1,0 +1,67 @@
+@page "{id:guid?}"
+@model BuildWise.Web.Areas.Customers.Pages.UpsertModel
+@{
+    ViewData["Title"] = Model.Input.Id.HasValue ? "Edit customer" : "Add customer";
+    ViewData["PageTitle"] = ViewData["Title"];
+    ViewData["PageSubTitle"] = "Enter the customer contact details and client type.";
+    ViewData["Breadcrumbs"] = new BreadcrumbItem[]
+    {
+        new("Customers", Url.Page("/Index", new { area = "Customers", id = (Guid?)null }))
+    };
+}
+
+<div class="requests-page customers-page">
+    <form method="post" class="form-stack" asp-route-id="@Model.Input.Id">
+        <input type="hidden" asp-for="Input.Id" />
+        <div asp-validation-summary="All" class="configuration-errors" role="alert"></div>
+
+        <section class="panel configuration-section form-panel">
+            <div class="configuration-section-title">
+                <h2>Customer information</h2>
+            </div>
+            <div class="form-fields">
+                <div class="field">
+                    <label asp-for="Input.Name">Name *</label>
+                    <input class="form-control" asp-for="Input.Name" required maxlength="50" autocomplete="name" />
+                    <span asp-validation-for="Input.Name"></span>
+                </div>
+                <div class="field">
+                    <label asp-for="Input.ClientTypeId">Client type *</label>
+                    <select class="form-control" asp-for="Input.ClientTypeId" asp-items="Html.GetEnumSelectList<ClientType>()" required>
+                        <option value="">Select client type</option>
+                    </select>
+                    <span asp-validation-for="Input.ClientTypeId"></span>
+                </div>
+                <div class="field">
+                    <label asp-for="Input.Email">Email *</label>
+                    <input class="form-control" asp-for="Input.Email" required maxlength="50" autocomplete="email" />
+                    <span asp-validation-for="Input.Email"></span>
+                </div>
+                <div class="field">
+                    <label asp-for="Input.Phone">Phone</label>
+                    <input class="form-control" asp-for="Input.Phone" maxlength="20" autocomplete="tel" />
+                    <span asp-validation-for="Input.Phone"></span>
+                </div>
+                <div class="field form-wide">
+                    <label asp-for="Input.Address">Address *</label>
+                    <input class="form-control" asp-for="Input.Address" required maxlength="50" autocomplete="street-address" />
+                    <span asp-validation-for="Input.Address"></span>
+                </div>
+                <div>
+                    <label class="form-check">
+                        <input asp-for="Input.IsActive" />
+                        <span>Active</span>
+                    </label>
+                </div>
+            </div>
+        </section>
+        <div class="form-actions">
+            <button class="btn primary" type="submit">
+                <i class="fa-solid fa-check" aria-hidden="true"></i>
+                <span>@(Model.Input.Id.HasValue ? "Save changes" : "Add customer")</span>
+            </button>
+        </div>
+    </form>
+</div>
+
+

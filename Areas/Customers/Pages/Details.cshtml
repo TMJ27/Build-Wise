@@ -25,152 +25,205 @@
             <span>New request</span>
         </a>
     </div>
+
 }
 
 <div class="requests-page customers-page">
-
     @if (TempData["CustomerMessage"] is string message)
     {
         <div class="request-success" role="status">
             <i class="icon fa-solid fa-check" aria-hidden="true"></i>
             @message
         </div>
+
     }
 
     <div class="customer-profile-grid">
         <aside class="customer-column">
-            <section class="panel request-detail-panel customer-contact-panel">
-                <h2>Contact details</h2>
-                <dl>
-                    <div>
-                        <dt>Email address</dt>
-                        <dd>
-                            @if (Model.Customer.Email != "")
-                            {
-                                <a href="mailto:@Model.Customer.Email">@Model.Customer.Email</a>
-                            }
-                            else
-                            {
-                                <span class="customer-muted">Not recorded</span>
-                            }
-                        </dd>
+            <section class="detail-card panel request-detail-panel customer-contact-panel">
+                <header class="card-header">
+                    <h2>Contact details</h2>
+                </header>
+
+                <div class="card-body">
+                    <dl>
+                        <div>
+                            <dt>Email address</dt>
+                            <dd>
+                                @if (Model.Customer.Email != "")
+                                {
+                                    <a href="mailto:@Model.Customer.Email">@Model.Customer.Email</a>
+                                }
+                                else
+                                {
+                                    <span class="customer-muted">Not recorded</span>
+                                }
+                            </dd>
+                        </div>
+                        <div>
+                            <dt>Phone number</dt>
+                            <dd>
+                                @if (Model.Customer.Phone != "")
+                                {
+                                    <a href="tel:@Model.Customer.Phone">@Model.Customer.Phone</a>
+                                }
+                                else
+                                {
+                                    <span class="customer-muted">Not recorded</span>
+                                }
+                            </dd>
+                        </div>
+                        <div>
+                            <dt>Address / location</dt>
+                            <dd>@(Model.Customer.Address == "" ? "Not recorded" : Model.Customer.Address)</dd>
+                        </div>
+                        <div>
+                            <dt>Customer type</dt>
+                            <dd>@Model.Customer.Type</dd>
+                        </div>
+                    </dl>
+
+                    <div class="detail-section">
+                        <h3>Customer notes</h3>
+                        <p class="customer-notes">@(Model.Customer.Notes == "" ? "No notes added yet. Add useful contact preferences or access details when you edit this customer." : Model.Customer.Notes)</p>
                     </div>
-                    <div>
-                        <dt>Phone number</dt>
-                        <dd>
-                            @if (Model.Customer.Phone != "")
-                            {
-                                <a href="tel:@Model.Customer.Phone">@Model.Customer.Phone</a>
-                            }
-                            else
-                            {
-                                <span class="customer-muted">Not recorded</span>
-                            }
-                        </dd>
-                    </div>
-                    <div><dt>Address / location</dt><dd>@(Model.Customer.Address == "" ? "Not recorded" : Model.Customer.Address)</dd></div>
-                    <div><dt>Customer type</dt><dd>@Model.Customer.Type</dd></div>
-                </dl>
+                </div>
+
+                <footer class="card-footer">
+                    <dl class="record-metadata">
+                        <div>
+                            <dt>Customer ID</dt>
+                            <dd>@Model.Customer.CustomerNumber</dd>
+                        </div>
+                    </dl>
+
+                </footer>
+
             </section>
 
-            <section class="panel request-detail-panel">
-                <h2>Customer notes</h2>
-                <p class="customer-notes">@(Model.Customer.Notes == "" ? "No notes added yet. Add useful contact preferences or access details when you edit this customer." : Model.Customer.Notes)</p>
-            </section>
         </aside>
 
         <div class="customer-column">
             <div class="customer-work-summary" aria-label="Customer work summary">
-                <div><span>Total requests</span><strong>@Model.Requests.Count.ToString("D2")</strong></div>
-                <div><span>Open requests</span><strong>@Model.OpenCount.ToString("D2")</strong></div>
-                <div><span>Approved value · USD</span><strong>@BuildWise.Web.Pages.IndexModel.Money(Model.ApprovedValue)</strong></div>
+                <div>
+                    <span>Total requests</span><strong>@Model.Requests.Count.ToString("D2")</strong>
+                </div>
+                <div>
+                    <span>Open requests</span><strong>@Model.OpenCount.ToString("D2")</strong>
+                </div>
+                <div>
+                    <span>Approved value · USD</span><strong>@BuildWise.Web.Pages.IndexModel.Money(Model.ApprovedValue)</strong>
+                </div>
             </div>
 
-            <section class="panel requests-panel">
-                <div class="requests-panel-heading">
-                    <div><h2>Customer work history</h2><p>Every request and quotation connected to this customer.</p></div>
-                </div>
-                <nav class="request-tabs" aria-label="Customer history">
-                    <a asp-page="Details" asp-route-id="@Model.Customer.Id" asp-route-tab="requests" class="@(Model.Tab == "requests" ? "active" : null)" aria-current="@(Model.Tab == "requests" ? "page" : null)">
-                        Requests <span>@Model.Requests.Count</span>
-                    </a>
-                    <a asp-page="Details" asp-route-id="@Model.Customer.Id" asp-route-tab="quotations" class="@(Model.Tab == "quotations" ? "active" : null)" aria-current="@(Model.Tab == "quotations" ? "page" : null)">
-                        Quotations <span>@Model.Quotations.Count</span>
-                    </a>
-                </nav>
+            <section class="detail-card panel requests-panel">
+                <header class="card-header">
+                    <div class="requests-panel-heading">
+                        <div>
+                            <h2>Customer work history</h2>
+                            <p>Every request and quotation connected to this customer.</p>
+                        </div>
+                    </div>
 
-                <div class="table-wrap requests-table-wrap" tabindex="0" role="region" aria-label="Customer history; scroll horizontally on smaller screens">
-                    <table class="requests-table customer-history-table">
-                        <thead>
-                            <tr>
-                        <th scope="col">ID</th>
-                                <th>@(Model.Tab == "requests" ? "Request" : "Quotation")</th>
-                                <th>Status</th>
-                                <th>@(Model.Tab == "requests" ? "Created" : "Value (USD)")</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @if (Model.Tab == "requests")
-                            {
-                                @foreach (var request in Model.Requests)
-                                {
-                                    <tr>
-                                        <td>
-                                            <a class="record-link record-id" asp-area="Requests" asp-page="/Details" asp-route-id="@request.Id">
-                                                @request.RequestNumber
-                                                <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
-                                            </a>
-                                        </td>
-                                        <td>
-                                            <strong>@request.Title</strong>
-                                                <small>REQ-@request.Id · @request.Category</small>
-                                        </td>
-                                        <td><span class="badge @request.BadgeClass">@request.Status</span></td>
-                                        <td class="request-date">@request.CreatedOn.ToString("dd MMM yyyy")</td>
-                                    </tr>
-                                }
-                            }
-                            else
-                            {
-                                @foreach (var entry in Model.Quotations)
-                                {
-                                    <tr>
-                                        <td>
-                                            <a class="record-link record-id" asp-area="Quotations" asp-page="/Details" asp-route-id="@entry.Quotation.Id">
-                                                @entry.Number
-                                                <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
-                                            </a>
-                                        </td>
-                                        <td>
-                                            <strong>@entry.Number</strong>
-                                                <small>Revision @entry.Quotation.Revision</small>
-                                        </td>
-                                        <td><span class="badge @(entry.Quotation.Status == "Approved" ? "green" : "")">@entry.Quotation.Status</span></td>
-                                        <td class="customer-money">@BuildWise.Web.Pages.IndexModel.Money(entry.Quotation.Amount)</td>
-                                    </tr>
-                                }
-                            }
+                </header>
 
-                            @if ((Model.Tab == "requests" && Model.Requests.Count == 0) || (Model.Tab == "quotations" && Model.Quotations.Count == 0))
-                            {
+                <div class="card-body">
+                    <nav class="request-tabs" aria-label="Customer history">
+                        <a asp-page="Details" asp-route-id="@Model.Customer.Id" asp-route-tab="requests" class="@(Model.Tab == "requests" ? "active" : null)" aria-current="@(Model.Tab == "requests" ? "page" : null)">
+                            Requests <span>@Model.Requests.Count</span>
+                        </a>
+                        <a asp-page="Details" asp-route-id="@Model.Customer.Id" asp-route-tab="quotations" class="@(Model.Tab == "quotations" ? "active" : null)" aria-current="@(Model.Tab == "quotations" ? "page" : null)">
+                            Quotations <span>@Model.Quotations.Count</span>
+                        </a>
+                    </nav>
+
+                    <div class="table-wrap requests-table-wrap" tabindex="0" role="region" aria-label="Customer history; scroll horizontally on smaller screens">
+                        <table class="requests-table customer-history-table">
+                            <thead>
                                 <tr>
-                                    <td colspan="4">
-                                        <div class="request-empty">
-                                            <i class="icon fa-solid fa-file-lines" aria-hidden="true"></i>
-                                            <h3>@(Model.Tab == "requests" ? "No requests yet" : "No quotations yet")</h3>
-                                            <p>@(Model.Tab == "requests" ? "Start a request to capture the work this customer needs." : "Quotations will appear here when their requests are ready to quote.")</p>
-                                            @if (Model.Tab == "requests")
-                                            {
-                                                <a class="btn" asp-area="Requests" asp-page="/Create" asp-route-customerId="@Model.Customer.Id">New request</a>
-                                            }
-                                        </div>
-                                    </td>
+                                    <th scope="col">ID</th>
+                                    <th>@(Model.Tab == "requests" ? "Request" : "Quotation")</th>
+                                    <th>Status</th>
+                                    <th>@(Model.Tab == "requests" ? "Created" : "Value (USD)")</th>
                                 </tr>
-                            }
-                        </tbody>
-                    </table>
+
+                            </thead>
+
+                            <tbody>
+                                @if (Model.Tab == "requests")
+                                {
+                                    @foreach (var request in Model.Requests)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <a class="record-link record-id" asp-area="Requests" asp-page="/Details" asp-route-id="@request.Id">
+                                                    @request.RequestNumber
+                                                    <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                                                </a>
+                                            </td>
+                                            <td>
+                                                <strong>@request.Title</strong>
+                                                <small>@request.RequestNumber · @request.Category</small>
+                                            </td>
+                                            <td><span class="badge @request.BadgeClass">@request.Status</span></td>
+                                            <td class="request-date">@request.CreatedOn.ToString("dd MMM yyyy")</td>
+                                        </tr>
+
+                                    }
+                                }
+                                else
+                                {
+                                    @foreach (var entry in Model.Quotations)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <a class="record-link record-id" asp-area="Quotations" asp-page="/Details" asp-route-id="@entry.Quotation.Id">
+                                                    @entry.Number
+                                                    <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                                                </a>
+                                            </td>
+                                            <td>
+                                                <strong>@entry.Number</strong>
+                                                <small>Revision @entry.Quotation.Revision</small>
+                                            </td>
+                                            <td><span class="badge @(entry.Quotation.Status == "Approved" ? "green" : "")">@entry.Quotation.Status</span></td>
+                                            <td class="customer-money">@BuildWise.Web.Pages.IndexModel.Money(entry.Quotation.Amount)</td>
+                                        </tr>
+
+                                    }
+                                }
+
+                                @if ((Model.Tab == "requests" && Model.Requests.Count == 0) || (Model.Tab == "quotations" && Model.Quotations.Count == 0))
+                                {
+                                    <tr>
+                                        <td colspan="4">
+                                            <div class="request-empty">
+                                                <i class="icon fa-solid fa-file-lines" aria-hidden="true"></i>
+                                                <h3>@(Model.Tab == "requests" ? "No requests yet" : "No quotations yet")</h3>
+                                                <p>@(Model.Tab == "requests" ? "Start a request to capture the work this customer needs." : "Quotations will appear here when their requests are ready to quote.")</p>
+                                                @if (Model.Tab == "requests")
+                                                {
+                                                    <a class="btn" asp-area="Requests" asp-page="/Create" asp-route-customerId="@Model.Customer.Id">New request</a>
+                                                }
+                                            </div>
+                                        </td>
+                                    </tr>
+
+                                }
+                            </tbody>
+
+                        </table>
+
+                    </div>
                 </div>
+
+                <footer class="card-footer">
+                    <span>@(Model.Tab == "requests" ? Model.Requests.Count : Model.Quotations.Count) records</span>
+                </footer>
+
             </section>
+
         </div>
     </div>
+
 </div>

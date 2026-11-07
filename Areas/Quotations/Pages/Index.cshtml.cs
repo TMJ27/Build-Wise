@@ -1,18 +1,19 @@
-using System.Globalization;
-using BuildWise.Web.ViewModels.Dashboard;
-using BuildWise.Web.Services;
+using BuildWise.Data;
+using BuildWise.Lib.Enums.Statuses;
+using BuildWise.Web.Areas.Quotations.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
 
 namespace BuildWise.Web.Areas.Quotations.Pages;
 
-public class IndexModel(QuotationWorkspace quotations, RequestWorkspace requests) : PageModel
+public class IndexModel(BuildWiseDbContext db) : PageModel
 {
     [BindProperty(SupportsGet = true)]
     public string Search { get; set; } = string.Empty;
 
     [BindProperty(SupportsGet = true)]
-    public string Status { get; set; } = "all";
+    public QuotationStatus? Status { get; set; }
 
     [BindProperty(SupportsGet = true)]
     public string Sort { get; set; } = "newest";
@@ -20,49 +21,83 @@ public class IndexModel(QuotationWorkspace quotations, RequestWorkspace requests
     [BindProperty(SupportsGet = true)]
     public int PageNumber { get; set; } = 1;
 
-    public IReadOnlyList<QuotationEntry> All { get; private set; } = [];
-    public IReadOnlyList<QuotationEntry> Records { get; private set; } = [];
-    public int Total { get; private set; }
-    public int PageCount => Math.Max(1, (int)Math.Ceiling(Total / 8d));
-    public int DraftCount => All.Count(entry => entry.Quotation.Status == "Draft");
-    public int ApprovedCount => All.Count(entry => entry.Quotation.Status == "Approved");
-    public decimal ApprovedValue => All
-        .Where(entry => entry.Quotation.Status == "Approved")
-        .Sum(entry => entry.Quotation.Amount);
+    public int PageSize => 10;
+    public int FilteredCount { get; set; }
+    public int PageCount => Math.Max(1, (int)Math.Ceiling(FilteredCount / (double)PageSize));
+    public QuotationSummaryViewModel Summary { get; set; } = new();
+    public List<QuotationIndexViewModel> Quotations { get; set; } = [];
 
-    public DashboardRequest RequestFor(QuotationEntry entry) => requests.Find(entry.Quotation.RequestId)!.Request;
-
-    public static string Money(decimal amount) => amount.ToString("C2", CultureInfo.GetCultureInfo("en-US"));
-
-    public void OnGet()
+    public async Task OnGetAsync()
     {
-        All = quotations.All;
         Search = (Search ?? string.Empty).Trim();
-
         if (Search.Length > 120)
         {
             Search = Search[..120];
         }
-
-        Status = Status is "Draft" or "Approved" ? Status : "all";
-        Sort = Sort is "oldest" or "highest" ? Sort : "newest";
-
-        var filtered = All.Where(entry =>
-            (Status == "all" || entry.Quotation.Status == Status) &&
-            $"{entry.Number} {RequestFor(entry).Customer} {RequestFor(entry).Title}"
-                .Contains(Search, StringComparison.OrdinalIgnoreCase));
-
-        Total = filtered.Count();
-        PageNumber = Math.Clamp(PageNumber, 1, PageCount);
-
-        var ordered = Sort switch
+        if (Status.HasValue && !Enum.IsDefined(Status.Value))
         {
-            "oldest" => filtered.OrderBy(entry => entry.Quotation.PreparedOn).ThenBy(entry => entry.Quotation.Id),
-            "highest" => filtered.OrderByDescending(entry => entry.Quotation.Amount).ThenByDescending(entry => entry.Quotation.Id),
-            _ => filtered.OrderByDescending(entry => entry.Quotation.PreparedOn).ThenByDescending(entry => entry.Quotation.Id)
+            Status = null;
+            ModelState.Remove(nameof(Status));
+        }
+        Sort = Sort is "oldest" or "customer" ? Sort : "newest";
+
+        // Keep one row per quotation, including quotations without a revision yet.
+        // Amounts and status belong to a specific revision, never to the request.
+        var query = db.Quotations
+            .AsNoTracking()
+            .Select(quotation => new
+            {
+                Quotation = quotation,
+                Revision = quotation.QuotationRevisions
+                    .OrderByDescending(revision => revision.RevisionNumber)
+                    .FirstOrDefault()
+            })
+            .Select(record => new QuotationIndexViewModel
+            {
+                Id = record.Quotation.Id,
+                RequestId = record.Quotation.RequestId,
+                QuotationNumber = record.Quotation.QuotationNumber,
+                Title = record.Revision == null ? record.Quotation.Request.Title : record.Revision.Title,
+                CustomerName = record.Revision == null ? record.Quotation.Request.Client.Name : record.Revision.CustomerNameSnapshot,
+                RevisionNumber = record.Revision == null ? 0 : record.Revision.RevisionNumber,
+                Status = record.Revision == null ? null : (QuotationStatus?)record.Revision.StatusId,
+                IncludesPrices = record.Revision != null && record.Revision.IncludesPrices,
+                CurrencyCode = record.Revision == null ? null : record.Revision.CurrencyCode,
+                Total = record.Revision == null ? null : record.Revision.Total,
+                CreationDate = record.Revision == null ? null : record.Revision.CreationDate,
+                CreatorName = ((record.Quotation.Creator.Name ?? "") + " " + (record.Quotation.Creator.Surname ?? "")).Trim() == ""
+                    ? record.Quotation.Creator.Email
+                    : ((record.Quotation.Creator.Name ?? "") + " " + (record.Quotation.Creator.Surname ?? "")).Trim()
+            });
+
+        Summary = new QuotationSummaryViewModel
+        {
+            TotalCount = await query.CountAsync(),
+            DraftCount = await query.CountAsync(quotation => quotation.Status == QuotationStatus.Draft),
+            ApprovedCount = await query.CountAsync(quotation => quotation.Status == QuotationStatus.Approved),
+            PricedCount = await query.CountAsync(quotation => quotation.IncludesPrices && quotation.Total.HasValue)
         };
 
-        Records = ordered.Skip((PageNumber - 1) * 8).Take(8).ToArray();
-        ModelState.Clear();
+        if (Status.HasValue)
+        {
+            query = query.Where(quotation => quotation.Status == Status);
+        }
+        if (Search.Length > 0)
+        {
+            var searchText = Search.ToUpper();
+            query = query.Where(quotation => quotation.QuotationNumber.ToUpper().Contains(searchText)
+                || quotation.Title.ToUpper().Contains(searchText)
+                || quotation.CustomerName.ToUpper().Contains(searchText));
+        }
+
+        FilteredCount = await query.CountAsync();
+        PageNumber = Math.Clamp(PageNumber, 1, PageCount);
+        query = Sort switch
+        {
+            "oldest" => query.OrderBy(quotation => quotation.CreationDate).ThenBy(quotation => quotation.Id),
+            "customer" => query.OrderBy(quotation => quotation.CustomerName).ThenBy(quotation => quotation.Id),
+            _ => query.OrderByDescending(quotation => quotation.CreationDate).ThenBy(quotation => quotation.Id)
+        };
+        Quotations = await query.Skip((PageNumber - 1) * PageSize).Take(PageSize).ToListAsync();
     }
 }

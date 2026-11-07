@@ -1,0 +1,82 @@
+@page "{id:guid}"
+@model BuildWise.Web.Areas.Configuration.Pages.ServiceCategories.DetailsModel
+@{
+    var category = Model.CategoryDetails;
+    ViewData["Title"] = "Category details";
+    ViewData["PageTitle"] = category.Name;
+    ViewData["PageSubTitle"] = "Service category information and status.";
+    ViewData["BreadcrumbTitle"] = category.CategoryNumber;
+    ViewData["Breadcrumbs"] = new BreadcrumbItem[]
+    {
+        new("Configuration"),
+        new("Service categories", Url.Page("/ServiceCategories/Index", new { area = "Configuration", id = (Guid?)null }))
+    };
+}
+
+@section actionbar {
+    <a class="btn primary" asp-page="Upsert" asp-route-id="@category.Id">
+        <i class="fa-solid fa-pen" aria-hidden="true"></i>
+        <span>Edit category</span>
+    </a>
+}
+
+<div class="requests-page configuration-page profile-details">
+    @if (TempData["SuccessMessage"] is string message)
+    {
+        <div class="request-success" role="status">
+            @message
+        </div>
+
+    }
+
+    <div class="details-stack">
+        <section class="detail-card panel configuration-section">
+            <header class="card-header">
+                <h2>Category details</h2>
+            </header>
+
+            <div class="card-body">
+                <dl class="profile-detail-list">
+                    <div>
+                        <dt>Category ID</dt>
+                        <dd>@category.CategoryNumber</dd>
+                    </div>
+                    <div>
+                        <dt>Name</dt>
+                        <dd>@category.Name</dd>
+                    </div>
+                    <div>
+                        <dt>Status</dt>
+                        <dd>
+                            <span class="badge @(category.IsActive ? "green" : null)">@category.Status</span>
+                        </dd>
+                    </div>
+                    <div>
+                        <dt>Services</dt>
+                        <dd>@category.ServiceCount</dd>
+                    </div>
+                    <div class="profile-detail-wide">
+                        <dt>Description</dt>
+                        <dd>@(category.Description ?? "Not provided")</dd>
+                    </div>
+                </dl>
+
+            </div>
+            <footer class="card-footer">
+                <dl class="record-metadata">
+                    <div>
+                        <dt>Creation date</dt>
+                        <dd>@category.CreationDate.ToString("dd MMM yyyy, HH:mm")</dd>
+                    </div>
+                    <div>
+                        <dt>Last updated</dt>
+                        <dd>@(category.LastUpdated?.ToString("dd MMM yyyy 'at' HH:mm") )</dd>
+                    </div>
+                </dl>
+
+            </footer>
+
+        </section>
+
+    </div>
+</div>

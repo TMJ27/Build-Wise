@@ -33,106 +33,122 @@
 <div class="requests-page configuration-page profile-details user-details">
     @if (TempData["UserMessage"] is string message)
     {
-        <div class="request-success" role="status">@message</div>
+        <div class="request-success" role="status">
+            @message
+        </div>
+
     }
 
     @if (person is null)
     {
-        <section class="panel configuration-section">
-            <h2>User not found</h2>
-            <p class="configuration-muted">This user is unavailable. Return to the user register to select a user.</p>
+        <section class="detail-card panel configuration-section">
+            <header class="card-header">
+                <h2>User not found</h2>
+            </header>
+
+            <div class="card-body">
+                <p class="configuration-muted">This user is unavailable. Return to the user register to select a user.</p>
+            </div>
         </section>
+
     }
     else
     {
-        <div class="configuration-grid">
+        <div class="details-stack">
             <div class="configuration-column">
-                <section class="panel request-detail-panel configuration-section">
-                    <div class="profile-identity">
-                        <div class="configuration-logo-frame" aria-hidden="true">
-                            <span class="configuration-initials">
-                                @if (initials.Length > 0)
-                                {
-                                    @initials
-                                }
-                                else
-                                {
-                                    <i class="fa-solid fa-user"></i>
-                                }
-                            </span>
+                <section class="detail-card panel request-detail-panel configuration-section">
+                    <header class="card-header">
+                        <div class="profile-identity">
+                            <div class="configuration-logo-frame" aria-hidden="true">
+                                <span class="configuration-initials">
+                                    @if (initials.Length > 0)
+                                    {
+                                        @initials
+                                    }
+                                    else
+                                    {
+                                        <i class="fa-solid fa-user"></i>
+                                    }
+                                </span>
+                            </div>
+                            <div>
+                                <h2>@(string.IsNullOrWhiteSpace(fullName) ? person.Email : fullName)</h2>
+                                <span class="badge @(person.IsActive ? "green" : null)">@(person.IsActive ? "Active" : "Inactive")</span>
+                            </div>
                         </div>
-                        <div>
-                            <h2>@(string.IsNullOrWhiteSpace(fullName) ? person.Email : fullName)</h2>
-                            <span class="badge @(person.IsActive ? "green" : null)">@(person.IsActive ? "Active" : "Inactive")</span>
+
+                    </header>
+
+                    <div class="card-body">
+                        <dl class="profile-detail-list">
+                            <div>
+                                <dt>User ID</dt>
+                                <dd>@person.UserNumber</dd>
+                            </div>
+                            <div>
+                                <dt>First name</dt>
+                                <dd>@(string.IsNullOrWhiteSpace(person.Name) ? "Not provided" : person.Name)</dd>
+                            </div>
+                            <div>
+                                <dt>Surname</dt>
+                                <dd>@(string.IsNullOrWhiteSpace(person.Surname) ? "Not provided" : person.Surname)</dd>
+                            </div>
+                            <div>
+                                <dt>Email address</dt>
+                                <dd>@person.Email</dd>
+                            </div>
+                            <div>
+                                <dt>Phone number</dt>
+                                <dd>@(string.IsNullOrWhiteSpace(person.Phone) ? "Not provided" : person.Phone)</dd>
+                            </div>
+                        </dl>
+
+                        <div class="detail-section">
+                            <h3>Account access</h3>
+                            <dl class="profile-detail-list">
+                                <div>
+                                    <dt>User group</dt>
+                                    <dd>@(person.Group?.Name ?? "Unassigned")</dd>
+                                </div>
+                                <div>
+                                    <dt>Account status</dt>
+                                    <dd>@(person.IsActive ? "Active" : "Inactive")</dd>
+                                </div>
+                                <div>
+                                    <dt>Email confirmation</dt>
+                                    <dd>@(person.IsEmailConfirmed ? "Confirmed" : "Not confirmed")</dd>
+                                </div>
+                                <div>
+                                    <dt>Two-factor authentication</dt>
+                                    <dd>@(person.TwoFactorAuthEnabled == true ? "Enabled" : "Not enabled")</dd>
+                                </div>
+                            </dl>
+
                         </div>
                     </div>
 
-                    <dl class="profile-detail-list">
-                        <div>
-                            <dt>User ID</dt>
-                            <dd>@person.UserNumber</dd>
-                        </div>
-                        <div>
-                            <dt>First name</dt>
-                            <dd>@(string.IsNullOrWhiteSpace(person.Name) ? "Not provided" : person.Name)</dd>
-                        </div>
-                        <div>
-                            <dt>Surname</dt>
-                            <dd>@(string.IsNullOrWhiteSpace(person.Surname) ? "Not provided" : person.Surname)</dd>
-                        </div>
-                        <div>
-                            <dt>Email address</dt>
-                            <dd>@person.Email</dd>
-                        </div>
-                        <div>
-                            <dt>Phone number</dt>
-                            <dd>@(string.IsNullOrWhiteSpace(person.Phone) ? "Not provided" : person.Phone)</dd>
-                        </div>
-                    </dl>
+                    <footer class="card-footer">
+                        <dl class="record-metadata">
+                            <div>
+                                <dt>Created</dt>
+                                <dd>@person.CreationDate.ToString("dd MMM yyyy, HH:mm")</dd>
+                            </div>
+                            <div>
+                                <dt>Last updated</dt>
+                                <dd>@(person.LastUpdated?.ToString("dd MMM yyyy, HH:mm") ?? "Not updated")</dd>
+                            </div>
+                            <div>
+                                <dt>Last login</dt>
+                                <dd>@(person.LastLoginDate?.ToString("dd MMM yyyy, HH:mm") ?? "No login recorded")</dd>
+                            </div>
+                        </dl>
+
+                    </footer>
+
                 </section>
 
-                <section class="panel request-detail-panel configuration-section">
-                    <h2>Account access</h2>
-                    <dl class="profile-detail-list">
-                        <div>
-                            <dt>User group</dt>
-                            <dd>@(person.Group?.Name ?? "Unassigned")</dd>
-                        </div>
-                        <div>
-                            <dt>Account status</dt>
-                            <dd>@(person.IsActive ? "Active" : "Inactive")</dd>
-                        </div>
-                        <div>
-                            <dt>Email confirmation</dt>
-                            <dd>@(person.IsEmailConfirmed ? "Confirmed" : "Not confirmed")</dd>
-                        </div>
-                        <div>
-                            <dt>Two-factor authentication</dt>
-                            <dd>@(person.TwoFactorAuthEnabled == true ? "Enabled" : "Not enabled")</dd>
-                        </div>
-                    </dl>
-                </section>
             </div>
-
-            <aside class="configuration-column">
-                <section class="panel request-detail-panel configuration-section">
-                    <h2>Account record</h2>
-                    <dl class="profile-detail-list profile-record-list">
-                        <div>
-                            <dt>Created</dt>
-                            <dd>@person.CreationDate.ToString("dd MMM yyyy, HH:mm")</dd>
-                        </div>
-                        <div>
-                            <dt>Last updated</dt>
-                            <dd>@(person.LastUpdated?.ToString("dd MMM yyyy, HH:mm") ?? "Not updated")</dd>
-                        </div>
-                        <div>
-                            <dt>Last login</dt>
-                            <dd>@(person.LastLoginDate?.ToString("dd MMM yyyy, HH:mm") ?? "No login recorded")</dd>
-                        </div>
-                    </dl>
-                </section>
-            </aside>
         </div>
+
     }
 </div>

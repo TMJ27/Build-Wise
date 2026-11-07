@@ -1,0 +1,43 @@
+@{
+    Layout = "/Pages/Shared/_CustomerPublicLayout.cshtml";
+    ViewData["CustomerAuth"] = true;
+    var registering = ViewData["Registering"] is true;
+}
+<div class="auth-shell">
+    <aside class="auth-story" aria-label="About BuildWise">
+        <a class="auth-brand" asp-area="CustomerPortal" asp-page="/Welcome" aria-label="BuildWise home">
+            <img src="~/brand/buildwise-mark-muted.svg" alt="" />BuildWise<span>.</span>
+        </a>
+        <div class="story-content">
+            <p class="eyebrow">YOUR IDEAS. A CLEARER WAY FORWARD.</p>
+            <h1>Good work<br />starts <span>here.</span></h1>
+            <p class="story-description">From your first request to your quotation. Every detail, together in your own workspace.</p>
+            <div class="project-art" aria-hidden="true">
+                <div class="art-ruler"><span>ROOM FOR YOUR NEXT PROJECT</span></div>
+                <div class="project-art-sheet">
+                    <span class="project-art-title"><i class="fa-solid fa-drafting-compass"></i> A CLEAR SCOPE OF WORK</span>
+                    <div class="project-art-plan"><span>Living space</span><span>Kitchen</span><span>Entrance</span></div>
+                    <div class="project-art-caption"><span>YOUR VISION</span><span>ONE THOUGHTFUL PLAN</span></div>
+                </div>
+                <p><span></span> A little planning. A better start.</p>
+            </div>
+        </div>
+        <p class="story-footer">Your requests and quotations, thoughtfully organised.</p>
+    </aside>
+    <div class="auth-main">
+        <header class="auth-topbar">
+            <span class="account-label">YOUR BUILDWISE ACCOUNT</span>
+            <a class="auth-top-link" asp-area="CustomerPortal" asp-page="@(registering ? "/Account/Login" : "/Account/Register")">@(registering ? "Sign in" : "Create account") <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+        </header>
+        <main id="main-content" class="auth-content">
+            <div class="auth-card">
+                <div class="auth-icon"><i class="fa-solid @(registering ? "fa-user-plus" : "fa-door-open")" aria-hidden="true"></i></div>
+                @RenderBody()
+            </div>
+        </main>
+        <footer class="auth-footer"><span>© @DateTime.Now.Year BuildWise</span><a asp-area="CustomerPortal" asp-page="/Welcome" asp-fragment="questions">Need a little guidance?</a></footer>
+    </div>
+</div>
+@section Scripts {
+    @await RenderSectionAsync("Scripts", required: false)
+}

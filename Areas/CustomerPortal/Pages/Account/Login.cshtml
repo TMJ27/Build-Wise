@@ -1,0 +1,34 @@
+@page
+@model BuildWise.Web.Areas.CustomerPortal.Pages.Account.LoginModel
+@{
+    Layout = "/Pages/Shared/_CustomerAuthLayout.cshtml";
+    ViewData["Title"] = "Sign in";
+}
+<section aria-labelledby="login-title">
+    <p class="eyebrow">WELCOME BACK</p>
+    <h2 id="login-title">Your workspace<br />is waiting.</h2>
+    <p class="auth-description">Sign in to find your requests, view your quotations and pick up where you left off.</p>
+    @if (TempData["SuccessMessage"] is string message)
+    {
+        <div class="auth-alert auth-alert-info" role="status">@message</div>
+    }
+<form method="post" class="auth-form registration-form">
+                <div asp-validation-summary="All" class="auth-alert" role="alert"></div>
+                <div class="auth-field">
+                    <label asp-for="Input.Email">Email address <span>*</span></label>
+                    <input asp-for="Input.Email" type="email" autocomplete="username" maxlength="50" required />
+                    <span class="field-error" asp-validation-for="Input.Email"></span>
+                </div>
+                <div class="auth-field">
+                    <label asp-for="Input.Password">Password <span>*</span></label>
+                    <input asp-for="Input.Password" type="password" autocomplete="current-password" required />
+                    <span class="field-error" asp-validation-for="Input.Password"></span>
+                </div>
+                @* Enable after implementing the sign-in handler. *@
+                <button class="auth-button" type="submit" disabled aria-describedby="signin-availability"><i class="fa-solid fa-arrow-right-to-bracket" aria-hidden="true"></i><span>Sign in</span></button>
+                <p class="auth-footnote" id="signin-availability">Customer sign-in is not available yet.</p>
+            </form>
+    <div class="auth-divider"><span>NEW TO BUILDWISE?</span></div>
+    <a class="auth-button auth-button-secondary" asp-page="Register">Create an account <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+    <p class="auth-footnote">A workspace for your requests, scope of work and quotations.</p>
+</section>

@@ -1,0 +1,57 @@
+@page
+@model BuildWise.Web.Areas.Configuration.Pages.Inclusions.IndexModel
+@{
+    ViewData["Title"] = "Inclusions";
+    ViewData["PageTitle"] = ViewData["Title"];
+    ViewData["PageSubTitle"] = "Define reusable work, materials and deliverables included in your quotations.";
+    ViewData["Breadcrumbs"] = new BreadcrumbItem[] { new("Configuration") };
+}
+
+@section actionbar {
+    <a class="btn primary" asp-page="Upsert">
+        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+        <span>Add inclusion</span>
+    </a>
+}
+
+<div class="requests-page configuration-page">
+    <section class="panel configuration-section">
+        <div class="configuration-preview-heading">
+            <h2>Inclusions</h2>
+            <span class="badge">@Model.Records.Count inclusions</span>
+        </div>
+        <div class="table-wrap">
+            <table class="configuration-table">
+                <caption class="sr-only">Configured inclusions</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Name</th>
+                        <th scope="col">Description</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Creation date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var entry in Model.Records)
+                    {
+                        <tr>
+                            <td>
+                                <a class="record-link" asp-page="Details" asp-route-id="@entry.Id">
+                                    @entry.Name
+                                    <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                                </a>
+                            </td>
+                            <td>@entry.Description</td>
+                            <td><span class="badge @(entry.IsActive ? "green" : null)">@(entry.IsActive ? "Active" : "Inactive")</span></td>
+                            <td>@(entry.CreationDate?.ToString("dd MMM yyyy, HH:mm") ?? "Not set")</td>
+                        </tr>
+                    }
+                    @if (Model.Records.Count == 0)
+                    {
+                        <tr><td colspan="4">No inclusions have been added.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>

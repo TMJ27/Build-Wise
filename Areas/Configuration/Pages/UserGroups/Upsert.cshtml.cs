@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using BuildWise.Lib.Rights;
+using BuildWise.Lib.Enums.Rights;
 using BuildWise.Lib.Users;
 using BuildWise.Data;
 using BuildWise.Web.Areas.Configuration.ViewModels.UserGroups;

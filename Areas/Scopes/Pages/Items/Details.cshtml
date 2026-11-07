@@ -1,0 +1,125 @@
+@page "{id:guid}"
+@model BuildWise.Web.Areas.Scopes.Pages.Items.DetailsModel
+@{
+    var item = Model.Item;
+    ViewData["Title"] = "Scope item details";
+    ViewData["PageTitle"] = string.IsNullOrWhiteSpace(item.Title) ? "Scope item details" : item.Title;
+    ViewData["PageSubTitle"] = "Work, quantities, site assessment and review information.";
+    var breadcrumbs = new List<BreadcrumbItem>
+    {
+        new("Scope", Url.Page("/Index", new { area = "Scopes", id = (Guid?)null, requestId = (Guid?)null }))
+    };
+    if (item.RequestId.HasValue)
+    {
+        breadcrumbs.Add(new("Request scope", Url.Page("/Details", new { area = "Scopes", id = item.RequestId, requestId = (Guid?)null })));
+    }
+    ViewData["Breadcrumbs"] = breadcrumbs;
+}
+
+@section actionbar {
+    <a class="btn" asp-page="/Dependencies/Index" asp-route-id="" asp-route-scopeItemId="@item.Id" asp-route-requestId="">
+        <i class="fa-solid fa-link" aria-hidden="true"></i>
+        <span>View dependencies</span>
+    </a>
+    <a class="btn" asp-page="/Stages/Index" asp-route-id="" asp-route-scopeItemId="@item.Id" asp-route-requestId="">
+        <i class="fa-solid fa-list-check" aria-hidden="true"></i>
+        <span>View stages</span>
+    </a>
+    <a class="btn" asp-page="/Clauses/Index" asp-route-id="" asp-route-scopeItemId="@item.Id" asp-route-requestId="">
+        <i class="fa-solid fa-list" aria-hidden="true"></i>
+        <span>View clauses</span>
+    </a>
+    @if (item.CanEdit)
+    {
+    <a class="btn primary" asp-page="Upsert" asp-route-id="@item.Id" asp-route-requestId="@item.RequestId">
+        <i class="fa-solid fa-pen" aria-hidden="true"></i>
+        <span>Edit scope item</span>
+    </a>
+        <a class="btn" asp-page="/Clauses/Upsert" asp-route-id="" asp-route-scopeItemId="@item.Id" asp-route-requestId="">
+            <i class="fa-solid fa-plus" aria-hidden="true"></i>
+            <span>Add clause</span>
+        </a>
+    }
+}
+
+<div class="requests-page profile-details">
+    @if (TempData["SuccessMessage"] is string message)
+    {
+        <div class="request-success" role="status">@message</div>
+    }
+    <div class="details-stack">
+        <section class="detail-card panel configuration-section">
+            <header class="card-header"><h2>Scope item details</h2></header>
+            <div class="card-body">
+                <dl class="profile-detail-list">
+                    <div><dt>Scope item ID</dt><dd>@item.Id</dd></div>
+                    <div><dt>Request ID</dt><dd>@(item.RequestId?.ToString() ?? "Not set")</dd></div>
+                    <div><dt>Title</dt><dd>@(string.IsNullOrWhiteSpace(item.Title) ? "Not provided" : item.Title)</dd></div>
+                    <div><dt>Service</dt><dd>@(item.ServiceName ?? "Not set")</dd></div>
+                    <div><dt>Service code</dt><dd>@(item.ServiceCodeSnapshot ?? "Not set")</dd></div>
+                    <div><dt>Quantity</dt><dd>@(item.Quantity?.ToString() ?? "Not set")</dd></div>
+                    <div><dt>Unit</dt><dd>@(item.UnitCodeSnapshot ?? "Not set")</dd></div>
+                    <div class="profile-detail-wide"><dt>Description</dt><dd>@(item.Description ?? "Not provided")</dd></div>
+                </dl>
+            </div>
+            <footer class="card-footer">
+                <dl class="record-metadata">
+                    <div><dt>Review status</dt><dd>@(item.ReviewStatusName ?? "Not set")</dd></div>
+                    <div><dt>Reviewed by</dt><dd>@(item.ReviewedBy ?? "Not set")</dd></div>
+                    <div><dt>Review date</dt><dd>@(item.ReviewedOn?.ToString("dd MMM yyyy, HH:mm") ?? "Not set")</dd></div>
+                </dl>
+            </footer>
+        </section>
+        <section class="detail-card panel configuration-section">
+            <header class="card-header"><h2>Site assessment</h2></header>
+            <div class="card-body">
+                <dl class="profile-detail-list">
+                    <div>
+                        <dt>Assessment</dt>
+                        <dd><span class="badge">@(item.RequireAssessment.HasValue ? (item.RequireAssessment.Value ? "Required" : "Not required") : "Not set")</span></dd>
+                    </div>
+                    <div class="profile-detail-wide"><dt>Notes</dt><dd>@(item.AssessmentNotes ?? "Not provided")</dd></div>
+                </dl>
+            </div>
+        </section>
+        <section class="panel configuration-section">
+            <div class="configuration-preview-heading">
+                <h2>Scope clauses</h2>
+                <span class="badge">@Model.Clauses.Count clauses</span>
+            </div>
+            <div class="table-wrap">
+                <table class="configuration-table">
+                    <caption class="sr-only">Inclusions, exclusions and conditions for this scope item</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Type</th>
+                            <th scope="col">Wording</th>
+                            <th scope="col">Creator</th>
+                            <th scope="col">Creation date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var clause in Model.Clauses)
+                        {
+                            <tr>
+                                <td>
+                                    <a class="record-link" asp-page="/Clauses/Details" asp-route-id="@clause.Id" asp-route-scopeItemId="@item.Id" asp-route-requestId="">
+                                        @clause.ClauseTypeName
+                                        <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                                    </a>
+                                </td>
+                                <td>@clause.Description</td>
+                                <td>@clause.CreatorName</td>
+                                <td>@(clause.CreationDate?.ToString("dd MMM yyyy, HH:mm") ?? "Not set")</td>
+                            </tr>
+                        }
+                        @if (Model.Clauses.Count == 0)
+                        {
+                            <tr><td colspan="4">No clauses have been added to this scope item.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+</div>

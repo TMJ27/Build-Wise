@@ -1,0 +1,51 @@
+@page "{id:guid}"
+@model BuildWise.Web.Areas.Scopes.Pages.Clauses.DetailsModel
+@{
+    var clause = Model.Clause;
+    ViewData["Title"] = "Scope clause details";
+    ViewData["PageTitle"] = clause.ClauseTypeName;
+    ViewData["PageSubTitle"] = "Scope clause information and creation record.";
+    ViewData["Breadcrumbs"] = new BreadcrumbItem[]
+    {
+        new("Scope", Url.Page("/Index", new { area = "Scopes", id = (Guid?)null, scopeItemId = (Guid?)null })),
+        new("Request scope", Url.Page("/Details", new { area = "Scopes", id = clause.RequestId, scopeItemId = (Guid?)null })),
+        new("Scope item", Url.Page("/Items/Details", new { area = "Scopes", id = clause.ScopeItemId, requestId = clause.RequestId, scopeItemId = (Guid?)null })),
+        new("Clauses", Url.Page("/Clauses/Index", new { area = "Scopes", id = (Guid?)null, scopeItemId = clause.ScopeItemId, requestId = (Guid?)null }))
+    };
+}
+
+@section actionbar {
+    @if (clause.CanEdit)
+    {
+        <a class="btn primary" asp-page="Upsert" asp-route-id="@clause.Id" asp-route-scopeItemId="@clause.ScopeItemId">
+            <i class="fa-solid fa-pen" aria-hidden="true"></i>
+            <span>Edit clause</span>
+        </a>
+    }
+}
+
+<div class="requests-page profile-details">
+    @if (TempData["SuccessMessage"] is string message)
+    {
+        <div class="request-success" role="status">@message</div>
+    }
+    <div class="details-stack">
+        <section class="detail-card panel configuration-section">
+            <header class="card-header"><h2>Scope clause details</h2></header>
+            <div class="card-body">
+                <dl class="profile-detail-list">
+                    <div><dt>Clause ID</dt><dd>@clause.Id</dd></div>
+                    <div><dt>Type</dt><dd><span class="badge">@clause.ClauseTypeName</span></dd></div>
+                    <div class="profile-detail-wide"><dt>Scope item</dt><dd>@clause.ScopeItemTitle</dd></div>
+                    <div class="profile-detail-wide"><dt>Wording</dt><dd>@(clause.Description ?? "Not provided")</dd></div>
+                </dl>
+            </div>
+            <footer class="card-footer">
+                <dl class="record-metadata">
+                    <div><dt>Creator</dt><dd>@clause.CreatorName</dd></div>
+                    <div><dt>Creation date</dt><dd>@(clause.CreationDate?.ToString("dd MMM yyyy, HH:mm") ?? "Not set")</dd></div>
+                </dl>
+            </footer>
+        </section>
+    </div>
+</div>

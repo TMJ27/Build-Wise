@@ -1,0 +1,53 @@
+@page
+@model BuildWise.Web.Areas.Scopes.Pages.IndexModel
+@{
+    ViewData["Title"] = "Scope";
+    ViewData["PageTitle"] = ViewData["Title"];
+    ViewData["PageSubTitle"] = "Define the work required for each customer request.";
+}
+
+<div class="requests-page">
+    <section class="panel configuration-section">
+        <div class="configuration-preview-heading">
+            <h2>Request scopes</h2>
+            <span class="badge">@Model.Requests.Count requests</span>
+        </div>
+        <div class="table-wrap">
+            <table class="configuration-table">
+                <caption class="sr-only">Customer requests and their scope items</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Request</th>
+                        <th scope="col">Title</th>
+                        <th scope="col">Customer</th>
+                        <th scope="col">Site address</th>
+                        <th scope="col">Scope items</th>
+                        <th scope="col">Site assessments</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var request in Model.Requests)
+                    {
+                        <tr>
+                            <td>
+                                <a class="record-link record-id" asp-page="Details" asp-route-id="@request.RequestId">
+                                    @(request.ReferenceNumber ?? request.RequestId.ToString())
+                                    <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                                </a>
+                            </td>
+                            <td>@request.Title</td>
+                            <td>@request.CustomerName</td>
+                            <td>@request.SiteAddress</td>
+                            <td>@request.ItemCount</td>
+                            <td>@request.AssessmentCount</td>
+                        </tr>
+                    }
+                    @if (Model.Requests.Count == 0)
+                    {
+                        <tr><td colspan="6">No requests are available for scope preparation.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>

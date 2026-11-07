@@ -1,0 +1,15 @@
+@{
+    var name = ViewData["CustomerName"]?.ToString() ?? "Customer account";
+    var initials = string.Concat(name.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(part => char.ToUpperInvariant(part[0])));
+}
+<header class="v2-header">
+    <a class="brand" asp-area="CustomerPortal" asp-page="/Index"><img src="~/brand/buildwise-mark-muted.svg" alt="" />BuildWise</a>
+    <div class="v2-header-right">
+        <span class="avatar" aria-hidden="true">@initials</span>
+        <div class="v2-owner"><b class="workspace-account-name">@name</b><small class="workspace-account-role">Customer</small></div>
+        <form method="post" asp-area="CustomerPortal" asp-page="/Account/Logout">
+            <button class="icon-btn" type="submit" aria-label="Sign out" title="Sign out"><i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i></button>
+        </form>
+        <button class="icon-btn v2-mobile-menu" type="button" data-workspace-menu aria-controls="workspace-navigation" aria-expanded="false" aria-label="Open navigation"><i class="fa-solid fa-bars" aria-hidden="true"></i></button>
+    </div>
+</header>

@@ -1,0 +1,67 @@
+@page "{id:guid}"
+@model BuildWise.Web.Areas.Configuration.Pages.Inclusions.DetailsModel
+@{
+    var entry = Model.InclusionDetails;
+    ViewData["Title"] = "Inclusion details";
+    ViewData["PageTitle"] = string.IsNullOrWhiteSpace(entry.Name) ? "Inclusion details" : entry.Name;
+    ViewData["PageSubTitle"] = "Inclusion information and status.";
+    ViewData["Breadcrumbs"] = new BreadcrumbItem[]
+    {
+        new("Configuration"),
+        new("Inclusions", Url.Page("/Inclusions/Index", new { area = "Configuration", id = (Guid?)null }))
+    };
+}
+
+@section actionbar {
+    <a class="btn primary" asp-page="Upsert" asp-route-id="@entry.Id">
+        <i class="fa-solid fa-pen" aria-hidden="true"></i>
+        <span>Edit inclusion</span>
+    </a>
+}
+
+<div class="requests-page configuration-page profile-details">
+    @if (TempData["SuccessMessage"] is string message)
+    {
+        <div class="request-success" role="status">@message</div>
+    }
+
+    <div class="details-stack">
+        <section class="detail-card panel configuration-section">
+            <header class="card-header">
+                <h2>Inclusion details</h2>
+            </header>
+            <div class="card-body">
+                <dl class="profile-detail-list">
+                    <div>
+                        <dt>Inclusion ID</dt>
+                        <dd>@entry.Id</dd>
+                    </div>
+                    <div>
+                        <dt>Name</dt>
+                        <dd>@(string.IsNullOrWhiteSpace(entry.Name) ? "Not provided" : entry.Name)</dd>
+                    </div>
+                    <div>
+                        <dt>Status</dt>
+                        <dd><span class="badge @(entry.IsActive == true ? "green" : null)">@(entry.Status?.ToString() ?? "Not set")</span></dd>
+                    </div>
+                    <div class="profile-detail-wide">
+                        <dt>Description</dt>
+                        <dd>@(string.IsNullOrWhiteSpace(entry.Description) ? "Not provided" : entry.Description)</dd>
+                    </div>
+                </dl>
+            </div>
+            <footer class="card-footer">
+                <dl class="record-metadata">
+                    <div>
+                        <dt>Creation date</dt>
+                        <dd>@(entry.CreationDate?.ToString("dd MMM yyyy, HH:mm") ?? "Not set")</dd>
+                    </div>
+                    <div>
+                        <dt>Last updated</dt>
+                        <dd>@(entry.LastUpdated?.ToString("dd MMM yyyy, HH:mm") ?? "Not set")</dd>
+                    </div>
+                </dl>
+            </footer>
+        </section>
+    </div>
+</div>

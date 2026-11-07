@@ -1,0 +1,112 @@
+@page "{id:guid?}"
+@model BuildWise.Web.Areas.Scopes.Pages.Items.UpsertModel
+@{
+    var editing = Model.Input.Id.HasValue;
+    ViewData["Title"] = editing ? "Edit scope item" : "Add scope item";
+    ViewData["PageTitle"] = ViewData["Title"];
+    ViewData["PageSubTitle"] = "Describe an individual piece of work for a customer request.";
+    var breadcrumbs = new List<BreadcrumbItem>
+    {
+        new("Scope", Url.Page("/Index", new { area = "Scopes", id = (Guid?)null, requestId = (Guid?)null }))
+    };
+    if (Model.Input.RequestId.HasValue)
+    {
+        breadcrumbs.Add(new("Request scope", Url.Page("/Details", new { area = "Scopes", id = Model.Input.RequestId, requestId = (Guid?)null })));
+    }
+    ViewData["Breadcrumbs"] = breadcrumbs;
+}
+
+<div class="requests-page">
+    <form method="post" class="form-stack" asp-route-id="@Model.Input.Id" asp-route-requestId="">
+        <input type="hidden" asp-for="Input.Id" />
+        <div asp-validation-summary="All" class="configuration-errors" role="alert"></div>
+        <section class="panel configuration-section form-panel">
+            <h2>Work details</h2>
+            <div class="form-fields">
+                <div class="field form-wide">
+                    <label asp-for="Input.RequestId">Request <span>*</span></label>
+                    @if (editing)
+                    {
+                        <input type="hidden" asp-for="Input.RequestId" />
+                        <p>@Model.Requests.FirstOrDefault(request => request.Value == Model.Input.RequestId?.ToString())?.Text</p>
+                    }
+                    else
+                    {
+                    <select class="form-control" asp-for="Input.RequestId" asp-items="Model.Requests" required>
+                        <option value="">Choose a request</option>
+                    </select>
+                    }
+                    <span asp-validation-for="Input.RequestId"></span>
+                </div>
+                <div class="field form-wide">
+                    <label asp-for="Input.ServiceId">Service <span>*</span></label>
+                    @if (editing)
+                    {
+                        <input type="hidden" asp-for="Input.ServiceId" />
+                        <p>@Model.Services.FirstOrDefault(service => service.Value == Model.Input.ServiceId?.ToString())?.Text</p>
+                    }
+                    else
+                    {
+                    <select class="form-control" asp-for="Input.ServiceId" asp-items="Model.Services" required>
+                        <option value="">Choose a service</option>
+                    </select>
+                    }
+                    <span asp-validation-for="Input.ServiceId"></span>
+                </div>
+                <div class="field form-wide">
+                    <label asp-for="Input.Title">Title <span>*</span></label>
+                    <input class="form-control" asp-for="Input.Title" required maxlength="50" placeholder="For example, paint three bedroom walls" />
+                    <span asp-validation-for="Input.Title"></span>
+                </div>
+                <div class="field form-wide">
+                    <label asp-for="Input.Description">Description</label>
+                    <textarea class="form-control" asp-for="Input.Description" rows="4"></textarea>
+                    <span asp-validation-for="Input.Description"></span>
+                </div>
+                <div class="field">
+                    <label asp-for="Input.Quantity">Quantity</label>
+                    <input class="form-control" asp-for="Input.Quantity" type="number" min="1" step="1" />
+                    <span asp-validation-for="Input.Quantity"></span>
+                </div>
+                <div class="field">
+                    <label asp-for="Input.UnitCodeSnapshot">Unit</label>
+                    <input class="form-control" asp-for="Input.UnitCodeSnapshot" maxlength="50" placeholder="For example, rooms or m²" />
+                    <span asp-validation-for="Input.UnitCodeSnapshot"></span>
+                </div>
+            </div>
+        </section>
+        <section class="panel configuration-section form-panel">
+            <h2>Site assessment</h2>
+            <label class="form-check">
+                <input asp-for="Input.RequireAssessment" />
+                <span>
+                    <strong>Site assessment required</strong>
+                    <small>Confirm site conditions before finalising this work item. An assessment is also required when the selected service requires one.</small>
+                </span>
+            </label>
+            <div class="form-fields">
+                <div class="field form-wide">
+                    <label asp-for="Input.AssessmentNotes">Assessment notes</label>
+                    <textarea class="form-control" asp-for="Input.AssessmentNotes" rows="4" placeholder="Record measurements, access needs or conditions to confirm."></textarea>
+                    <span asp-validation-for="Input.AssessmentNotes"></span>
+                </div>
+            </div>
+        </section>
+        <section class="panel configuration-section form-panel">
+            <h2>Review</h2>
+            <label class="form-check">
+                <input asp-for="Input.MarkReviewed" />
+                <span>
+                    <strong>I have reviewed this scope item</strong>
+                    <small>Record your name and the review date when saving. Leave unchecked to keep the item pending.</small>
+                </span>
+            </label>
+        </section>
+        <div class="form-actions">
+            <button class="btn primary" type="submit">
+                <i class="fa-solid fa-check" aria-hidden="true"></i>
+                <span>@(editing ? "Save changes" : "Create scope item")</span>
+            </button>
+        </div>
+    </form>
+</div>

@@ -1,0 +1,23 @@
+@page
+@model BuildWise.Web.Areas.CustomerPortal.Pages.Requests.CreateModel
+@{
+    ViewData["Title"] = "New request";
+    ViewData["PageTitle"] = ViewData["Title"];
+    ViewData["PageSubTitle"] = "Tell us about the work you need.";
+    ViewData["Breadcrumbs"] = new BreadcrumbItem[] { new("My dashboard", Url.Page("/Index", new { area = "CustomerPortal" })) };
+}
+<div class="requests-page">
+    <form method="post" class="form-stack">
+        <div asp-validation-summary="All" class="configuration-errors" role="alert"></div>
+        <section class="panel configuration-section form-panel">
+            <h2>Work details</h2>
+            <div class="form-fields">
+                <div class="field form-wide"><label asp-for="Input.Title">Title <span>*</span></label><input class="form-control" asp-for="Input.Title" maxlength="50" required /><span asp-validation-for="Input.Title"></span></div>
+                <div class="field form-wide"><label asp-for="Input.SiteAddress">Site address <span>*</span></label><input class="form-control" asp-for="Input.SiteAddress" maxlength="50" required /><span asp-validation-for="Input.SiteAddress"></span></div>
+                <div class="field form-wide"><label asp-for="Input.PropertyType">Property type</label><input class="form-control" asp-for="Input.PropertyType" maxlength="50" placeholder="For example, existing house" /><span asp-validation-for="Input.PropertyType"></span></div>
+                <div class="field form-wide"><label asp-for="Input.Description">Description <span>*</span></label><textarea class="form-control" asp-for="Input.Description" rows="4" maxlength="3000" required placeholder="Describe the work, affected areas and anything we need to know."></textarea><span asp-validation-for="Input.Description"></span></div>
+            </div>
+        </section>
+        <div class="form-actions"><button class="btn primary" type="submit"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i><span>Submit request</span></button></div>
+    </form>
+</div>

@@ -1,0 +1,51 @@
+@page "{id:guid}"
+@model BuildWise.Web.Areas.Scopes.Pages.Stages.DetailsModel
+@{
+    var stage = Model.Stage;
+    ViewData["Title"] = "Scope stage details";
+    ViewData["PageTitle"] = stage.Name;
+    ViewData["PageSubTitle"] = "Scope stage information and creation record.";
+    ViewData["Breadcrumbs"] = new BreadcrumbItem[]
+    {
+        new("Scope", Url.Page("/Index", new { area = "Scopes", id = (Guid?)null, scopeItemId = (Guid?)null })),
+        new("Request scope", Url.Page("/Details", new { area = "Scopes", id = stage.RequestId, scopeItemId = (Guid?)null })),
+        new("Scope item", Url.Page("/Items/Details", new { area = "Scopes", id = stage.ScopeItemId, requestId = stage.RequestId, scopeItemId = (Guid?)null })),
+        new("Stages", Url.Page("/Stages/Index", new { area = "Scopes", id = (Guid?)null, scopeItemId = stage.ScopeItemId, requestId = (Guid?)null }))
+    };
+}
+
+@section actionbar {
+    @if (stage.CanEdit)
+    {
+        <a class="btn primary" asp-page="Upsert" asp-route-id="@stage.Id" asp-route-scopeItemId="@stage.ScopeItemId">
+            <i class="fa-solid fa-pen" aria-hidden="true"></i>
+            <span>Edit stage</span>
+        </a>
+    }
+}
+
+<div class="requests-page profile-details">
+    @if (TempData["SuccessMessage"] is string message)
+    {
+        <div class="request-success" role="status">@message</div>
+    }
+    <div class="details-stack">
+        <section class="detail-card panel configuration-section">
+            <header class="card-header"><h2>Scope stage details</h2></header>
+            <div class="card-body">
+                <dl class="profile-detail-list">
+                    <div><dt>Stage ID</dt><dd>@stage.Id</dd></div>
+                    <div><dt>Name</dt><dd>@stage.Name</dd></div>
+                    <div class="profile-detail-wide"><dt>Scope item</dt><dd>@stage.ScopeItemTitle</dd></div>
+                    <div class="profile-detail-wide"><dt>Description</dt><dd>@(stage.Description ?? "Not provided")</dd></div>
+                </dl>
+            </div>
+            <footer class="card-footer">
+                <dl class="record-metadata">
+                    <div><dt>Creator</dt><dd>@stage.CreatorName</dd></div>
+                    <div><dt>Creation date</dt><dd>@stage.CreationDate.ToString("dd MMM yyyy, HH:mm")</dd></div>
+                </dl>
+            </footer>
+        </section>
+    </div>
+</div>

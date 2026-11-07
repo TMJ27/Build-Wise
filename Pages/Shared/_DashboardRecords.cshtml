@@ -1,13 +1,13 @@
 @model BuildWise.Web.Pages.IndexModel
 @using BuildWise.Web.Pages
 <div class="table-period" data-view-all-url="@Model.ScreenUrl(Model.Tab == "requests" ? "requests" : "quotations")">
-    <span>Last 7 days</span>
+    <span>@Model.RangeCaption</span>
     <span>@Model.PeriodCaption</span>
 </div>
 <div class="table-wrap" id="dashboard-records">
     <table>
         <thead><tr>
-                        <th scope="col">ID</th><th>@(Model.Tab == "requests" ? "Request / customer" : "Quotation / customer")</th><th>Status</th><th>@(Model.Tab == "requests" ? "Created" : "Value (USD)")</th></tr></thead>
+                        <th scope="col">ID</th><th>@(Model.Tab == "requests" ? "Request / customer" : "Quotation / customer")</th><th>Status</th><th>@(Model.Tab == "requests" ? "Created" : "Value")</th></tr></thead>
         <tbody>
         @if (Model.Tab == "requests")
         {
@@ -27,13 +27,12 @@
                     <td><span class="badge @request.BadgeClass">@request.Status</span></td><td class="muted">@IndexModel.Date(request.CreatedOn)</td>
                     </tr>
             }
-            @if (Model.VisibleRequests.Count == 0) { <tr><td colspan="4" class="empty">No requests in the last 7 days.</td></tr> }
+            @if (Model.VisibleRequests.Count == 0) { <tr><td colspan="4" class="empty">No requests in the selected period.</td></tr> }
         }
         else
         {
             @foreach (var quotation in Model.VisibleQuotations.Take(6))
             {
-                var request = Model.RequestFor(quotation.RequestId);
                 <tr>
                     <td>
                         <a class="record-link record-id" href="@Model.ScreenUrl($"quote/{quotation.Id}")">
@@ -42,13 +41,13 @@
                         </a>
                     </td>
                     <td>
-                        <strong>@request.Title</strong>
-                        <small>@request.Customer</small>
+                        <strong>@quotation.Title</strong>
+                        <small>@quotation.Customer</small>
                     </td>
-                    <td><span class="badge @(quotation.Status == "Approved" ? "green" : "")">@quotation.Status</span></td><td>@IndexModel.Money(quotation.Amount)</td>
+                    <td><span class="badge @(quotation.Status == BuildWise.Lib.Enums.Statuses.QuotationStatus.Approved ? "green" : "")">@(quotation.Status?.ToString() ?? "Not set")</span></td><td>@IndexModel.Amount(quotation)</td>
                     </tr>
             }
-            @if (Model.VisibleQuotations.Count == 0) { <tr><td colspan="4" class="empty">No quotations in the last 7 days.</td></tr> }
+            @if (Model.VisibleQuotations.Count == 0) { <tr><td colspan="4" class="empty">No quotations in the selected period.</td></tr> }
         }
         </tbody>
     </table>

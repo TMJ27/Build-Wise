@@ -1,147 +1,122 @@
 @page "{id:guid}"
 @model BuildWise.Web.Areas.Services.Pages.DetailsModel
 @{
-    ViewData["Title"] = Model.Service.Name;
-    ViewData["AccountName"] = "Tawanda M.";
-    ViewData["AccountRole"] = "Business owner";
-
-    ViewData["PageTitle"] = Model.Service.Name;
-    ViewData["PageSubTitle"] = "Reusable details that bring clarity to each customer request.";
+    var service = Model.ServiceDetails;
+    ViewData["Title"] = "Service details";
+    ViewData["PageTitle"] = service.Name;
+    ViewData["PageSubTitle"] = "Service information, availability and creation record.";
+    ViewData["BreadcrumbTitle"] = service.ServiceNumber;
     ViewData["Breadcrumbs"] = new BreadcrumbItem[]
     {
-        new("Service catalogue", Url.Page("/Index", new { area = "Services" }))
+        new("Service catalogue", Url.Page("/Index", new { area = "Services", id = (Guid?)null }))
     };
 }
 
 @section actionbar {
-    <div class="catalogue-actions">
-        <a class="btn" asp-page="Edit" asp-route-id="@Model.Service.Id">
-            <i class="icon fa-solid fa-pen" aria-hidden="true"></i>
-            <span>Edit service</span>
-        </a>
-        @if (Model.Service.IsActive)
-        {
-            <a class="btn primary" asp-area="Requests" asp-page="/Create" asp-route-serviceId="@Model.Service.Id">
-                <i class="icon fa-solid fa-plus" aria-hidden="true"></i>
-                <span>Start request</span>
-            </a>
-        }
-    </div>
+    <a class="btn primary" asp-page="Upsert" asp-route-id="@service.Id">
+        <i class="fa-solid fa-pen" aria-hidden="true"></i>
+        <span>Edit service</span>
+    </a>
 }
 
-<div class="requests-page catalogue-page">
-
-    @if (TempData["CatalogueMessage"] is string message)
+<div class="requests-page catalogue-page profile-details">
+    @if (TempData["SuccessMessage"] is string message)
     {
         <div class="request-success" role="status">
-            <i class="icon fa-solid fa-check" aria-hidden="true"></i>
             @message
         </div>
+
     }
 
-    <div class="catalogue-detail-grid">
-        <div class="catalogue-column">
-            <section class="panel request-detail-panel">
-                <div class="catalogue-section-heading">
-                    <h2>Service overview</h2>
-                    <span class="badge @(Model.Service.IsActive ? "green" : "")">@(Model.Service.IsActive ? "Active" : "Archived")</span>
-                </div>
-                <p class="catalogue-copy">@Model.Service.Description</p>
-                <dl>
-                    <div><dt>Category</dt><dd>@Model.Service.Category</dd></div>
-                    <div><dt>Measurement unit</dt><dd>@Model.Service.Unit</dd></div>
-                    <div><dt>Site assessment</dt><dd>@(Model.Service.RequiresSiteAssessment ? "Required before confirming the scope" : "Confirm for each request")</dd></div>
+    <div class="details-stack">
+        <section class="detail-card panel configuration-section">
+            <header class="card-header">
+                <h2>Service details</h2>
+            </header>
+
+            <div class="card-body">
+                <dl class="profile-detail-list">
+                    <div>
+                        <dt>Service ID</dt>
+                        <dd>@service.ServiceNumber</dd>
+                    </div>
+                    <div>
+                        <dt>Name</dt>
+                        <dd>@service.Name</dd>
+                    </div>
+                    <div>
+                        <dt>Category</dt>
+                        <dd>
+                            <a asp-area="Configuration" asp-page="/ServiceCategories/Details" asp-route-id="@service.CategoryId">@service.CategoryName</a>
+                            @if (!service.CategoryIsActive)
+                            {
+                                <span class="badge">@ActiveStatus.Inactive category</span>
+                            }
+                        </dd>
+                    </div>
+                    <div>
+                        <dt>Site assessment</dt>
+                        <dd>@(service.RequireSiteAssessment ? "Required" : "Not required")</dd>
+                    </div>
+                    <div>
+                        <dt>Status</dt>
+                        <dd>
+                            <span class="badge @(service.IsActive ? "green" : null)">@service.Status</span>
+                        </dd>
+                    </div>
+                    <div class="profile-detail-wide">
+                        <dt>Description</dt>
+                        <dd>@(string.IsNullOrWhiteSpace(service.Description) ? "Not provided" : service.Description)</dd>
+                    </div>
                 </dl>
-            </section>
 
-            <section class="panel request-detail-panel">
-                <div class="catalogue-scope-columns">
+            </div>
+            <footer class="card-footer">
+                <dl class="record-metadata">
                     <div>
-                        <h2>What’s included</h2>
-                        <ul class="catalogue-list">
-                            @foreach (var item in Model.Service.Inclusions)
-                            {
-                                <li>@item</li>
-                            }
-                        </ul>
+                        <dt>Created by</dt>
+                        <dd>@service.CreatorName</dd>
                     </div>
                     <div>
-                        <h2>What’s excluded</h2>
-                        <ul class="catalogue-list">
-                            @foreach (var item in Model.Service.Exclusions)
-                            {
-                                <li>@item</li>
-                            }
-                        </ul>
-                        @if (Model.Service.Exclusions.Count == 0)
-                        {
-                            <p class="catalogue-muted">No default exclusions recorded.</p>
-                        }
+                        <dt>Creation date</dt>
+                        <dd>@service.CreationDate.ToString("dd MMM yyyy, HH:mm")</dd>
                     </div>
+                    <div>
+                        <dt>Last updated</dt>
+                        <dd>@(service.LastUpdated?.ToString("dd MMM yyyy, HH:mm") ?? "Not updated")</dd>
+                    </div>
+                </dl>
+
+            </footer>
+
+        </section>
+
+        <div class="catalogue-column">
+            <section class="detail-card panel configuration-section">
+                <header class="card-header">
+                    <h2>Service availability</h2>
+                </header>
+
+                <div class="card-body">
+                    <p class="configuration-muted">
+                        @(service.IsActive
+                        ? "Deactivate this service when it is no longer offered. Existing records are retained."
+                        : "Activate this service to make it available again.")
+                    </p>
                 </div>
+                <footer class="card-footer">
+                    <form method="post" asp-page-handler="Toggle" asp-route-id="@service.Id">
+                        <button class="btn" type="submit">
+                            <i class="fa-solid @(service.IsActive ? "fa-box-archive" : "fa-check")" aria-hidden="true"></i>
+                            <span>@(service.IsActive ? "Deactivate service" : "Activate service")</span>
+                        </button>
+                    </form>
+
+                </footer>
+
             </section>
 
-            <section class="panel request-detail-panel">
-                <div class="catalogue-section-heading">
-                    <div><h2>Clarification questions</h2><p>Information to confirm with the customer.</p></div>
-                    <span class="badge">@Model.Service.Questions.Count questions</span>
-                </div>
-                <ol class="catalogue-numbered-list">
-                    @foreach (var question in Model.Service.Questions)
-                    {
-                        <li>@question</li>
-                    }
-                </ol>
-                @if (Model.Service.Questions.Count == 0)
-                {
-                    <p class="catalogue-muted">No default questions recorded.</p>
-                }
-            </section>
-
-            <section class="panel request-detail-panel">
-                <h2>Normal work stages</h2>
-                <p class="catalogue-muted">Use this sequence as a starting point when reviewing the scope.</p>
-                <ol class="catalogue-numbered-list catalogue-stage-list">
-                    @foreach (var stage in Model.Service.Stages)
-                    {
-                        <li>@stage</li>
-                    }
-                </ol>
-            </section>
         </div>
-
-        <aside class="catalogue-column">
-            <section class="request-workflow-note request-form-help">
-                <i class="icon fa-solid fa-circle-question" aria-hidden="true"></i>
-                <div>
-                    <h2>A catalogue you can stand behind.</h2>
-                    <p>These details provide a starting point. Review the actual site, quantities and customer requirements before approving a quotation.</p>
-                </div>
-            </section>
-
-            <section class="panel request-detail-panel">
-                <h2>Service dependencies</h2>
-                <p class="catalogue-muted">Work that should happen before this service.</p>
-                @foreach (var dependency in Model.Dependencies)
-                {
-                    <a class="catalogue-dependency" asp-page="Details" asp-route-id="@dependency.Id">
-                        <span><strong>@dependency.Name</strong><small>@dependency.Code · @(dependency.IsActive ? "Active" : "Archived")</small></span>
-                        <i class="icon fa-solid fa-chevron-right" aria-hidden="true"></i>
-                    </a>
-                }
-                @if (Model.Dependencies.Count == 0)
-                {
-                    <p class="catalogue-muted">No default dependencies recorded.</p>
-                }
-            </section>
-
-            <section class="panel request-detail-panel">
-                <h2>Service availability</h2>
-                <p class="catalogue-muted">@(Model.Service.IsActive ? "Archive this service when it is no longer offered. Its definition will remain available for reference." : "Activate this service to offer it for new customer requests.")</p>
-                <form method="post" asp-page-handler="Toggle" asp-route-id="@Model.Service.Id" class="catalogue-availability-form">
-                    <button class="btn" type="submit">@(Model.Service.IsActive ? "Archive service" : "Activate service")</button>
-                </form>
-            </section>
-        </aside>
     </div>
+
 </div>

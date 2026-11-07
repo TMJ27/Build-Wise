@@ -2,7 +2,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Data;
 using BuildWise.Data;
-using BuildWise.Lib.Rights;
+using BuildWise.Lib.Enums.Rights;
 using BuildWise.Lib.Users;
 using BuildWise.Web.Services.Authentication;
 using Microsoft.AspNetCore.Identity;
@@ -35,7 +35,7 @@ public class CurrentUserService(
         {
             return await db.Users
                 .AsNoTracking()
-                .Where(user => user.Id == userId && user.IsActive)
+                .Where(user => user.Id == userId && user.IsActive && !db.CustomerAccounts.Any(account => account.UserId == user.Id))
                 .Select(user => (Guid?)user.Id)
                 .FirstOrDefaultAsync();
         }
@@ -55,7 +55,7 @@ public class CurrentUserService(
 
         return await db.Users
             .AsNoTracking()
-            .Where(user => user.Email == email && user.IsActive)
+            .Where(user => user.Email == email && user.IsActive && !db.CustomerAccounts.Any(account => account.UserId == user.Id))
             .Select(user => (Guid?)user.Id)
             .FirstOrDefaultAsync();
     }
@@ -102,11 +102,13 @@ public class CurrentUserService(
         // email can restrict who is allowed to claim setup when provisioning a company.
         var bootstrap = (string.IsNullOrWhiteSpace(settings.BootstrapAdminEmail)
                 || string.Equals(settings.BootstrapAdminEmail.Trim(), email, StringComparison.OrdinalIgnoreCase))
-            && !await db.Users.AnyAsync(user => user.IsActive || user.ActivationDate != null || user.LastLoginDate != null)
+            && !await db.Users.AnyAsync(user => (user.IsActive || user.ActivationDate != null || user.LastLoginDate != null)
+                && !db.CustomerAccounts.Any(account => account.UserId == user.Id))
             && !await db.UserGroups.AnyAsync(group => group.RightsId == (int)AccessRights.All);
         var existing = await db.Users.FirstOrDefaultAsync(user => user.Email.ToLower() == normalizedEmail);
         if (existing is not null)
         {
+            if (await db.CustomerAccounts.AnyAsync(account => account.UserId == existing.Id)) return null;
             if (!existing.IsActive && bootstrap)
             {
                 SetUpAdministrator(existing);

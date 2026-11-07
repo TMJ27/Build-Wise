@@ -12,7 +12,7 @@ public class IndexModel(BuildWiseDbContext db) : PageModel
 
     public async Task OnGetAsync()
     {
-      Users = await db.Users.ToListAsync();
+      Users = await db.Users.Where(user => !db.CustomerAccounts.Any(account => account.UserId == user.Id)).ToListAsync();
       await db.ApplyUserNumbersAsync(Users);
     }
 

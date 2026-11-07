@@ -1,6 +1,7 @@
 using BuildWise.Data;
 using Microsoft.EntityFrameworkCore;
 using BuildWise.Web.Services.Authentication;
+using BuildWise.Web.Services.CustomerPortal;
 
 var migrateOnly = args.Contains("--migrate", StringComparer.OrdinalIgnoreCase);
 var builder = WebApplication.CreateBuilder(args
@@ -32,6 +33,7 @@ builder.Services.AddRazorPages();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<BuildWise.Lib.Users.ICurrentUserService, BuildWise.Web.Services.CurrentUserService>();
 builder.Services.AddCognitoAuthentication(builder.Configuration);
+builder.Services.AddCustomerPortal();
 builder.Services.AddDbContext<BuildWiseDbContext>(options =>
 {
     var connectionString = builder.Configuration.GetConnectionString("BuildWise")
@@ -49,6 +51,13 @@ builder.Services.AddSingleton<BuildWise.Web.Services.QuotationWorkspace>();
 
 var app = builder.Build();
 
+// Apply existing EF migrations before serving requests.
+await using (var scope = app.Services.CreateAsyncScope())
+{
+    var database = scope.ServiceProvider.GetRequiredService<BuildWiseDbContext>();
+    await database.Database.MigrateAsync();
+}
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
@@ -60,6 +69,7 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseRouting();
+app.UseRateLimiter();
 
 app.UseStaticFiles();
 

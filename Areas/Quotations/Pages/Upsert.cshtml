@@ -1,0 +1,154 @@
+@page "{id:guid?}"
+@model BuildWise.Web.Areas.Quotations.Pages.UpsertModel
+@{
+    ViewData["Title"] = Model.Input.Id.HasValue ? "Edit quotation" : "Create quotation";
+    ViewData["PageTitle"] = ViewData["Title"];
+    ViewData["PageSubTitle"] = "Prepare the scope, amounts and terms for your customer.";
+}
+
+@section actionbar {
+    <a class="btn" asp-page="Index">Back to quotations</a>
+}
+
+<div class="requests-page quotations-page">
+    <form method="post" asp-route-id="@Model.Input.Id" class="quotation-editor quotation-upsert">
+        <input type="hidden" asp-for="Input.Id" />
+        <input type="hidden" asp-for="Input.RevisionId" />
+        <input type="hidden" asp-for="Input.Version" />
+        <div class="quotation-column">
+            <section class="panel request-detail-panel form-panel">
+                <h2>Request and quotation</h2>
+                <div asp-validation-summary="All" class="request-validation" role="alert"></div>
+                @if (Model.CreatesRevision)
+                {
+                    <p>Saving creates draft revision @Model.RevisionNumber. The approved revision is preserved.</p>
+                }
+                else
+                {
+                    <p>Draft revision @Model.RevisionNumber</p>
+                }
+                <div class="field">
+                    <label asp-for="Input.RequestId">Source request</label>
+                    @if (Model.Input.Id.HasValue)
+                    {
+                        <input type="hidden" asp-for="Input.RequestId" />
+                        <p>@Model.Requests.FirstOrDefault(request => request.Value == Model.Input.RequestId.ToString())?.Text</p>
+                    }
+                    else
+                    {
+                        <select class="form-control" asp-for="Input.RequestId" asp-items="Model.Requests">
+                            <option value="">Choose a request with scope items</option>
+                        </select>
+                        <button class="btn" type="submit" asp-page-handler="LoadScope" formnovalidate>Load request scope</button>
+                        <p>Load the scope after selecting a request. This replaces the items below.</p>
+                    }
+                    <span asp-validation-for="Input.RequestId"></span>
+                </div>
+                <div class="field">
+                    <label asp-for="Input.Title">Quotation title</label>
+                    <input class="form-control" asp-for="Input.Title" maxlength="150" required />
+                    <span asp-validation-for="Input.Title"></span>
+                </div>
+                <div class="field">
+                    <label><input asp-for="Input.IncludesPrices" /> Include prices</label>
+                    <p>Clear this to save a scope-only quotation without amounts.</p>
+                </div>
+                <div class="field">
+                    <label asp-for="Input.CurrencyCode">Currency</label>
+                    <select class="form-control" asp-for="Input.CurrencyCode" asp-items="Model.Currencies">
+                        <option value="">Choose a currency</option>
+                    </select>
+                    <span asp-validation-for="Input.CurrencyCode"></span>
+                </div>
+                <div class="field">
+                    <label asp-for="Input.IssueDate">Issue date</label>
+                    <input class="form-control" asp-for="Input.IssueDate" type="date" />
+                </div>
+                <div class="field">
+                    <label asp-for="Input.ValidUntil">Valid until</label>
+                    <input class="form-control" asp-for="Input.ValidUntil" type="date" />
+                    <span asp-validation-for="Input.ValidUntil"></span>
+                </div>
+            </section>
+
+            <section class="panel request-detail-panel">
+                <h2>Quotation items</h2>
+                <p>Enter the full amount for each line, including its quantity.</p>
+                @if (Model.Input.Items.Count == 0)
+                {
+                    <p>Select a request and load its scope to begin.</p>
+                }
+                @for (var i = 0; i < Model.Input.Items.Count; i++)
+                {
+                    <div class="quotation-edit-line">
+                        <input type="hidden" asp-for="Input.Items[i].ScopeItemId" />
+                        <div class="field quotation-description-field">
+                            <label asp-for="Input.Items[i].Title">Item @(i + 1)</label>
+                            <input class="form-control" asp-for="Input.Items[i].Title" maxlength="50" required />
+                            <span asp-validation-for="Input.Items[i].Title"></span>
+                            <label asp-for="Input.Items[i].Description">Description</label>
+                            <textarea class="form-control" asp-for="Input.Items[i].Description" rows="2"></textarea>
+                        </div>
+                        <div class="field">
+                            <label asp-for="Input.Items[i].Quantity">Quantity</label>
+                            <input class="form-control" asp-for="Input.Items[i].Quantity" type="number" min="1" max="1000000" step="1" />
+                            <span asp-validation-for="Input.Items[i].Quantity"></span>
+                        </div>
+                        <div class="field">
+                            <label asp-for="Input.Items[i].LineAmount">Line amount</label>
+                            <input class="form-control" asp-for="Input.Items[i].LineAmount" type="number" min="0" max="999999999999.99" step="0.01" />
+                            <span asp-validation-for="Input.Items[i].LineAmount"></span>
+                        </div>
+                    </div>
+                }
+                <div class="field">
+                    <label asp-for="Input.TaxAmount">Tax amount</label>
+                    <input class="form-control" asp-for="Input.TaxAmount" type="number" min="0" max="999999999999.99" step="0.01" />
+                    <span asp-validation-for="Input.TaxAmount"></span>
+                </div>
+                <p>Subtotal: <strong id="quotation-subtotal">—</strong> · Total including tax: <strong id="quotation-total">—</strong></p>
+            </section>
+
+            <section class="panel request-detail-panel form-panel">
+                <h2>Terms and exclusions</h2>
+                <div class="field">
+                    <label asp-for="Input.Terms">Terms</label>
+                    <textarea class="form-control" asp-for="Input.Terms" rows="4" maxlength="4000"></textarea>
+                    <span asp-validation-for="Input.Terms"></span>
+                </div>
+                <div class="field">
+                    <label asp-for="Input.Exclusions">Exclusions</label>
+                    <textarea class="form-control" asp-for="Input.Exclusions" rows="3" maxlength="4000"></textarea>
+                    <span asp-validation-for="Input.Exclusions"></span>
+                </div>
+                <div class="form-actions">
+                    <button class="btn primary" type="submit">@(Model.CreatesRevision ? "Save new draft revision" : "Save draft")</button>
+                    <a class="btn" asp-page="Index">Cancel</a>
+                </div>
+            </section>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        (() => {
+            const form = document.querySelector('.quotation-editor');
+            const prices = document.getElementById('Input_IncludesPrices');
+            const currency = document.getElementById('Input_CurrencyCode');
+            const amounts = [...form.querySelectorAll('input[name$=".LineAmount"]')];
+            const tax = document.getElementById('Input_TaxAmount');
+            function updateTotals() {
+                const subtotal = amounts.reduce((sum, input) => sum + Math.round((Number(input.value) || 0) * 100), 0);
+                const format = cents => (cents / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                document.getElementById('quotation-subtotal').textContent = prices.checked ? format(subtotal) : 'Not priced';
+                document.getElementById('quotation-total').textContent = prices.checked ? format(subtotal + Math.round((Number(tax.value) || 0) * 100)) : 'Not priced';
+                currency.required = prices.checked;
+                amounts.forEach(input => { input.required = prices.checked; input.disabled = !prices.checked; });
+                tax.disabled = !prices.checked;
+            }
+            form.addEventListener('input', updateTotals);
+            updateTotals();
+        })();
+    </script>
+}

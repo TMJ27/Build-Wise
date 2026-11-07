@@ -32,14 +32,14 @@ namespace BuildWise.Data.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<int>("ClientTypeId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("CreationDate")
                         .HasColumnType("datetime");
 
                     b.Property<Guid>("CreatorId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("CustomerTypeId")
-                        .HasColumnType("int");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -218,6 +218,57 @@ namespace BuildWise.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("Currency", (string)null);
+                });
+
+            modelBuilder.Entity("BuildWise.Data.CustomerAccount", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ClientId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("datetime");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("NormalizedEmail")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("SecurityStamp")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClientId")
+                        .IsUnique();
+
+                    b.HasIndex("NormalizedEmail")
+                        .IsUnique();
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("CustomerAccount", (string)null);
                 });
 
             modelBuilder.Entity("BuildWise.Data.Quotation", b =>
@@ -985,6 +1036,25 @@ namespace BuildWise.Data.Migrations
                         .HasConstraintName("FK_Currency_User");
 
                     b.Navigation("Creator");
+                });
+
+            modelBuilder.Entity("BuildWise.Data.CustomerAccount", b =>
+                {
+                    b.HasOne("BuildWise.Data.Client", "Client")
+                        .WithMany()
+                        .HasForeignKey("ClientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("BuildWise.Data.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Client");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("BuildWise.Data.Quotation", b =>

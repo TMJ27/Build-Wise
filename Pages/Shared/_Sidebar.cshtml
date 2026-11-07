@@ -3,6 +3,7 @@
     var currentPage = ViewContext.RouteData.Values["page"]?.ToString() ?? "";
     var isDashboard = currentArea == "" && currentPage == "/Index";
     var isRequests = currentArea == "Requests";
+    var isScopes = currentArea == "Scopes";
     var isQuotations = currentArea == "Quotations";
     var isCustomers = currentArea == "Customers";
     var isServices = currentArea == "Services";
@@ -11,6 +12,9 @@
     var isUsers = configurationOpen && currentPage.StartsWith("/Users/", StringComparison.OrdinalIgnoreCase);
     var isUserGroups = configurationOpen && currentPage.StartsWith("/UserGroups/", StringComparison.OrdinalIgnoreCase);
     var isCurrency = configurationOpen && currentPage.StartsWith("/Currencies/", StringComparison.OrdinalIgnoreCase);
+    var isServiceCategories = configurationOpen && currentPage.StartsWith("/ServiceCategories/", StringComparison.OrdinalIgnoreCase);
+    var isClientCategories = configurationOpen && currentPage.StartsWith("/ClientCategories/", StringComparison.OrdinalIgnoreCase);
+    var isInclusions = configurationOpen && currentPage.StartsWith("/Inclusions/", StringComparison.OrdinalIgnoreCase);
 }
 
 <aside class="v2-rail workspace-sidebar" id="workspace-navigation" aria-label="Workspace navigation">
@@ -30,6 +34,13 @@
            aria-current="@(isRequests ? "page" : null)">
             <i class="fa-solid fa-file-lines" aria-hidden="true"></i>
             <span>Requests</span>
+        </a>
+
+        <a asp-area="Scopes" asp-page="/Index" asp-route-id="" asp-route-requestId=""
+           class="@(isScopes ? "active" : null)"
+           aria-current="@(isScopes ? "page" : null)">
+            <i class="fa-solid fa-list-check" aria-hidden="true"></i>
+            <span>Scope</span>
         </a>
 
         <a asp-area="Quotations" asp-page="/Index"
@@ -88,6 +99,26 @@
                    aria-current="@(isCurrency ? "page" : null)">
                     <i class="fa-solid fa-coins" aria-hidden="true"></i>
                     <span>Currency</span>
+                </a>
+
+                <a asp-area="Configuration" asp-page="/ServiceCategories/Index" asp-route-id=""
+                   class="@(isServiceCategories ? "active" : null)"
+                   aria-current="@(isServiceCategories ? "page" : null)">
+                    <i class="fa-solid fa-tags" aria-hidden="true"></i>
+                    <span>Service categories</span>
+                </a>
+
+                <a asp-area="Configuration" asp-page="/ClientCategories/Index" asp-route-id=""
+                   class="@(isClientCategories ? "active" : null)"
+                   aria-current="@(isClientCategories ? "page" : null)">
+                    <i class="fa-solid fa-address-book" aria-hidden="true"></i>
+                    <span>Client categories</span>
+                </a>
+                <a asp-area="Configuration" asp-page="/Inclusions/Index" asp-route-id=""
+                   class="@(isInclusions ? "active" : null)"
+                   aria-current="@(isInclusions ? "page" : null)">
+                    <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                    <span>Inclusions</span>
                 </a>
             </div>
         </details>

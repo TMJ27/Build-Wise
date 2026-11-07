@@ -1,0 +1,51 @@
+@page "{id:guid}"
+@model BuildWise.Web.Areas.Scopes.Pages.Dependencies.DetailsModel
+@{
+    var dependency = Model.Dependency;
+    ViewData["Title"] = "Scope dependency details";
+    ViewData["PageTitle"] = "Scope dependency";
+    ViewData["PageSubTitle"] = "Scope dependency information and creation record.";
+    ViewData["Breadcrumbs"] = new BreadcrumbItem[]
+    {
+        new("Scope", Url.Page("/Index", new { area = "Scopes", id = (Guid?)null, scopeItemId = (Guid?)null })),
+        new("Request scope", Url.Page("/Details", new { area = "Scopes", id = dependency.RequestId, scopeItemId = (Guid?)null })),
+        new("Scope item", Url.Page("/Items/Details", new { area = "Scopes", id = dependency.ScopeItemId, requestId = dependency.RequestId, scopeItemId = (Guid?)null })),
+        new("Dependencies", Url.Page("/Dependencies/Index", new { area = "Scopes", id = (Guid?)null, scopeItemId = dependency.ScopeItemId, requestId = (Guid?)null }))
+    };
+}
+
+@section actionbar {
+    @if (dependency.CanEdit)
+    {
+        <a class="btn primary" asp-page="Upsert" asp-route-id="@dependency.Id" asp-route-scopeItemId="@dependency.ScopeItemId">
+            <i class="fa-solid fa-pen" aria-hidden="true"></i>
+            <span>Edit dependency</span>
+        </a>
+    }
+}
+
+<div class="requests-page profile-details">
+    @if (TempData["SuccessMessage"] is string message)
+    {
+        <div class="request-success" role="status">@message</div>
+    }
+    <div class="details-stack">
+        <section class="detail-card panel configuration-section">
+            <header class="card-header"><h2>Scope dependency details</h2></header>
+            <div class="card-body">
+                <dl class="profile-detail-list">
+                    <div><dt>Dependency ID</dt><dd>@dependency.Id</dd></div>
+                    <div><dt>Depends on</dt><dd>@dependency.DependsOnTitle</dd></div>
+                    <div class="profile-detail-wide"><dt>Scope item</dt><dd>@dependency.ScopeItemTitle</dd></div>
+                    <div class="profile-detail-wide"><dt>Notes</dt><dd>@(dependency.Notes ?? "Not provided")</dd></div>
+                </dl>
+            </div>
+            <footer class="card-footer">
+                <dl class="record-metadata">
+                    <div><dt>Creator</dt><dd>@dependency.CreatorName</dd></div>
+                    <div><dt>Creation date</dt><dd>@dependency.CreationDate.ToString("dd MMM yyyy, HH:mm")</dd></div>
+                </dl>
+            </footer>
+        </section>
+    </div>
+</div>

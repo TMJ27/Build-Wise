@@ -1,6 +1,6 @@
 @page "{id:guid?}"
 @model BuildWise.Web.Areas.Configuration.Pages.UserGroups.UpsertModel
-@using BuildWise.Lib.Rights
+@using BuildWise.Lib.Enums.Rights
 @{
     var editing = Model.Input.Id.HasValue && Model.Input.Id != Guid.Empty;
     ViewData["Title"] = editing ? "Edit user group" : "Add user group";
@@ -23,13 +23,13 @@
         </div>
     }
 
-    <form method="post" class="configuration-column" data-rights-form>
+    <form method="post" class="form-stack" data-rights-form>
         <input type="hidden" asp-for="Input.Id" />
         <input type="hidden" asp-for="Input.RightsId" data-rights-value />
 
         <div asp-validation-summary="All" class="configuration-errors" role="alert"></div>
 
-        <section class="panel configuration-section request-form">
+        <section class="panel configuration-section form-panel">
             <div class="configuration-section-title">
                 <span class="summary-icon">
                     <i class="fa-solid fa-users-gear" aria-hidden="true"></i>
@@ -42,7 +42,7 @@
 
             <div class="field">
                 <label asp-for="Input.Name">Group name <span>*</span></label>
-                <input asp-for="Input.Name" required maxlength="50" autocomplete="off" />
+                <input class="form-control" asp-for="Input.Name" required maxlength="50" autocomplete="off" />
                 <span asp-validation-for="Input.Name"></span>
             </div>
         </section>
@@ -78,7 +78,7 @@
                             var rightValue = (int)right.Value;
                             var selected = (Model.Input.RightsId & rightValue) == rightValue;
 
-                            <label class="permission-option" for="right-@rightValue">
+                            <label class="form-check" for="right-@rightValue">
                                 <input type="checkbox"
                                        id="right-@rightValue"
                                        name="SelectedRights"
@@ -95,7 +95,7 @@
             <span asp-validation-for="Input.RightsId"></span>
         </section>
 
-        <div class="actions">
+        <div class="form-actions">
             <button class="btn primary" type="submit">
                 <i class="fa-solid fa-check" aria-hidden="true"></i>
                 <span>@(editing ? "Save changes" : "Create user group")</span>
@@ -103,4 +103,6 @@
         </div>
     </form>
 </div>
+
+
 

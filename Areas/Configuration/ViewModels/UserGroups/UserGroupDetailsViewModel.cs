@@ -1,4 +1,4 @@
-using BuildWise.Lib.Rights;
+using BuildWise.Lib.Enums.Rights;
 
 namespace BuildWise.Web.Areas.Configuration.ViewModels.UserGroups;
 

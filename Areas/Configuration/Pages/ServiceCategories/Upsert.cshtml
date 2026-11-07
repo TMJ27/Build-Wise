@@ -1,0 +1,53 @@
+@page "{id:guid?}"
+@model BuildWise.Web.Areas.Configuration.Pages.ServiceCategories.UpsertModel
+@{
+    var editing = Model.Input.Id.HasValue;
+    ViewData["Title"] = editing ? "Edit service category" : "Add service category";
+    ViewData["PageTitle"] = ViewData["Title"];
+    ViewData["PageSubTitle"] = "Set the category name, description and availability.";
+    ViewData["Breadcrumbs"] = new BreadcrumbItem[]
+    {
+        new("Configuration"),
+        new("Service categories", Url.Page("/ServiceCategories/Index", new { area = "Configuration", id = (Guid?)null }))
+    };
+}
+
+<div class="requests-page configuration-page">
+    <form method="post" class="form-stack">
+        <input type="hidden" asp-for="Input.Id" />
+        <div asp-validation-summary="All" class="configuration-errors" role="alert"></div>
+
+        <section class="panel configuration-section form-panel">
+           
+            <div class="form-fields">
+                <div class="field form-wide">
+                    <label asp-for="Input.Name">Name <span>*</span></label>
+                    <input class="form-control" asp-for="Input.Name" required maxlength="50" />
+                    <span asp-validation-for="Input.Name"></span>
+                </div>
+                <div class="field form-wide">
+                    <label asp-for="Input.Description"></label>
+                    <textarea class="form-control" asp-for="Input.Description" rows="4"></textarea>
+                    <span asp-validation-for="Input.Description"></span>
+                </div>
+            </div>
+
+            <label class="form-check">
+                <input asp-for="Input.IsActive" />
+                <span>
+                    <strong>Active category</strong>
+                    <small>Available when adding services. Existing services retain inactive categories.</small>
+                </span>
+            </label>
+        </section>
+
+        <div class="form-actions">
+            <button class="btn primary" type="submit">
+                <i class="fa-solid fa-check" aria-hidden="true"></i>
+                <span>@(editing ? "Save changes" : "Create category")</span>
+            </button>
+        </div>
+    </form>
+</div>
+
+

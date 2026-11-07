@@ -1,0 +1,68 @@
+@page
+@model BuildWise.Web.Areas.CustomerPortal.Pages.IndexModel
+@using BuildWise.Web.Services.Requests
+@{
+    var dashboard = Model.Dashboard;
+    ViewData["Title"] = "My dashboard";
+    ViewData["PageTitle"] = "My dashboard";
+    ViewData["PageSubTitle"] = "Your requests and the quotations prepared for you.";
+    ViewData["HideBreadcrumbs"] = true;
+}
+@section actionbar {
+    <a class="btn primary" asp-page="/Requests/Create"><i class="fa-solid fa-plus" aria-hidden="true"></i><span>New request</span></a>
+}
+<div class="requests-page profile-details">
+    <div class="request-summary" aria-label="My account summary">
+        <a class="request-summary-card" href="#my-requests"><span class="summary-icon"><i class="fa-solid fa-file-lines" aria-hidden="true"></i></span><span><span class="summary-label">My requests</span><strong>@dashboard.RequestCount.ToString("D2")</strong></span></a>
+        <a class="request-summary-card" href="#my-requests"><span class="summary-icon"><i class="fa-solid fa-folder-open" aria-hidden="true"></i></span><span><span class="summary-label">Open requests</span><strong>@dashboard.OpenRequestCount.ToString("D2")</strong></span></a>
+        <a class="request-summary-card" href="#my-quotations"><span class="summary-icon"><i class="fa-solid fa-file-invoice-dollar" aria-hidden="true"></i></span><span><span class="summary-label">Approved quotations</span><strong>@dashboard.ApprovedQuotationCount.ToString("D2")</strong></span></a>
+    </div>
+    <div class="details-stack">
+        <section class="panel configuration-section" id="my-requests">
+            <div class="configuration-preview-heading"><h2>My requests</h2><span class="badge">Latest 10</span></div>
+            <div class="table-wrap">
+                <table class="configuration-table">
+                    <caption class="sr-only">Your recent requests</caption>
+                    <thead><tr><th scope="col">Reference</th><th scope="col">Title</th><th scope="col">Status</th><th scope="col">Submitted</th></tr></thead>
+                    <tbody>
+                        @foreach (var request in dashboard.Requests)
+                        {
+                            <tr>
+                                <td><a class="record-link" asp-page="/Requests/Details" asp-route-id="@request.Id">@(request.ReferenceNumber ?? request.Id.ToString()) <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a></td>
+                                <td>@request.Title</td><td><span class="badge">@RequestDisplay.StatusName(request.StatusId)</span></td><td>@request.CreationDate.ToString("dd MMM yyyy, HH:mm")</td>
+                            </tr>
+                        }
+                        @if (dashboard.Requests.Count == 0)
+                        {
+                            <tr><td colspan="4">You have not submitted any requests yet.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <section class="panel configuration-section" id="my-quotations">
+            <div class="configuration-preview-heading"><h2>My quotations</h2><span class="badge">Latest 10</span></div>
+            <div class="table-wrap">
+                <table class="configuration-table">
+                    <caption class="sr-only">Your approved quotations</caption>
+                    <thead><tr><th scope="col">Reference</th><th scope="col">Title</th><th scope="col">Revision</th><th scope="col">Amount</th><th scope="col">Currency</th></tr></thead>
+                    <tbody>
+                        @foreach (var quotation in dashboard.Quotations)
+                        {
+                            <tr>
+                                <td><a class="record-link" asp-page="/Quotations/Details" asp-route-id="@quotation.Id">@quotation.QuotationNumber <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a></td>
+                                <td>@quotation.Title</td><td>@quotation.RevisionNumber</td>
+                                <td>@(quotation.IncludesPrices ? quotation.Total?.ToString("N2") ?? "Not set" : "Not priced")</td>
+                                <td>@(quotation.IncludesPrices ? quotation.CurrencyCode ?? "Not set" : "—")</td>
+                            </tr>
+                        }
+                        @if (dashboard.Quotations.Count == 0)
+                        {
+                            <tr><td colspan="5">Your quotations will appear here once the business has approved them.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+</div>

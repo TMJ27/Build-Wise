@@ -44,7 +44,8 @@
             const html = await response.text();
             if (request.signal.aborted) return;
             region.innerHTML = html;
-            document.querySelector('.dashboard-filters input[name="Tab"]').value = tab;
+            const selectedTab = document.querySelector('[data-dashboard-range-form] input[name="Tab"]');
+            if (selectedTab) selectedTab.value = tab;
             viewAll.href = region.querySelector('[data-view-all-url]').dataset.viewAllUrl;
             viewAll.setAttribute('aria-label', `View all ${tab}`);
 

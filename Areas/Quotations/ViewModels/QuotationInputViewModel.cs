@@ -8,7 +8,7 @@ public sealed class QuotationInputViewModel
     public int RequestId { get; set; }
 
     [Required, StringLength(2000)]
-    public string Terms { get; set; } = "Valid for 14 days. Work starts after site access and payment arrangements are confirmed.";
+    public string Terms { get; set; } 
 
     [Required, StringLength(2000)]
     public string Exclusions { get; set; } = "Additional work outside the agreed scope will be quoted separately.";

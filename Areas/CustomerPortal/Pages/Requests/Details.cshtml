@@ -1,0 +1,29 @@
+@page "{id:guid}"
+@model BuildWise.Web.Areas.CustomerPortal.Pages.Requests.DetailsModel
+@using BuildWise.Web.Services.Requests
+@{
+    var request = Model.RequestDetails;
+    ViewData["Title"] = "Request details";
+    ViewData["PageTitle"] = request.Title;
+    ViewData["PageSubTitle"] = "Your submitted request.";
+    ViewData["Breadcrumbs"] = new BreadcrumbItem[] { new("My dashboard", Url.Page("/Index", new { area = "CustomerPortal", id = (Guid?)null })) };
+}
+<div class="requests-page profile-details">
+    @if (TempData["SuccessMessage"] is string message)
+    {
+        <div class="request-success" role="status">@message</div>
+    }
+    <section class="detail-card panel configuration-section">
+        <header class="card-header"><h2>Request details</h2></header>
+        <div class="card-body">
+            <dl class="profile-detail-list">
+                <div><dt>Reference</dt><dd>@(request.ReferenceNumber ?? request.Id.ToString())</dd></div>
+                <div><dt>Status</dt><dd><span class="badge">@RequestDisplay.StatusName(request.StatusId)</span></dd></div>
+                <div><dt>Site address</dt><dd>@request.SiteAddress</dd></div>
+                <div><dt>Property type</dt><dd>@(request.PropertyType ?? "Not provided")</dd></div>
+                <div class="profile-detail-wide"><dt>Description</dt><dd>@(request.Description ?? "Not provided")</dd></div>
+            </dl>
+        </div>
+        <footer class="card-footer"><dl class="record-metadata"><div><dt>Submitted</dt><dd>@request.CreationDate.ToString("dd MMM yyyy, HH:mm")</dd></div></dl></footer>
+    </section>
+</div>

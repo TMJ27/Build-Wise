@@ -16,12 +16,12 @@
 }
 
 <div class="requests-page configuration-page user-upsert">
-    <form method="post" class="user-upsert-form">
+    <form method="post" class="form-stack">
         <input type="hidden" asp-for="Input.Id" />
         <div asp-validation-summary="All" class="configuration-errors" role="alert"></div>
 
         <div class="configuration-grid">
-            <section class="panel configuration-section request-form">
+            <section class="panel configuration-section form-panel">
                 <div class="configuration-section-title">
                     <span class="summary-icon">
                         <i class="fa-solid fa-user" aria-hidden="true"></i>
@@ -32,31 +32,31 @@
                     </div>
                 </div>
 
-                <div class="request-form-fields">
+                <div class="form-fields">
                     <div class="field">
                         <label asp-for="Input.Name">First name <span>*</span></label>
-                        <input asp-for="Input.Name" required maxlength="50" autocomplete="given-name" />
+                        <input class="form-control" asp-for="Input.Name" required maxlength="50" autocomplete="given-name" />
                         <span asp-validation-for="Input.Name"></span>
                     </div>
                     <div class="field">
                         <label asp-for="Input.Surname">Surname</label>
-                        <input asp-for="Input.Surname" maxlength="50" autocomplete="family-name" />
+                        <input class="form-control" asp-for="Input.Surname" maxlength="50" autocomplete="family-name" />
                         <span asp-validation-for="Input.Surname"></span>
                     </div>
                     <div class="field">
                         <label asp-for="Input.Email">Email address <span>*</span></label>
-                        <input asp-for="Input.Email" type="email" required maxlength="50" autocomplete="email" />
+                        <input class="form-control" asp-for="Input.Email" type="email" required maxlength="50" autocomplete="email" />
                         <span asp-validation-for="Input.Email"></span>
                     </div>
                     <div class="field">
                         <label asp-for="Input.Phone">Phone number</label>
-                        <input asp-for="Input.Phone" type="tel" maxlength="20" autocomplete="tel" />
+                        <input class="form-control" asp-for="Input.Phone" type="tel" maxlength="20" autocomplete="tel" />
                         <span asp-validation-for="Input.Phone"></span>
                     </div>
                 </div>
             </section>
 
-            <section class="panel configuration-section request-form">
+            <section class="panel configuration-section form-panel">
                 <div class="configuration-section-title">
                     <span class="summary-icon"><i class="fa-solid fa-users-gear" aria-hidden="true"></i></span>
                     <div>
@@ -67,14 +67,14 @@
 
                 <div class="field">
                     <label asp-for="Input.GroupId">User group</label>
-                    <select asp-for="Input.GroupId" aria-describedby="user-group-help">
+                    <select class="form-control" asp-for="Input.GroupId" aria-describedby="user-group-help">
                         <option value="">Select a user group</option>
                     </select>
                     <span asp-validation-for="Input.GroupId"></span>
                     <p id="user-group-help" class="configuration-muted">Choose a group from your configured user groups.</p>
                 </div>
 
-                <label class="user-active-toggle">
+                <label class="form-check">
                     <input asp-for="Input.IsActive" />
                     <span>
                         <strong>Active account</strong>
@@ -85,7 +85,7 @@
             </section>
         </div>
 
-        <div class="user-upsert-actions">
+        <div class="form-actions">
             <button class="btn primary" type="submit">
                 <i class="fa-solid fa-check" aria-hidden="true"></i>
                 <span>@(editing ? "Save changes" : "Create user")</span>
@@ -93,4 +93,6 @@
         </div>
     </form>
 </div>
+
+
 

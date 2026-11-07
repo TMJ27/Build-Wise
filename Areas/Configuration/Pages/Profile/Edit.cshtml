@@ -38,44 +38,44 @@
     }
 
     <div class="configuration-grid">
-        <form method="post" enctype="multipart/form-data" id="business-profile-form" class="configuration-column">
+        <form method="post" enctype="multipart/form-data" id="business-profile-form" class="form-stack">
             <input type="hidden" asp-for="Input.CompanyId" />
             <div asp-validation-summary="All" class="request-validation configuration-errors" role="alert"></div>
 
-            <section class="panel request-detail-panel request-form configuration-section">
+            <section class="panel request-detail-panel form-panel configuration-section">
                 <div class="configuration-section-title">
                     <span class="summary-icon"><i class="icon fa-solid fa-building" aria-hidden="true"></i></span>
                     <div><h2>Company details</h2><p>How your business appears on customer documents.</p></div>
                 </div>
-                <div class="request-form-fields">
-                    <div class="field request-form-wide">
+                <div class="form-fields">
+                    <div class="field form-wide">
                         <label asp-for="Input.Name">Company name <span>*</span></label>
-                        <input asp-for="Input.Name" required maxlength="30" autocomplete="organization" data-preview="name" />
+                        <input class="form-control" asp-for="Input.Name" required maxlength="30" autocomplete="organization" data-preview="name" />
                         <span asp-validation-for="Input.Name"></span>
                     </div>
                     <div class="field">
                         <label asp-for="Input.Email">Email address <span>*</span></label>
-                        <input asp-for="Input.Email" type="email" required maxlength="50" autocomplete="email" data-preview="email" />
+                        <input class="form-control" asp-for="Input.Email" type="email" required maxlength="50" autocomplete="email" data-preview="email" />
                         <span asp-validation-for="Input.Email"></span>
                     </div>
                     <div class="field">
                         <label asp-for="Input.Phone">Phone number <span>*</span></label>
-                        <input asp-for="Input.Phone" type="tel" required maxlength="20" autocomplete="tel" data-preview="phone" />
+                        <input class="form-control" asp-for="Input.Phone" type="tel" required maxlength="20" autocomplete="tel" data-preview="phone" />
                         <span asp-validation-for="Input.Phone"></span>
                     </div>
-                    <div class="field request-form-wide">
+                    <div class="field form-wide">
                         <label asp-for="Input.Address">Business address <span>*</span></label>
-                        <textarea asp-for="Input.Address" required rows="3" autocomplete="street-address" data-preview="address"></textarea>
+                        <textarea class="form-control" asp-for="Input.Address" required rows="3" autocomplete="street-address" data-preview="address"></textarea>
                         <span asp-validation-for="Input.Address"></span>
                     </div>
                     <div class="field">
                         <label asp-for="Input.RegistrationNumber">Registration number <small>Optional</small></label>
-                        <input asp-for="Input.RegistrationNumber" maxlength="50" placeholder="Business registration number" />
+                        <input class="form-control" asp-for="Input.RegistrationNumber" maxlength="50" placeholder="Business registration number" />
                         <span asp-validation-for="Input.RegistrationNumber"></span>
                     </div>
                     <div class="field">
                         <label asp-for="Input.TaxNumber">Tax number <small>Optional</small></label>
-                        <input asp-for="Input.TaxNumber" maxlength="50" placeholder="Business tax number" />
+                        <input class="form-control" asp-for="Input.TaxNumber" maxlength="50" placeholder="Business tax number" />
                         <span asp-validation-for="Input.TaxNumber"></span>
                     </div>
                 </div>
@@ -91,15 +91,15 @@
                         <img src="@logoUrl" alt="" class="configuration-logo-image" hidden="@(logoUrl is null)" />
                         <span class="configuration-initials" hidden="@(logoUrl is not null)">@initials</span>
                     </div>
-                    <div class="configuration-upload-controls">
+                    <div class="field">
                         <label asp-for="Logo">Choose a logo</label>
-                        <input asp-for="Logo" type="file" accept="image/png,image/jpeg" aria-describedby="logo-guidance" />
-                        <p id="logo-guidance">PNG or JPEG, up to 2 MB. A square or wide logo works well.</p>
+                        <input class="form-control" asp-for="Logo" type="file" accept="image/png,image/jpeg" aria-describedby="logo-guidance" />
+                        <p id="logo-guidance" class="form-help">PNG or JPEG, up to 2 MB. A square or wide logo works well.</p>
                         <span asp-validation-for="Logo" class="field-validation-error"></span>
                         <span id="logo-client-error" class="field-validation-error" role="status"></span>
                         @if (logoUrl is not null)
                         {
-                            <label class="configuration-checkbox">
+                            <label class="form-check">
                                 <input asp-for="RemoveLogo" />
                                 <span>Remove current logo</span>
                             </label>
@@ -108,15 +108,15 @@
                 </div>
             </section>
 
-            <section class="panel request-detail-panel request-form configuration-section">
+            <section class="panel request-detail-panel form-panel configuration-section">
                 <div class="configuration-section-title">
                     <span class="summary-icon"><i class="icon fa-solid fa-file-invoice-dollar" aria-hidden="true"></i></span>
                     <div><h2>Quotation defaults</h2><p>A starting point for each new quotation.</p></div>
                 </div>
-                <div class="request-form-fields">
+                <div class="form-fields">
                     <div class="field">
                         <label asp-for="Input.DefaultCurrency">Base currency</label>
-                        <select asp-for="Input.DefaultCurrency">
+                        <select class="form-control" asp-for="Input.DefaultCurrency">
                             <option value="">Select base currency</option>
                             @foreach (var currency in Model.Currencies)
                             {
@@ -128,21 +128,21 @@
                     </div>
                     <div class="field">
                         <label asp-for="Input.DefaultValidityDays">Default validity</label>
-                        <div class="configuration-number-field">
-                            <input asp-for="Input.DefaultValidityDays" type="number" max="365" />
+                        <div class="form-inline">
+                            <input class="form-control" asp-for="Input.DefaultValidityDays" type="number" max="365" />
                             <span>days</span>
                         </div>
                         <span asp-validation-for="Input.DefaultValidityDays"></span>
                     </div>
-                    <div class="field request-form-wide">
+                    <div class="field form-wide">
                         <label asp-for="Input.DefaultTerms">Default terms</label>
-                        <textarea asp-for="Input.DefaultTerms" rows="4"></textarea>
+                        <textarea class="form-control" asp-for="Input.DefaultTerms" rows="4"></textarea>
                         <span asp-validation-for="Input.DefaultTerms"></span>
                     </div>
                 </div>
-                <div class="configuration-save-row">
+                <div class="form-footer">
                     <p>Review the defaults when preparing each quotation.</p>
-                    <div class="configuration-actions">
+                    <div class="form-actions">
                         <button class="btn" type="reset">Reset changes</button>
                         <button class="btn primary" type="submit">Save changes</button>
                     </div>
@@ -172,7 +172,7 @@
                 </div>
             </section>
 
-            <section class="request-workflow-note request-form-help">
+            <section class="request-workflow-note form-help-panel">
                 <i class="icon fa-solid fa-circle-question" aria-hidden="true"></i>
                 <div>
                     <h2>One consistent identity.</h2>
@@ -183,4 +183,6 @@
         </aside>
     </div>
 </div>
+
+
 

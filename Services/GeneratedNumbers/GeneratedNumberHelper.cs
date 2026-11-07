@@ -5,68 +5,183 @@ namespace BuildWise.Web.Services.GeneratedNumbers;
 
 public static class GeneratedNumberHelper
 {
-    // Rank the complete table before applying numbers to any filtered or paged list.
-    // Creation date determines the order; the GUID breaks timestamp ties.
+    // Rank the whole table independently of filters and pagination, as in Deporess.
+    // The GUID breaks ties when creation dates are equal.
+    private static async Task<Dictionary<Guid, int>> RanksAsync(IQueryable<Guid> orderedIds)
+    {
+        var ids = await orderedIds.ToListAsync();
+        return ids.Select((id, index) => (id, sequence: index + 1))
+            .ToDictionary(item => item.id, item => item.sequence);
+    }
+
     private static async Task ApplyAsync<T>(
         IQueryable<Guid> orderedIds,
         IEnumerable<T> items,
         Func<T, Guid> getId,
         Action<T, int> assign)
     {
-        var rows = items.ToArray();
-        if (rows.Length == 0)
+        var rows = items.ToList();
+        if (rows.Count == 0)
         {
             return;
         }
 
-        var ids = await orderedIds.ToListAsync();
-        var sequences = ids.Select((id, index) => (id, sequence: index + 1))
-            .ToDictionary(item => item.id, item => item.sequence);
-
+        var ranks = await RanksAsync(orderedIds);
         foreach (var row in rows)
         {
-            if (!sequences.TryGetValue(getId(row), out var sequence))
-            {
-                throw new InvalidOperationException("Cannot number a record that is not in the database.");
-            }
-
-            assign(row, sequence);
+            assign(row, ranks.GetValueOrDefault(getId(row)));
         }
     }
 
-    public static Task ApplyUserNumbersAsync(this BuildWiseDbContext db, IEnumerable<User> users)
+    private static IQueryable<Guid> UserIds(BuildWiseDbContext db)
     {
-        return ApplyAsync(
-            db.Users.AsNoTracking().OrderBy(user => user.CreationDate).ThenBy(user => user.Id).Select(user => user.Id),
-            users, user => user.Id, (user, sequence) => user.UserSequence = sequence);
+        return db.Users.AsNoTracking()
+            .Where(item => !db.CustomerAccounts.Any(account => account.UserId == item.Id))
+            .OrderBy(item => item.CreationDate)
+            .ThenBy(item => item.Id)
+            .Select(item => item.Id);
     }
 
-    public static Task ApplyUserNumberAsync(this BuildWiseDbContext db, User user)
+    public static async Task<int> GetUserSequenceAsync(this BuildWiseDbContext db, User item)
     {
-        return db.ApplyUserNumbersAsync([user]);
+        var ranks = await RanksAsync(UserIds(db));
+        return ranks.GetValueOrDefault(item.Id);
     }
 
-    public static Task ApplyUserGroupNumbersAsync(this BuildWiseDbContext db, IEnumerable<UserGroup> groups)
+    public static async Task ApplyUserNumberAsync(this BuildWiseDbContext db, User item)
     {
-        return ApplyAsync(
-            db.UserGroups.AsNoTracking().OrderBy(group => group.CreationDate).ThenBy(group => group.Id).Select(group => group.Id),
-            groups, group => group.Id, (group, sequence) => group.UserGroupSequence = sequence);
+        item.UserSequence = await db.GetUserSequenceAsync(item);
     }
 
-    public static Task ApplyUserGroupNumberAsync(this BuildWiseDbContext db, UserGroup group)
+    public static Task ApplyUserNumbersAsync(this BuildWiseDbContext db, IEnumerable<User> items)
     {
-        return db.ApplyUserGroupNumbersAsync([group]);
+        return ApplyAsync(UserIds(db), items,
+            item => item.Id, (item, sequence) => item.UserSequence = sequence);
     }
 
-    public static Task ApplyCurrencyNumbersAsync(this BuildWiseDbContext db, IEnumerable<Currency> currencies)
+    private static IQueryable<Guid> UserGroupIds(BuildWiseDbContext db)
     {
-        return ApplyAsync(
-            db.Currencies.AsNoTracking().OrderBy(currency => currency.CreationDate).ThenBy(currency => currency.Id).Select(currency => currency.Id),
-            currencies, currency => currency.Id, (currency, sequence) => currency.CurrencySequence = sequence);
+        return db.UserGroups.AsNoTracking()
+            .OrderBy(item => item.CreationDate)
+            .ThenBy(item => item.Id)
+            .Select(item => item.Id);
     }
 
-    public static Task ApplyCurrencyNumberAsync(this BuildWiseDbContext db, Currency currency)
+    public static async Task<int> GetUserGroupSequenceAsync(this BuildWiseDbContext db, UserGroup item)
     {
-        return db.ApplyCurrencyNumbersAsync([currency]);
+        var ranks = await RanksAsync(UserGroupIds(db));
+        return ranks.GetValueOrDefault(item.Id);
+    }
+
+    public static async Task ApplyUserGroupNumberAsync(this BuildWiseDbContext db, UserGroup item)
+    {
+        item.UserGroupSequence = await db.GetUserGroupSequenceAsync(item);
+    }
+
+    public static Task ApplyUserGroupNumbersAsync(this BuildWiseDbContext db, IEnumerable<UserGroup> items)
+    {
+        return ApplyAsync(UserGroupIds(db), items,
+            item => item.Id, (item, sequence) => item.UserGroupSequence = sequence);
+    }
+
+    private static IQueryable<Guid> CurrencyIds(BuildWiseDbContext db)
+    {
+        return db.Currencies.AsNoTracking()
+            .OrderBy(item => item.CreationDate)
+            .ThenBy(item => item.Id)
+            .Select(item => item.Id);
+    }
+
+    public static async Task<int> GetCurrencySequenceAsync(this BuildWiseDbContext db, Currency item)
+    {
+        var ranks = await RanksAsync(CurrencyIds(db));
+        return ranks.GetValueOrDefault(item.Id);
+    }
+
+    public static async Task ApplyCurrencyNumberAsync(this BuildWiseDbContext db, Currency item)
+    {
+        item.CurrencySequence = await db.GetCurrencySequenceAsync(item);
+    }
+
+    public static Task ApplyCurrencyNumbersAsync(this BuildWiseDbContext db, IEnumerable<Currency> items)
+    {
+        return ApplyAsync(CurrencyIds(db), items,
+            item => item.Id, (item, sequence) => item.CurrencySequence = sequence);
+    }
+
+    private static IQueryable<Guid> ServiceCategoryIds(BuildWiseDbContext db)
+    {
+        return db.ServiceCategories.AsNoTracking()
+            .OrderBy(item => item.CreationDate)
+            .ThenBy(item => item.Id)
+            .Select(item => item.Id);
+    }
+
+    public static async Task<int> GetServiceCategorySequenceAsync(this BuildWiseDbContext db, ServiceCategory item)
+    {
+        var ranks = await RanksAsync(ServiceCategoryIds(db));
+        return ranks.GetValueOrDefault(item.Id);
+    }
+
+    public static async Task ApplyServiceCategoryNumberAsync(this BuildWiseDbContext db, ServiceCategory item)
+    {
+        item.CategorySequence = await db.GetServiceCategorySequenceAsync(item);
+    }
+
+    public static Task ApplyServiceCategoryNumbersAsync(this BuildWiseDbContext db, IEnumerable<ServiceCategory> items)
+    {
+        return ApplyAsync(ServiceCategoryIds(db), items,
+            item => item.Id, (item, sequence) => item.CategorySequence = sequence);
+    }
+
+
+    private static IQueryable<Guid> ClientIds(BuildWiseDbContext db)
+    {
+        return db.Clients.AsNoTracking()
+            .OrderBy(item => item.CreationDate)
+            .ThenBy(item => item.Id)
+            .Select(item => item.Id);
+    }
+
+    public static async Task<int> GetClientSequenceAsync(this BuildWiseDbContext db, Client item)
+    {
+        var ranks = await RanksAsync(ClientIds(db));
+        return ranks.GetValueOrDefault(item.Id);
+    }
+
+    public static async Task ApplyClientNumberAsync(this BuildWiseDbContext db, Client item)
+    {
+        item.ClientSequence = await db.GetClientSequenceAsync(item);
+    }
+
+    public static Task ApplyClientNumbersAsync(this BuildWiseDbContext db, IEnumerable<Client> items)
+    {
+        return ApplyAsync(ClientIds(db), items,
+            item => item.Id, (item, sequence) => item.ClientSequence = sequence);
+    }
+
+    private static IQueryable<Guid> ServiceIds(BuildWiseDbContext db)
+    {
+        return db.Services.AsNoTracking()
+            .OrderBy(item => item.CreationDate)
+            .ThenBy(item => item.Id)
+            .Select(item => item.Id);
+    }
+
+    public static async Task<int> GetServiceSequenceAsync(this BuildWiseDbContext db, Service item)
+    {
+        var ranks = await RanksAsync(ServiceIds(db));
+        return ranks.GetValueOrDefault(item.Id);
+    }
+
+    public static async Task ApplyServiceNumberAsync(this BuildWiseDbContext db, Service item)
+    {
+        item.ServiceSequence = await db.GetServiceSequenceAsync(item);
+    }
+
+    public static Task ApplyServiceNumbersAsync(this BuildWiseDbContext db, IEnumerable<Service> items)
+    {
+        return ApplyAsync(ServiceIds(db), items,
+            item => item.Id, (item, sequence) => item.ServiceSequence = sequence);
     }
 }

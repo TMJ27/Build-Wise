@@ -1,10 +1,11 @@
-@page
+@page "/Overview"
 @model IndexModel
 @{
     ViewData["Title"] = "Overview";
     ViewData["PageTitle"] = "Overview";
     ViewData["PageSubTitle"] = "Requests, quotations and work needing your attention.";
     ViewData["NativeDashboard"] = true;
+    ViewData["HideBreadcrumbs"] = true;
 
     ViewData["DashboardChartData"] = new
     {
@@ -25,11 +26,11 @@
 }
 
 @section actionbar {
-    <form method="get" asp-page="/Index" class="dashboard-filters">
+    <form method="get" asp-page="/Index" class="form-inline" data-dashboard-range-form>
         <input type="hidden" name="Tab" value="@Model.Tab" />
-        <label class="db-range">
+        <label class="form-search">
             <i class="icon fa-solid fa-clock" aria-hidden="true"></i>
-            <select asp-for="Range" aria-label="Dashboard date range">
+            <select class="form-control" asp-for="Range" aria-label="Dashboard date range">
                 <option value="7">Last 7 days</option>
                 <option value="30">Last 30 days</option>
                 <option value="all">All time</option>
@@ -80,7 +81,7 @@
                 <i class="icon fa-solid fa-users" aria-hidden="true"></i>
             </span>
             <span>
-                <span class="summary-label">Customers</span>
+                <span class="summary-label">All customers</span>
                 <strong>@Model.CustomerCount.ToString("D2")</strong>
             </span>
         </div>
@@ -90,7 +91,7 @@
             <div class="panel-head">
                 <div>
                     <h2>Quotation activity</h2>
-                    <p>Prepared and approved over the last 7 days.</p>
+                    <p>Revisions prepared and approved over the last 7 days.</p>
                 </div>
                 <span class="badge">@Model.Quotations.Count in selected period</span>
             </div>
@@ -122,7 +123,7 @@
                 </table>
                 <div class="dashboard-chart-summary">
                     <span>Approved value</span>
-                    <strong>@IndexModel.Money(Model.ApprovedValue)</strong>
+                    <strong>@Model.ApprovedValueText</strong>
                 </div>
             </div>
         </section>
@@ -131,7 +132,7 @@
             <div class="panel-head">
                 <div>
                     <h2>Requests by service</h2>
-                    <p>@(Model.Categories.Count > 5 ? "Top 5 categories and all remaining requests." : "Distribution across your service categories.")</p>
+                    <p>One count per request. Requests covering several categories are grouped together.</p>
                 </div>
                 <span class="badge">@Model.Requests.Count requests</span>
             </div>
@@ -151,7 +152,7 @@
                         @foreach (var category in Model.ChartCategories)
                         {
                             <li>
-                                <span class="dashboard-legend-dot" style="background-color: @category.Colour" aria-hidden="true"></span>
+                                <span class="dashboard-legend-dot @category.ColourClass" aria-hidden="true"></span>
                                 <span>@category.Name</span>
                                 <strong>@category.Count</strong>
                             </li>
@@ -265,7 +266,7 @@
                 {
                     <i class="icon fa-solid fa-check" aria-hidden="true"></i>
                 }
-                else if (activity.Title == "Quotation drafted")
+                else if (activity.Title == "Quotation prepared")
                 {
                     <i class="icon fa-solid fa-pen" aria-hidden="true"></i>
                 }
@@ -287,4 +288,3 @@
         <button type="button" class="btn" data-workspace-dialog-close>Close</button>
     </div>
 </template>
-

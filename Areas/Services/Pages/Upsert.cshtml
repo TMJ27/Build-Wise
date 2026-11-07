@@ -1,0 +1,75 @@
+@page "{id:guid?}"
+@model BuildWise.Web.Areas.Services.Pages.UpsertModel
+@{
+    var editing = Model.Input.Id.HasValue;
+    ViewData["Title"] = editing ? "Edit service" : "Add service";
+    ViewData["PageTitle"] = ViewData["Title"];
+    ViewData["PageSubTitle"] = editing
+        ? "Update the service details and availability."
+        : "Enter the details of the service you offer.";
+    ViewData["Breadcrumbs"] = new BreadcrumbItem[]
+    {
+        new("Service catalogue", Url.Page("/Index", new { area = "Services", id = (Guid?)null }))
+    };
+}
+
+<div class="requests-page catalogue-page">
+    @if (TempData["SuccessMessage"] is string message)
+    {
+        <div class="request-success" role="status">@message</div>
+    }
+
+    <form method="post" class="form-stack">
+        <input type="hidden" asp-for="Input.Id" />
+        <div asp-validation-summary="All" class="configuration-errors" role="alert"></div>
+
+        <section class="panel configuration-section form-panel">
+           
+
+            <div class="form-fields">
+                <div class="field">
+                    <label asp-for="Input.Name">Service name <span>*</span></label>
+                    <input class="form-control" asp-for="Input.Name" maxlength="100" required />
+                    <span asp-validation-for="Input.Name"></span>
+                </div>
+                <div class="field">
+                    <label asp-for="Input.CategoryId">Category <span>*</span></label>
+                    <select class="form-control" asp-for="Input.CategoryId" asp-items="Model.Categories" required>
+                        <option value="">Select a category</option>
+                    </select>
+                    <span asp-validation-for="Input.CategoryId"></span>
+                   
+                </div>
+                <div class="field form-wide">
+                    <label asp-for="Input.Description"></label>
+                    <textarea class="form-control" asp-for="Input.Description" rows="4"></textarea>
+                    <span asp-validation-for="Input.Description"></span>
+                </div>
+            </div>
+
+            <label class="form-check">
+                <input asp-for="Input.RequireSiteAssessment" />
+                <span>
+                    <strong>Requires a site assessment</strong>
+                    <small>Inspect the site before confirming the scope of work.</small>
+                </span>
+            </label>
+            <label class="form-check">
+                <input asp-for="Input.IsActive" />
+                <span>
+                    <strong>Active service</strong>
+                    <small>Available for new customer requests.</small>
+                </span>
+            </label>
+        </section>
+
+        <div class="form-actions">
+            <button class="btn primary" type="submit">
+                <i class="fa-solid fa-check" aria-hidden="true"></i>
+                <span>@(editing ? "Save changes" : "Create service")</span>
+            </button>
+        </div>
+    </form>
+</div>
+
+

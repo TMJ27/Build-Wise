@@ -1,0 +1,69 @@
+@page
+@model BuildWise.Web.Areas.Configuration.Pages.ServiceCategories.IndexModel
+@{
+    ViewData["Title"] = "Service categories";
+    ViewData["PageTitle"] = ViewData["Title"];
+    ViewData["PageSubTitle"] = "Manage the categories used to organise your service catalogue.";
+    ViewData["Breadcrumbs"] = new BreadcrumbItem[] { new("Configuration") };
+}
+
+@section actionbar {
+    <a class="btn primary" asp-page="Upsert">
+        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+        <span>Add category</span>
+    </a>
+}
+
+<div class="requests-page configuration-page">
+    @if (TempData["SuccessMessage"] is string message)
+    {
+        <div class="request-success" role="status">@message</div>
+    }
+
+    <section class="panel configuration-section">
+        <div class="configuration-preview-heading">
+            <h2>Service categories</h2>
+            <span class="badge">@Model.Categories.Count categories</span>
+        </div>
+
+        <div class="table-wrap">
+            <table class="configuration-table">
+                <caption class="sr-only">Configured service categories</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">ID</th>
+                        <th scope="col">Name</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Services</th>
+                        <th scope="col">Creation date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var category in Model.Categories)
+                    {
+                        <tr>
+                            <td>
+                                <a class="record-link record-id" asp-page="Details" asp-route-id="@category.Id">
+                                    @category.CategoryNumber
+                                    <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                                </a>
+                            </td>
+                            <td>@category.Name</td>
+                            <td>
+                                <span class="badge @(category.IsActive ? "green" : null)">@category.Status</span>
+                            </td>
+                            <td>@category.ServiceCount</td>
+                            <td>@category.CreationDate.ToString("dd MMM yyyy, HH:mm")</td>
+                        </tr>
+                    }
+                    @if (Model.Categories.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="5">No service categories have been added.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>

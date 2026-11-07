@@ -1,0 +1,93 @@
+@page "{id:guid}"
+@model BuildWise.Web.Areas.Scopes.Pages.DetailsModel
+@{
+    var scope = Model.Scope;
+    ViewData["Title"] = "Scope details";
+    ViewData["PageTitle"] = string.IsNullOrWhiteSpace(scope.Title) ? "Scope details" : scope.Title;
+    ViewData["PageSubTitle"] = "The work covered by this customer request.";
+    ViewData["Breadcrumbs"] = new BreadcrumbItem[]
+    {
+        new("Scope", Url.Page("/Index", new { area = "Scopes", id = (Guid?)null }))
+    };
+}
+
+@section actionbar {
+    @if (scope.CanEdit)
+    {
+    <a class="btn primary" asp-page="/Items/Upsert" asp-route-requestId="@scope.RequestId" asp-route-id="">
+        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+        <span>Add scope item</span>
+    </a>
+        @if (Model.Items.Count > 0)
+        {
+            <a class="btn" asp-area="Quotations" asp-page="/Upsert" asp-route-requestId="@scope.RequestId" asp-route-id="">Create quotation</a>
+        }
+    }
+}
+
+<div class="requests-page profile-details">
+    @if (!scope.CanEdit)
+    {
+        <p>This request is closed or cancelled. Its scope items are read-only.</p>
+    }
+    @if (TempData["SuccessMessage"] is string message)
+    {
+        <div class="request-success" role="status">@message</div>
+    }
+    <div class="details-stack">
+        <section class="detail-card panel configuration-section">
+            <header class="card-header"><h2>Request details</h2></header>
+            <div class="card-body">
+                <dl class="profile-detail-list">
+                    <div><dt>Request</dt><dd>@(scope.ReferenceNumber ?? scope.RequestId.ToString())</dd></div>
+                    <div><dt>Customer</dt><dd>@(scope.CustomerName ?? "Not provided")</dd></div>
+                    <div class="profile-detail-wide"><dt>Site address</dt><dd>@(scope.SiteAddress ?? "Not provided")</dd></div>
+                    <div class="profile-detail-wide"><dt>Description</dt><dd>@(scope.Description ?? "Not provided")</dd></div>
+                </dl>
+            </div>
+        </section>
+        <section class="panel configuration-section">
+            <div class="configuration-preview-heading">
+                <h2>Scope items</h2>
+                <span class="badge">@Model.Items.Count items</span>
+            </div>
+            <div class="table-wrap">
+                <table class="configuration-table">
+                    <caption class="sr-only">Work items for this request</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Title</th>
+                            <th scope="col">Service</th>
+                            <th scope="col">Quantity</th>
+                            <th scope="col">Unit</th>
+                            <th scope="col">Site assessment</th>
+                            <th scope="col">Review status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Items)
+                        {
+                            <tr>
+                                <td>
+                                    <a class="record-link" asp-page="/Items/Details" asp-route-id="@item.Id" asp-route-requestId="@scope.RequestId">
+                                        @item.Title
+                                        <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                                    </a>
+                                </td>
+                                <td>@(item.ServiceName ?? item.ServiceCodeSnapshot ?? "Not set")</td>
+                                <td>@(item.Quantity?.ToString() ?? "Not set")</td>
+                                <td>@(item.UnitCodeSnapshot ?? "Not set")</td>
+                                <td>@(item.RequireAssessment.HasValue ? (item.RequireAssessment.Value ? "Required" : "Not required") : "Not set")</td>
+                                <td><span class="badge">@(item.ReviewStatusName ?? "Not set")</span></td>
+                            </tr>
+                        }
+                        @if (Model.Items.Count == 0)
+                        {
+                            <tr><td colspan="6">No scope items have been added to this request.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+</div>

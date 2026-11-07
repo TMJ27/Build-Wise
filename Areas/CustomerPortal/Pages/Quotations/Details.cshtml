@@ -1,0 +1,57 @@
+@page "{id:guid}"
+@model BuildWise.Web.Areas.CustomerPortal.Pages.Quotations.DetailsModel
+@{
+    var revision = Model.Revision;
+    ViewData["Title"] = "Quotation details";
+    ViewData["PageTitle"] = Model.QuotationNumber;
+    ViewData["PageSubTitle"] = $"Revision {revision.RevisionNumber} · Approved";
+    ViewData["Breadcrumbs"] = new BreadcrumbItem[] { new("My dashboard", Url.Page("/Index", new { area = "CustomerPortal", id = (Guid?)null })) };
+}
+<div class="requests-page profile-details">
+    <div class="details-stack">
+        <section class="detail-card panel configuration-section">
+            <header class="card-header"><h2>@revision.Title</h2></header>
+            <div class="card-body">
+                <dl class="profile-detail-list">
+                    <div><dt>Business</dt><dd>@revision.CompanyNameSnapshot</dd></div>
+                    <div><dt>Customer</dt><dd>@revision.CustomerNameSnapshot</dd></div>
+                    <div><dt>Issue date</dt><dd>@(revision.IssueDate?.ToString("dd MMM yyyy") ?? "Not set")</dd></div>
+                    <div><dt>Valid until</dt><dd>@(revision.ValidUntil?.ToString("dd MMM yyyy") ?? "Not set")</dd></div>
+                    <div class="profile-detail-wide"><dt>Site address</dt><dd>@revision.SiteAddressSnapshot</dd></div>
+                </dl>
+            </div>
+        </section>
+        <section class="panel configuration-section">
+            <h2>Quoted work</h2>
+            <div class="table-wrap">
+                <table class="configuration-table">
+                    <caption class="sr-only">Items included in the approved quotation</caption>
+                    <thead><tr><th scope="col">Work</th><th scope="col">Quantity</th><th scope="col">Unit</th><th scope="col">Amount</th></tr></thead>
+                    <tbody>
+                        @foreach (var item in revision.QuotationItems.OrderBy(item => item.Title))
+                        {
+                            <tr><td><strong>@item.Title</strong><p>@item.Description</p></td><td>@(item.Quantity?.ToString() ?? "—")</td><td>@item.UnitCodeSnapshot</td><td>@(revision.IncludesPrices ? item.LineAmount?.ToString("N2") ?? "Not set" : "Not priced")</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            @if (revision.IncludesPrices)
+            {
+                <dl class="profile-detail-list">
+                    <div><dt>Subtotal</dt><dd>@(revision.Subtotal?.ToString("N2") ?? "Not set")</dd></div>
+                    <div><dt>Tax</dt><dd>@(revision.TaxAmount?.ToString("N2") ?? "Not set")</dd></div>
+                    <div><dt>Total</dt><dd>@revision.CurrencyCode @(revision.Total?.ToString("N2") ?? "Not set")</dd></div>
+                </dl>
+            }
+        </section>
+        <section class="detail-card panel configuration-section">
+            <header class="card-header"><h2>Terms and exclusions</h2></header>
+            <div class="card-body">
+                <dl class="profile-detail-list">
+                    <div class="profile-detail-wide"><dt>Terms</dt><dd>@(revision.Terms ?? "Not provided")</dd></div>
+                    <div class="profile-detail-wide"><dt>Exclusions</dt><dd>@(revision.Exclusions ?? "Not provided")</dd></div>
+                </dl>
+            </div>
+        </section>
+    </div>
+</div>

@@ -2,34 +2,61 @@
 @model BuildWise.Web.Areas.Requests.Pages.CreateModel
 @{
     ViewData["Title"] = "New request";
-    ViewData["AccountName"] = "Tawanda M.";
-    ViewData["AccountRole"] = "Business owner";
-
-    ViewData["PageTitle"] = "Let’s understand the work.";
-    ViewData["PageSubTitle"] = "Capture the customer’s details and what they need done.";
-    ViewData["Breadcrumbs"] = new BreadcrumbItem[]
-    {
-        new("Requests", Url.Page("/Index", new { area = "Requests" }))
-    };
+    ViewData["PageTitle"] = ViewData["Title"];
+    ViewData["PageSubTitle"] = "Choose the customer and describe the work required.";
+    ViewData["Breadcrumbs"] = new BreadcrumbItem[] { new("Requests", Url.Page("/Index", new { area = "Requests" })) };
 }
 
 <div class="requests-page">
-
-    <div class="request-detail-grid">
-        <form method="post" class="panel request-detail-panel request-form">
-            <div asp-validation-summary="All" class="request-validation" role="alert"></div>
-            <h2>Customer &amp; location</h2>
-            <div class="request-form-fields">
-                <div class="field"><label asp-for="Input.Customer">Customer name <span>*</span></label><input asp-for="Input.Customer" autocomplete="name" required maxlength="100" placeholder="Full name or business name" /><span asp-validation-for="Input.Customer"></span></div>
-                <div class="field"><label asp-for="Input.Email">Email address <small>Optional</small></label><input asp-for="Input.Email" type="email" autocomplete="email" maxlength="200" placeholder="customer@example.com" /><span asp-validation-for="Input.Email"></span></div>
-                <div class="field request-form-wide"><label asp-for="Input.Location">Site location <span>*</span></label><input asp-for="Input.Location" required maxlength="200" placeholder="Street address or area" /><span asp-validation-for="Input.Location"></span></div>
+    <form method="post" class="form-stack">
+        <div asp-validation-summary="All" class="configuration-errors" role="alert"></div>
+        <section class="panel configuration-section form-panel">
+            <h2>Customer and site</h2>
+            <div class="form-fields">
+                <div class="field form-wide">
+                    <label asp-for="Input.ClientId">Customer <span>*</span></label>
+                    <select class="form-control" asp-for="Input.ClientId" asp-items="Model.Customers" required><option value="">Choose a customer</option></select>
+                    <span asp-validation-for="Input.ClientId"></span>
+                    @if (Model.Customers.Count == 0)
+                    {
+                        <p>Add an active customer before creating a request.</p>
+                        <a class="record-link" asp-area="Customers" asp-page="/Upsert" asp-route-id="">Add customer</a>
+                    }
+                </div>
+                <div class="field form-wide">
+                    <label asp-for="Input.SiteAddress">Site address <span>*</span></label>
+                    <input class="form-control" asp-for="Input.SiteAddress" required maxlength="50" autocomplete="street-address" />
+                    <span asp-validation-for="Input.SiteAddress"></span>
+                </div>
+                <div class="field form-wide">
+                    <label asp-for="Input.PropertyType">Property type</label>
+                    <input class="form-control" asp-for="Input.PropertyType" maxlength="50" placeholder="For example, existing house" />
+                    <span asp-validation-for="Input.PropertyType"></span>
+                </div>
             </div>
-            <h2>What work is needed?</h2>
-            <div class="field"><label asp-for="Input.Title">Request title <span>*</span></label><input asp-for="Input.Title" required maxlength="120" placeholder="e.g. Electrical installation" /><span asp-validation-for="Input.Title"></span></div>
-            <div class="field"><label asp-for="Input.Category">Service category <span>*</span></label><select asp-for="Input.Category" required><option value="">Select a service</option>@foreach (var category in Model.Categories) { <option>@category</option> }</select><span asp-validation-for="Input.Category"></span></div>
-            <div class="field"><label asp-for="Input.Description">Customer’s description <span>*</span></label><textarea asp-for="Input.Description" required minlength="20" maxlength="3000" rows="5" placeholder="Describe the work, affected areas and any specific requirements."></textarea><span asp-validation-for="Input.Description"></span></div>
-            <div class="request-form-actions"><button class="btn primary" type="submit"><i class="icon fa-solid fa-plus" aria-hidden="true"></i><span>Create request</span></button></div>
-        </form>
-        <aside class="request-workflow-note request-form-help"><i class="icon fa-solid fa-circle-question" aria-hidden="true"></i><div><h2>Start simple. Add clarity.</h2><p>Record what the customer knows now. Missing details can be clarified before the scope and quotation are prepared.</p><ul><li>Describe the work and its location.</li><li>Include measurements when available.</li><li>Note preferred materials or finishes.</li></ul><p>Fields marked * are required.</p></div></aside>
-    </div>
+        </section>
+        <section class="panel configuration-section form-panel">
+            <h2>Requested work</h2>
+            <div class="form-fields">
+                <div class="field form-wide">
+                    <label asp-for="Input.Title">Title <span>*</span></label>
+                    <input class="form-control" asp-for="Input.Title" required maxlength="50" placeholder="For example, kitchen renovation" />
+                    <span asp-validation-for="Input.Title"></span>
+                </div>
+                <div class="field form-wide">
+                    <label asp-for="Input.ReferenceNumber">Reference</label>
+                    <input class="form-control" asp-for="Input.ReferenceNumber" maxlength="50" aria-describedby="reference-help" />
+                    <small id="reference-help">Leave blank to generate a request reference.</small>
+                    <span asp-validation-for="Input.ReferenceNumber"></span>
+                </div>
+                <div class="field form-wide">
+                    <label asp-for="Input.Description">Customer's description <span>*</span></label>
+                    <textarea class="form-control" asp-for="Input.Description" required maxlength="3000" rows="4" placeholder="Describe the work, location and any known requirements."></textarea>
+                    <span asp-validation-for="Input.Description"></span>
+                </div>
+            </div>
+            <p>Prepare the individual scope items after saving this request.</p>
+        </section>
+        <div class="form-actions"><button class="btn primary" type="submit"><i class="fa-solid fa-plus" aria-hidden="true"></i><span>Create request</span></button></div>
+    </form>
 </div>

@@ -1,6 +1,6 @@
 using System.Security.Claims;
 using BuildWise.Data;
-using BuildWise.Lib.Rights;
+using BuildWise.Lib.Enums.Rights;
 using BuildWise.Lib.Users;
 using BuildWise.Web.Areas.Configuration.Pages.UserGroups;
 using BuildWise.Web.Areas.Configuration.ViewModels.UserGroups;

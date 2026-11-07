@@ -1,0 +1,57 @@
+@page
+@model BuildWise.Web.Areas.CustomerPortal.Pages.Account.RegisterModel
+@using BuildWise.Lib.Enums
+@{
+    Layout = "/Pages/Shared/_CustomerAuthLayout.cshtml";
+    ViewData["Title"] = "Create an account";
+    ViewData["Registering"] = true;
+}
+<section aria-labelledby="register-title">
+    <p class="eyebrow">YOUR BUILDWISE ACCOUNT</p>
+    <h2 id="register-title">Create your account.</h2>
+    <p class="auth-description">Bring your requests and quotations into your own workspace.</p>
+<form method="post" class="auth-form registration-form">
+                <div asp-validation-summary="All" class="auth-alert" role="alert"></div>
+                <div class="auth-field">
+                    <label asp-for="Input.ClientType">Customer type</label>
+                    <select asp-for="Input.ClientType" asp-items="Html.GetEnumSelectList<ClientType>()"></select>
+                    <span class="field-error" asp-validation-for="Input.ClientType"></span>
+                </div>
+                <div class="auth-field">
+                    <label asp-for="Input.Name">Full name or business name <span>*</span></label>
+                    <input asp-for="Input.Name" autocomplete="name" maxlength="50" required />
+                    <span class="field-error" asp-validation-for="Input.Name"></span>
+                </div>
+                <div class="auth-field">
+                    <label asp-for="Input.Email">Email address <span>*</span></label>
+                    <input asp-for="Input.Email" type="email" autocomplete="email" maxlength="50" required />
+                    <span class="field-error" asp-validation-for="Input.Email"></span>
+                </div>
+                <div class="auth-field">
+                    <label asp-for="Input.Phone">Phone number</label>
+                    <input asp-for="Input.Phone" type="tel" autocomplete="tel" maxlength="20" />
+                    <span class="field-error" asp-validation-for="Input.Phone"></span>
+                </div>
+                <div class="auth-field">
+                    <label asp-for="Input.Address">Address <span>*</span></label>
+                    <input asp-for="Input.Address" autocomplete="street-address" maxlength="50" required />
+                    <span class="field-error" asp-validation-for="Input.Address"></span>
+                </div>
+                <div class="auth-passwords">
+                <div class="auth-field">
+                    <label asp-for="Input.Password">Password <span>*</span></label>
+                    <input asp-for="Input.Password" type="password" autocomplete="new-password" minlength="12" maxlength="128" required aria-describedby="password-help" />
+                    <small id="password-help">Use at least 12 characters.</small>
+                    <span class="field-error" asp-validation-for="Input.Password"></span>
+                </div>
+                <div class="auth-field">
+                    <label asp-for="Input.ConfirmPassword">Confirm password <span>*</span></label>
+                    <input asp-for="Input.ConfirmPassword" type="password" autocomplete="new-password" maxlength="128" required />
+                    <span class="field-error" asp-validation-for="Input.ConfirmPassword"></span>
+                </div>
+                </div>
+                <button class="auth-button" type="submit"><i class="fa-solid fa-user-plus" aria-hidden="true"></i><span>Create account</span></button>
+            </form>
+    <p class="secure-note"><i class="fa-solid fa-lock" aria-hidden="true"></i> Your account keeps your requests and quotations together.</p>
+    <p class="auth-switch">Already have an account? <a asp-page="Login">Sign in</a></p>
+</section>

@@ -535,12 +535,6 @@ namespace BuildWise.Data.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "UQ_Currency_Code",
-                table: "Currency",
-                column: "Code",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Quotation_CreatorId",
                 table: "Quotation",
                 column: "CreatorId");

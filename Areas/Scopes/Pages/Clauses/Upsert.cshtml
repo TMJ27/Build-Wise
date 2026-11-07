@@ -1,0 +1,53 @@
+@page "{id:guid?}"
+@model BuildWise.Web.Areas.Scopes.Pages.Clauses.UpsertModel
+@using BuildWise.Lib.Enums
+@{
+    var editing = Model.Input.Id.HasValue;
+    ViewData["Title"] = editing ? "Edit scope clause" : "Add scope clause";
+    ViewData["PageTitle"] = ViewData["Title"];
+    ViewData["PageSubTitle"] = "Define what is included, excluded or required for this work item.";
+    ViewData["Breadcrumbs"] = new BreadcrumbItem[]
+    {
+        new("Scope", Url.Page("/Index", new { area = "Scopes", id = (Guid?)null, scopeItemId = (Guid?)null })),
+        new("Request scope", Url.Page("/Details", new { area = "Scopes", id = Model.RequestId, scopeItemId = (Guid?)null })),
+        new("Scope item", Url.Page("/Items/Details", new { area = "Scopes", id = Model.Input.ScopeItemId, requestId = Model.RequestId, scopeItemId = (Guid?)null })),
+        new("Clauses", Url.Page("/Clauses/Index", new { area = "Scopes", id = (Guid?)null, scopeItemId = Model.Input.ScopeItemId, requestId = (Guid?)null }))
+    };
+}
+
+<div class="requests-page">
+    <form method="post" class="form-stack" asp-route-id="@Model.Input.Id" asp-route-scopeItemId="@Model.Input.ScopeItemId">
+        <input type="hidden" asp-for="Input.Id" />
+        <input type="hidden" asp-for="Input.ScopeItemId" />
+        <div asp-validation-summary="All" class="configuration-errors" role="alert"></div>
+        <section class="panel configuration-section form-panel">
+            <h2>Clause details</h2>
+            <div class="form-fields">
+                <div class="field form-wide">
+                    <label>Scope item</label>
+                    <p>@Model.ScopeItemTitle</p>
+                </div>
+                <div class="field form-wide">
+                    <label asp-for="Input.ClauseType">Type <span>*</span></label>
+                    <select class="form-control" asp-for="Input.ClauseType" asp-items="Html.GetEnumSelectList<ScopeClauseType>()" required>
+                        <option value="">Choose a clause type</option>
+                    </select>
+                    <span asp-validation-for="Input.ClauseType"></span>
+                </div>
+                <div class="field form-wide">
+                    <label asp-for="Input.Description">Wording <span>*</span></label>
+                    <textarea class="form-control" asp-for="Input.Description" rows="4" required maxlength="4000" aria-describedby="clause-wording-help"></textarea>
+                    <small id="clause-wording-help">For example: paint is included, ceilings are excluded, or the customer must clear the room.</small>
+                    <span asp-validation-for="Input.Description"></span>
+                </div>
+            </div>
+            <p>Adding or changing a clause returns the scope item to pending review.</p>
+        </section>
+        <div class="form-actions">
+            <button class="btn primary" type="submit">
+                <i class="fa-solid fa-check" aria-hidden="true"></i>
+                <span>@(editing ? "Save changes" : "Create clause")</span>
+            </button>
+        </div>
+    </form>
+</div>

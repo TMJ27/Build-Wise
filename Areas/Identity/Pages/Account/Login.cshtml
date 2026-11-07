@@ -23,7 +23,7 @@
         <section class="auth-card">
             <h1>@ViewData["PageTitle"]</h1>
             <p>@ViewData["PageSubTitle"]</p>
-            <form method="post" class="configuration-column">
+            <form method="post" class="form-stack">
                 <input type="hidden" asp-for="ReturnUrl" />
                 <div asp-validation-summary="All" class="configuration-errors" role="alert"></div>
                 @if (!string.IsNullOrWhiteSpace(Model.SignInDiagnostic))
@@ -44,6 +44,8 @@
                     <span>Sign in</span>
                 </button>
             </form>
+            <p>Customer? <a asp-area="CustomerPortal" asp-page="/Account/Login">Sign in to your customer account</a></p>
         </section>
     </div>
 </div>
+

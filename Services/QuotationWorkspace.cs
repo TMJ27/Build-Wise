@@ -117,5 +117,5 @@ public sealed record QuotationEntry(
     string Exclusions,
     CompanySnapshotViewModel? CompanySnapshot)
 {
-    public string Number => $"BW-2026-{Quotation.Id:D4}";
+    public string Number => Quotation.QuotationNumber;
 }

@@ -1,132 +1,160 @@
 @page
 @model BuildWise.Web.Areas.Quotations.Pages.IndexModel
-@using BuildWise.Web.Areas.Quotations.Pages
+@using BuildWise.Lib.Enums.Statuses
 @{
     ViewData["Title"] = "Quotations";
-    ViewData["AccountName"] = "Tawanda M.";
-    ViewData["AccountRole"] = "Business owner";
-
-    ViewData["PageTitle"] = "Clear work. Clear quotations.";
-    ViewData["PageSubTitle"] = "Keep your drafts, approvals and customer quotations together.";
+    ViewData["PageTitle"] = ViewData["Title"];
+    ViewData["PageSubTitle"] = "Manage customer quotations and their latest revisions.";
+    var upsertUrl = Url.Page("/Upsert", new { area = "Quotations" });
 }
 
 @section actionbar {
-    <a class="btn primary" asp-page="Edit">
-        <i class="icon fa-solid fa-plus" aria-hidden="true"></i>
-        <span>Create quotation</span>
-    </a>
+    @if (upsertUrl is not null)
+    {
+        <a class="btn primary" href="@upsertUrl">
+            <i class="fa-solid fa-plus" aria-hidden="true"></i>
+            <span>Create quotation</span>
+        </a>
+    }
+    else
+    {
+        <button class="btn primary" type="button" disabled title="The quotation Upsert page is not available yet.">
+            <i class="fa-solid fa-plus" aria-hidden="true"></i>
+            <span>Create quotation</span>
+        </button>
+    }
 }
 
 <div class="requests-page quotations-page">
+    @if (TempData["SuccessMessage"] is string message)
+    {
+        <div class="request-success" role="status">@message</div>
+    }
 
-    <div class="request-summary quotation-summary" aria-label="Quotation summary">
+    <div class="request-summary" aria-label="Quotation summary">
         <a class="request-summary-card" asp-page="Index">
-            <span class="summary-icon"><i class="icon fa-solid fa-file-invoice-dollar" aria-hidden="true"></i></span>
-            <span><span class="summary-label">Total quotations</span><strong>@Model.All.Count.ToString("D2")</strong></span>
+            <span class="summary-icon">
+                <i class="fa-solid fa-file-invoice-dollar" aria-hidden="true"></i>
+            </span>
+            <span>
+                <span class="summary-label">Total quotations</span>
+                <strong>@Model.Summary.TotalCount.ToString("D2")</strong>
+            </span>
         </a>
-        <a class="request-summary-card" asp-page="Index" asp-route-status="Draft">
-            <span class="summary-icon"><i class="icon fa-solid fa-pen" aria-hidden="true"></i></span>
-            <span><span class="summary-label">Draft quotations</span><strong>@Model.DraftCount.ToString("D2")</strong></span>
+        <a class="request-summary-card" asp-page="Index" asp-route-status="@QuotationStatus.Draft">
+            <span class="summary-icon">
+                <i class="fa-solid fa-pen" aria-hidden="true"></i>
+            </span>
+            <span>
+                <span class="summary-label">Draft quotations</span>
+                <strong>@Model.Summary.DraftCount.ToString("D2")</strong>
+            </span>
         </a>
-        <a class="request-summary-card" asp-page="Index" asp-route-status="Approved">
-            <span class="summary-icon"><i class="icon fa-solid fa-check" aria-hidden="true"></i></span>
-            <span><span class="summary-label">Approved quotations</span><strong>@Model.ApprovedCount.ToString("D2")</strong></span>
+        <a class="request-summary-card" asp-page="Index" asp-route-status="@QuotationStatus.Approved">
+            <span class="summary-icon">
+                <i class="fa-solid fa-check" aria-hidden="true"></i>
+            </span>
+            <span>
+                <span class="summary-label">Approved quotations</span>
+                <strong>@Model.Summary.ApprovedCount.ToString("D2")</strong>
+            </span>
         </a>
-        <div class="request-summary-card quotation-value-card">
-            <span class="summary-icon"><i class="icon fa-solid fa-file-invoice-dollar" aria-hidden="true"></i></span>
-            <span><span class="summary-label">Approved value · USD</span><strong>@IndexModel.Money(Model.ApprovedValue)</strong></span>
+        <div class="request-summary-card">
+            <span class="summary-icon">
+                <i class="fa-solid fa-coins" aria-hidden="true"></i>
+            </span>
+            <span>
+                <span class="summary-label">Priced quotations</span>
+                <strong>@Model.Summary.PricedCount.ToString("D2")</strong>
+            </span>
         </div>
     </div>
 
-    <section class="panel requests-panel" aria-labelledby="quotation-list-heading">
+    <section class="panel requests-panel">
         <div class="requests-panel-heading">
             <div>
-                <h2 id="quotation-list-heading">Quotation register</h2>
-                <p>Review the details before making a commitment.</p>
+                <h2>Quotation register</h2>
+                <p>One entry per quotation, showing its latest revision.</p>
             </div>
-            <span class="badge">@Model.All.Count quotations</span>
         </div>
 
-        <nav class="request-tabs" aria-label="Quotation status">
-            @foreach (var tab in new[] { ("all", "All quotations", Model.All.Count), ("Draft", "Drafts", Model.DraftCount), ("Approved", "Approved", Model.ApprovedCount) })
-            {
-                <a asp-page="Index"
-                   asp-route-status="@tab.Item1"
-                   asp-route-search="@Model.Search"
-                   asp-route-sort="@Model.Sort"
-                   class="@(Model.Status == tab.Item1 ? "active" : null)"
-                   aria-current="@(Model.Status == tab.Item1 ? "page" : null)">
-                    @tab.Item2 <span>@tab.Item3</span>
-                </a>
-            }
-        </nav>
-
-        <form method="get" class="requests-filters" role="search">
-            <input type="hidden" asp-for="Status" />
-            <label class="request-search">
-                <i class="icon fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-                <span class="visually-hidden">Search quotations</span>
-                <input asp-for="Search" type="search" maxlength="120" placeholder="Search quotation, customer or request…" />
+        <form method="get" class="form-filters" role="search">
+            <label class="form-search">
+                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                <span class="sr-only">Search quotations</span>
+                <input class="form-control" asp-for="Search" type="search" maxlength="120" placeholder="Search quotation number, title or customer..." />
             </label>
-            <label class="request-filter">
+            <label class="form-filter">
+                <span>Status</span>
+                <select class="form-control" asp-for="Status" asp-items="Html.GetEnumSelectList<QuotationStatus>()">
+                    <option value="">All statuses</option>
+                </select>
+            </label>
+            <label class="form-filter">
                 <span>Sort by</span>
-                <select asp-for="Sort">
+                <select class="form-control" asp-for="Sort">
                     <option value="newest">Newest first</option>
                     <option value="oldest">Oldest first</option>
-                    <option value="highest">Highest value</option>
+                    <option value="customer">Customer name</option>
                 </select>
             </label>
             <button class="btn" type="submit">Apply filters</button>
-            @if (Model.Search != "" || Model.Status != "all" || Model.Sort != "newest")
+            @if (!string.IsNullOrWhiteSpace(Model.Search) || Model.Status.HasValue || Model.Sort != "newest")
             {
                 <a class="request-clear" asp-page="Index">Clear filters</a>
             }
         </form>
 
-        <div class="table-wrap requests-table-wrap" tabindex="0" role="region" aria-label="Quotations; scroll horizontally on smaller screens">
-            <table class="requests-table quotation-table">
+        <div class="table-wrap">
+            <table class="configuration-table">
+                <caption class="sr-only">Quotations matching the selected filters</caption>
                 <thead>
                     <tr>
                         <th scope="col">ID</th>
-                        <th>Quotation / customer</th>
-                        <th>Status</th>
-                        <th>Revision</th>
-                        <th>Value (USD)</th>
-                        <th>Prepared</th>
+                        <th scope="col">Title</th>
+                        <th scope="col">Customer</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Revision</th>
+                        <th scope="col">Amount</th>
+                        <th scope="col">Currency</th>
+                        <th scope="col">Creator</th>
+                        <th scope="col">Creation date</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var entry in Model.Records)
+                    @foreach (var quotation in Model.Quotations)
                     {
-                        var request = Model.RequestFor(entry);
+                        var detailsUrl = Url.Page("/Upsert", new { area = "Quotations", id = quotation.Id });
                         <tr>
                             <td>
-                                <a class="record-link record-id" asp-page="Details" asp-route-id="@entry.Quotation.Id">
-                                    @entry.Number
-                                    <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
-                                </a>
+                                @if (detailsUrl is not null)
+                                {
+                                    <a class="record-link record-id" href="@detailsUrl">
+                                        @quotation.QuotationNumber
+                                        <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="record-id">@quotation.QuotationNumber</span>
+                                }
                             </td>
+                            <td>@quotation.Title</td>
+                            <td>@quotation.CustomerName</td>
                             <td>
-                                <strong>@request.Title</strong>
-                                <small>@request.Customer</small>
+                                <span class="badge @(quotation.Status == QuotationStatus.Approved ? "green" : null)">@(quotation.Status?.ToString() ?? "Not set")</span>
                             </td>
-                            <td><span class="badge @(entry.Quotation.Status == "Approved" ? "green" : "")">@entry.Quotation.Status</span></td>
-                            <td class="request-category">Revision @entry.Quotation.Revision</td>
-                            <td class="quotation-amount">@IndexModel.Money(entry.Quotation.Amount)</td>
-                            <td class="request-date">@entry.Quotation.PreparedOn.ToString("dd MMM yyyy")</td>
+                            <td>@quotation.RevisionNumber</td>
+                            <td>@(quotation.IncludesPrices ? quotation.Total?.ToString("N2") ?? "Not set" : "Not priced")</td>
+                            <td>@(quotation.IncludesPrices ? quotation.CurrencyCode ?? "Not set" : "—")</td>
+                            <td>@(string.IsNullOrWhiteSpace(quotation.CreatorName) ? "Not provided" : quotation.CreatorName)</td>
+                            <td>@(quotation.CreationDate?.ToString("dd MMM yyyy, HH:mm") ?? "Not set")</td>
                         </tr>
                     }
-                    @if (Model.Total == 0)
+                    @if (Model.Quotations.Count == 0)
                     {
                         <tr>
-                            <td colspan="6">
-                                <div class="request-empty">
-                                    <i class="icon fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-                                    <h3>No matching quotations</h3>
-                                    <p>Try another customer name, reference or status.</p>
-                                    <a class="btn" asp-page="Index">Clear filters</a>
-                                </div>
-                            </td>
+                            <td colspan="9">@(Model.Summary.TotalCount == 0 ? "No quotations have been added." : "No quotations match the selected filters.")</td>
                         </tr>
                     }
                 </tbody>
@@ -134,23 +162,21 @@
         </div>
 
         <div class="requests-table-footer">
-            <span>Showing @Model.Records.Count of @Model.Total quotations</span>
-            <nav class="request-pagination" aria-label="Quotation pages">
-                @if (Model.PageNumber > 1)
-                {
-                    <a class="btn" asp-page="Index" asp-route-pageNumber="@(Model.PageNumber - 1)" asp-route-status="@Model.Status" asp-route-search="@Model.Search" asp-route-sort="@Model.Sort">Previous</a>
-                }
-                <span>Page @Model.PageNumber of @Model.PageCount</span>
-                @if (Model.PageNumber < Model.PageCount)
-                {
-                    <a class="btn" asp-page="Index" asp-route-pageNumber="@(Model.PageNumber + 1)" asp-route-status="@Model.Status" asp-route-search="@Model.Search" asp-route-sort="@Model.Sort">Next</a>
-                }
-            </nav>
+            <span>@Model.Quotations.Count of @Model.FilteredCount quotations shown</span>
+            @if (Model.PageCount > 1)
+            {
+                <nav class="request-pagination" aria-label="Quotation pages">
+                    @if (Model.PageNumber > 1)
+                    {
+                        <a class="btn" asp-page="Index" asp-route-pageNumber="@(Model.PageNumber - 1)" asp-route-status="@Model.Status" asp-route-search="@Model.Search" asp-route-sort="@Model.Sort">Previous</a>
+                    }
+                    <span>Page @Model.PageNumber of @Model.PageCount</span>
+                    @if (Model.PageNumber < Model.PageCount)
+                    {
+                        <a class="btn" asp-page="Index" asp-route-pageNumber="@(Model.PageNumber + 1)" asp-route-status="@Model.Status" asp-route-search="@Model.Search" asp-route-sort="@Model.Sort">Next</a>
+                    }
+                </nav>
+            }
         </div>
     </section>
-
-    <div class="request-workflow-note">
-        <i class="icon fa-solid fa-circle-question" aria-hidden="true"></i>
-        <p><strong>Approval stays in your hands.</strong> Review the scope, pricing and terms before approving a quotation.</p>
-    </div>
 </div>

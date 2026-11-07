@@ -1,45 +1,106 @@
-using BuildWise.Web.Services;
+using BuildWise.Data;
+using BuildWise.Lib.Enums.Statuses;
+using BuildWise.Web.Areas.Services.ViewModels;
+using BuildWise.Web.Services.GeneratedNumbers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 
 namespace BuildWise.Web.Areas.Services.Pages;
 
-public class IndexModel(CatalogueWorkspace catalogue) : PageModel
+public class IndexModel(BuildWiseDbContext db) : PageModel
 {
     [BindProperty(SupportsGet = true)]
     public string Search { get; set; } = string.Empty;
 
     [BindProperty(SupportsGet = true)]
-    public string Category { get; set; } = "all";
+    public Guid? CategoryId { get; set; }
 
     [BindProperty(SupportsGet = true)]
-    public string Status { get; set; } = "active";
+    public StatusFilter Status { get; set; } = StatusFilter.Active;
 
-    public IReadOnlyList<CatalogueService> All { get; private set; } = [];
-    public IReadOnlyList<CatalogueService> Records { get; private set; } = [];
-    public int ActiveCount => All.Count(service => service.IsActive);
-    public int ArchivedCount => All.Count(service => !service.IsActive);
-    public int AssessmentCount => All.Count(service => service.IsActive && service.RequiresSiteAssessment);
-    public int CategoryCount => All.Where(service => service.IsActive).Select(service => service.Category).Distinct().Count();
+    public IReadOnlyList<ServiceIndexViewModel> Records { get; private set; } = [];
+    public List<SelectListItem> Categories { get; private set; } = [];
+    public int TotalCount { get; private set; }
+    public int ActiveCount { get; private set; }
+    public int InactiveCount { get; private set; }
+    public int AssessmentCount { get; private set; }
+    public int CategoryCount { get; private set; }
 
-    public void OnGet()
+    public async Task OnGetAsync()
     {
         Search = (Search ?? string.Empty).Trim();
-
         if (Search.Length > 120)
         {
             Search = Search[..120];
         }
+        if (!Enum.IsDefined(Status) || ModelState[nameof(Status)]?.Errors.Count > 0)
+        {
+            Status = StatusFilter.Active;
+            ModelState.Remove(nameof(Status));
+        }
 
-        Status = Status is "all" or "archived" ? Status : "active";
-        Category = CatalogueWorkspace.Categories.Contains(Category) ? Category : "all";
-        All = catalogue.All;
-        Records = All.Where(service =>
-            (Status == "all" || service.IsActive == (Status == "active")) &&
-            (Category == "all" || service.Category == Category) &&
-            $"{service.Code} {service.Name} {service.Description} {service.Category}"
-                .Contains(Search, StringComparison.OrdinalIgnoreCase)).ToArray();
+        // Cards describe the whole catalogue, independently of the table filters.
+        TotalCount = await db.Services.CountAsync();
+        ActiveCount = await db.Services.CountAsync(service => service.IsActive);
+        InactiveCount = await db.Services.CountAsync(service => !service.IsActive);
+        AssessmentCount = await db.Services.CountAsync(service => service.IsActive && service.RequireSiteAssessment);
+        CategoryCount = await db.Services.Where(service => service.IsActive)
+            .Select(service => service.CategoryId)
+            .Distinct()
+            .CountAsync();
 
-        ModelState.Clear();
+        var inactiveLabel = ActiveStatus.Inactive.ToString();
+        Categories = await db.ServiceCategories.AsNoTracking()
+            .OrderBy(category => category.Name)
+            .Select(category => new SelectListItem
+            {
+                Value = category.Id.ToString(),
+                Text = category.IsActive ? category.Name : category.Name + " (" + inactiveLabel + ")"
+            })
+            .ToListAsync();
+
+        var query = db.Services.AsNoTracking();
+
+        if (Status != StatusFilter.All)
+        {
+            query = query.Where(service => service.IsActive == (Status == StatusFilter.Active));
+        }
+
+        if (CategoryId.HasValue)
+        {
+            query = query.Where(service => service.CategoryId == CategoryId.Value);
+        }
+
+        if (Search.Length > 0)
+        {
+            var searchText = Search.ToUpper();
+            query = query.Where(service => service.Name.ToUpper().Contains(searchText)
+                || (service.Description != null && service.Description.ToUpper().Contains(searchText))
+                || service.Category.Name.ToUpper().Contains(searchText));
+        }
+
+        var services = await query.Include(service => service.Category)
+            .OrderBy(service => service.Name)
+            .ToListAsync();
+
+        // Apply whole-table display numbers after filtering, as in Deporess.
+        await db.ApplyServiceNumbersAsync(services);
+
+        Records = services
+            .Select(service => new ServiceIndexViewModel
+            {
+                Id = service.Id,
+                ServiceNumber = service.ServiceNumber,
+                Name = service.Name,
+                Description = service.Description,
+                CategoryId = service.CategoryId,
+                CategoryName = service.Category.Name,
+                RequireSiteAssessment = service.RequireSiteAssessment,
+                IsActive = service.IsActive,
+                CreationDate = service.CreationDate
+            })
+            .ToList();
     }
 }

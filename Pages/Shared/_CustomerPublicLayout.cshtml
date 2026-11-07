@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Bring your requests, scope of work and quotations together in your BuildWise customer workspace." />
+    <meta name="theme-color" content="#14233b" />
+    <title>@ViewData["Title"] · BuildWise</title>
+    <link rel="icon" type="image/svg+xml" href="~/brand/buildwise-mark-muted.svg" />
+    <link rel="stylesheet" href="~/lib/fontawesome/css/fontawesome.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/lib/fontawesome/css/solid.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="@(ViewData["CustomerAuth"] is true ? "bw-customer-auth" : "bw-public")">
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    @RenderBody()
+    @if (ViewData["CustomerAuth"] is true)
+    {
+        <script src="~/lib/jquery/dist/jquery.min.js" asp-append-version="true"></script>
+        <script src="~/lib/jquery-validation/dist/jquery.validate.min.js" asp-append-version="true"></script>
+        <script src="~/lib/jquery-validation-unobtrusive/dist/jquery.validate.unobtrusive.min.js" asp-append-version="true"></script>
+    }
+    <script src="~/js/customer-public.js" asp-append-version="true" defer></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

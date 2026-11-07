@@ -1,6 +1,6 @@
 using System.Security.Claims;
 using BuildWise.Data;
-using BuildWise.Lib.Rights;
+using BuildWise.Lib.Enums.Rights;
 using BuildWise.Lib.Users;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;

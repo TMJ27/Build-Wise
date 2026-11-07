@@ -15,11 +15,11 @@
 }
 
 <div class="requests-page configuration-page">
-    <form method="post" class="user-upsert-form">
+    <form method="post" class="form-stack">
         <input type="hidden" asp-for="Input.Id" />
         <div asp-validation-summary="All" class="configuration-errors" role="alert"></div>
 
-        <section class="panel configuration-section request-form">
+        <section class="panel configuration-section form-panel">
             <div class="configuration-section-title">
                 <span class="summary-icon">
                     <i class="fa-solid fa-coins" aria-hidden="true"></i>
@@ -30,27 +30,27 @@
                 </div>
             </div>
 
-            <div class="request-form-fields">
+            <div class="form-fields">
                 <div class="field">
                     <label asp-for="Input.Name">Name <span>*</span></label>
-                    <input asp-for="Input.Name" required maxlength="80" />
+                    <input class="form-control" asp-for="Input.Name" required maxlength="80" />
                     <span asp-validation-for="Input.Name"></span>
                 </div>
                 <div class="field">
                     <label asp-for="Input.Code">Code <span>*</span></label>
-                    <input asp-for="Input.Code" required maxlength="3" aria-describedby="currency-code-help" />
+                    <input class="form-control" asp-for="Input.Code" required maxlength="3" aria-describedby="currency-code-help" />
                     <span asp-validation-for="Input.Code"></span>
                     <p id="currency-code-help" class="configuration-muted">Enter a three-letter code, such as USD.</p>
                 </div>
                 <div class="field">
                     <label asp-for="Input.Symbol">Symbol <span>*</span></label>
-                    <input asp-for="Input.Symbol" required maxlength="10" />
+                    <input class="form-control" asp-for="Input.Symbol" required maxlength="10" />
                     <span asp-validation-for="Input.Symbol"></span>
                 </div>
             </div>
         </section>
 
-        <div class="user-upsert-actions">
+        <div class="form-actions">
             <button class="btn primary" type="submit">
                 <i class="fa-solid fa-check" aria-hidden="true"></i>
                 <span>@(editing ? "Save changes" : "Create currency")</span>
@@ -58,4 +58,6 @@
         </div>
     </form>
 </div>
+
+
 

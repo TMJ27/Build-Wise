@@ -2,163 +2,174 @@
 @model BuildWise.Web.Areas.Customers.Pages.IndexModel
 @{
     ViewData["Title"] = "Customers";
-    ViewData["AccountName"] = "Tawanda M.";
-    ViewData["AccountRole"] = "Business owner";
-
-    ViewData["PageTitle"] = "Good work starts with people.";
-    ViewData["PageSubTitle"] = "Customer details, conversations and work history, kept together.";
+    ViewData["PageTitle"] = ViewData["Title"];
+    ViewData["PageSubTitle"] = "Manage your customer contact details and client types.";
 }
 
 @section actionbar {
-    <a class="btn primary" asp-page="Edit">
-        <i class="icon fa-solid fa-plus" aria-hidden="true"></i>
-        <span>Add customer</span>
-    </a>
+        <a class="btn primary" asp-area="Customers" asp-page="/Upsert">
+            <i class="fa-solid fa-plus" aria-hidden="true"></i>
+            <span>Add customer</span>
+        </a>
 }
 
 <div class="requests-page customers-page">
+    @if (TempData["SuccessMessage"] is string message)
+    {
+        <div class="request-success" role="status">@message</div>
+    }
 
     <div class="request-summary" aria-label="Customer summary">
-        <div class="request-summary-card">
-            <span class="summary-icon"><i class="icon fa-solid fa-users" aria-hidden="true"></i></span>
-            <span><span class="summary-label">Total customers</span><strong>@Model.All.Count.ToString("D2")</strong></span>
-        </div>
-        <div class="request-summary-card">
-            <span class="summary-icon"><i class="icon fa-solid fa-file-lines" aria-hidden="true"></i></span>
-            <span><span class="summary-label">With open requests</span><strong>@Model.ActiveCount.ToString("D2")</strong></span>
-        </div>
-        <a class="request-summary-card" asp-page="Index" asp-route-type="Business">
-            <span class="summary-icon"><i class="icon fa-solid fa-building" aria-hidden="true"></i></span>
-            <span><span class="summary-label">Businesses</span><strong>@Model.BusinessCount.ToString("D2")</strong></span>
+        <a class="request-summary-card" asp-page="Index">
+            <span class="summary-icon">
+                <i class="fa-solid fa-users" aria-hidden="true"></i>
+            </span>
+            <span>
+                <span class="summary-label">Total customers</span>
+                <strong>@Model.TotalCount.ToString("D2")</strong>
+            </span>
         </a>
-        <a class="request-summary-card" asp-page="Index" asp-route-type="Individual">
-            <span class="summary-icon"><i class="icon fa-solid fa-users" aria-hidden="true"></i></span>
-            <span><span class="summary-label">Individuals</span><strong>@Model.IndividualCount.ToString("D2")</strong></span>
+        <div class="request-summary-card">
+            <span class="summary-icon">
+                <i class="fa-solid fa-file-lines" aria-hidden="true"></i>
+            </span>
+            <span>
+                <span class="summary-label">With open requests</span>
+                <strong>@Model.OpenCount.ToString("D2")</strong>
+            </span>
+        </div>
+        <a class="request-summary-card" asp-page="Index" asp-route-type="@((int)ClientType.Business)">
+            <span class="summary-icon">
+                <i class="fa-solid fa-building" aria-hidden="true"></i>
+            </span>
+            <span>
+                <span class="summary-label">Businesses</span>
+                <strong>@Model.BusinessCount.ToString("D2")</strong>
+            </span>
+        </a>
+        <a class="request-summary-card" asp-page="Index" asp-route-type="@((int)ClientType.Individual)">
+            <span class="summary-icon">
+                <i class="fa-solid fa-user" aria-hidden="true"></i>
+            </span>
+            <span>
+                <span class="summary-label">Individuals</span>
+                <strong>@Model.IndividualsCount.ToString("D2")</strong>
+            </span>
         </a>
     </div>
 
-    <section class="panel requests-panel" aria-labelledby="customer-list-heading">
+    <section class="panel requests-panel">
         <div class="requests-panel-heading">
             <div>
-                <h2 id="customer-list-heading">Customer directory</h2>
-                <p>The people and businesses behind your requests.</p>
+                <h2>Customer register</h2>
+                <p>@Model.ClientList.Count @(Model.ClientList.Count == 1 ? "customer" : "customers") shown</p>
             </div>
-            <span class="badge">@Model.All.Count customers</span>
         </div>
 
-        <nav class="request-tabs" aria-label="Customer type">
-            @foreach (var tab in new[] { ("all", "All customers", Model.All.Count), ("Individual", "Individuals", Model.IndividualCount), ("Business", "Businesses", Model.BusinessCount) })
-            {
-                <a asp-page="Index"
-                   asp-route-type="@tab.Item1"
-                   asp-route-search="@Model.Search"
-                   asp-route-sort="@Model.Sort"
-                   class="@(Model.Type == tab.Item1 ? "active" : null)"
-                   aria-current="@(Model.Type == tab.Item1 ? "page" : null)">
-                    @tab.Item2 <span>@tab.Item3</span>
-                </a>
-            }
-        </nav>
-
-        <form method="get" class="requests-filters" role="search">
-            <input type="hidden" asp-for="Type" />
-            <label class="request-search">
-                <i class="icon fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-                <span class="visually-hidden">Search customers</span>
-                <input asp-for="Search" type="search" maxlength="120" placeholder="Search name, email, phone or location…" />
+        <form method="get" class="form-filters" role="search">
+            <label class="form-search">
+                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                <span class="sr-only">Search customers</span>
+                <input class="form-control" asp-for="Search" type="search" maxlength="120" placeholder="Search name, email, phone or address..." />
             </label>
-            <label class="request-filter">
+            <label class="form-filter">
+                <span>Client type</span>
+                <select class="form-control" asp-for="Type" asp-items="Html.GetEnumSelectList<ClientType>()">
+                    <option value="all">All types</option>
+                </select>
+            </label>
+            <label class="form-filter">
                 <span>Sort by</span>
-                <select asp-for="Sort">
-                    <option value="name">Name A–Z</option>
-                    <option value="requests">Most requests</option>
-                    <option value="recent">Latest request</option>
+                <select class="form-control" asp-for="Sort">
+                    <option value="name">Name</option>
+                    <option value="newest">Newest first</option>
+                    <option value="oldest">Oldest first</option>
                 </select>
             </label>
             <button class="btn" type="submit">Apply filters</button>
-            @if (Model.Search != "" || Model.Type != "all" || Model.Sort != "name")
+            @if (Model.Search.Length > 0 || Model.Type != "all" || Model.Sort != "name")
             {
                 <a class="request-clear" asp-page="Index">Clear filters</a>
             }
         </form>
 
-        <div class="table-wrap requests-table-wrap" tabindex="0" role="region" aria-label="Customers; scroll horizontally on smaller screens">
-            <table class="requests-table customer-table">
+        <div class="table-wrap">
+            <table class="configuration-table">
+                <caption class="sr-only">Customers matching the selected filters</caption>
                 <thead>
                     <tr>
                         <th scope="col">ID</th>
-                        <th>Customer</th>
-                        <th>Contact details</th>
-                        <th>Location</th>
-                        <th>Requests</th>
+                        <th scope="col">Name</th>
+                        <th scope="col">Client type</th>
+                        <th scope="col">Email</th>
+                        <th scope="col">Phone</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Creation date</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var row in Model.Records)
+                    @foreach (var client in Model.ClientList)
                     {
+                        var detailsUrl = Url.Page("/Details", new { area = "Customers", id = client.Id });
                         <tr>
                             <td>
-                                <a class="record-link record-id" asp-page="Details" asp-route-id="@row.Customer.Id">
-                                    @row.Customer.CustomerNumber
-                                    <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
-                                </a>
-                            </td>
-                            <td>
-                                <div class="customer-identity">
-<span class="customer-avatar" aria-hidden="true">@row.Customer.Initials</span>
-                                    <span><strong>@row.Customer.Name</strong><small>@row.Customer.Type</small></span>
-</div>
-                            </td>
-                            <td>
-                                @if (row.Customer.Email != "")
+                                @if (detailsUrl is not null)
                                 {
-                                    <a class="customer-email" href="mailto:@row.Customer.Email">@row.Customer.Email</a>
+                                    <a class="record-link record-id" href="@detailsUrl">
+                                        @client.ClientNumber
+                                        <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                                    </a>
                                 }
                                 else
                                 {
-                                    <span class="customer-muted">No email recorded</span>
+                                    <span class="record-id">@client.ClientNumber</span>
                                 }
-                                <small>@(row.Customer.Phone == "" ? "No phone recorded" : row.Customer.Phone)</small>
                             </td>
-                            <td class="customer-muted">@(row.Customer.Address == "" ? "Not recorded" : row.Customer.Address)</td>
-                            <td><strong>@row.RequestCount</strong><small>@row.OpenRequests open</small></td>
+                            <td>@client.Name</td>
+                            <td>@(Enum.IsDefined(typeof(ClientType), client.ClientTypeId) ? ((ClientType)client.ClientTypeId).ToString() : "Not set")</td>
+                            <td>
+                                @if (!string.IsNullOrWhiteSpace(client.Email))
+                                {
+                                    <a href="mailto:@client.Email">@client.Email</a>
+                                }
+                                else
+                                {
+                                    <span>Not provided</span>
+                                }
+                            </td>
+                            <td>@(string.IsNullOrWhiteSpace(client.Phone) ? "Not provided" : client.Phone)</td>
+                            <td>
+                                <span class="badge @(client.IsActive ? "green" : null)">@(client.IsActive ? ActiveStatus.Active : ActiveStatus.Inactive)</span>
+                            </td>
+                            <td>@client.CreationDate.ToString("dd MMM yyyy, HH:mm")</td>
                         </tr>
                     }
-                    @if (Model.Total == 0)
+                    @if (Model.ClientList.Count == 0)
                     {
                         <tr>
-                            <td colspan="5">
-                                <div class="request-empty">
-                                    <i class="icon fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-                                    <h3>No matching customers</h3>
-                                    <p>Try another name, contact detail or customer type.</p>
-                                    <a class="btn" asp-page="Index">Clear filters</a>
-                                </div>
-                            </td>
+                            <td colspan="7">@(Model.TotalCount == 0 ? "No customers have been added." : "No customers match the selected filters.")</td>
                         </tr>
                     }
                 </tbody>
             </table>
         </div>
-
         <div class="requests-table-footer">
-            <span>Showing @Model.Records.Count of @Model.Total customers</span>
-            <nav class="request-pagination" aria-label="Customer pages">
-                @if (Model.PageNumber > 1)
-                {
-                    <a class="btn" asp-page="Index" asp-route-pageNumber="@(Model.PageNumber - 1)" asp-route-type="@Model.Type" asp-route-search="@Model.Search" asp-route-sort="@Model.Sort">Previous</a>
-                }
-                <span>Page @Model.PageNumber of @Model.PageCount</span>
-                @if (Model.PageNumber < Model.PageCount)
-                {
-                    <a class="btn" asp-page="Index" asp-route-pageNumber="@(Model.PageNumber + 1)" asp-route-type="@Model.Type" asp-route-search="@Model.Search" asp-route-sort="@Model.Sort">Next</a>
-                }
-            </nav>
+            <span>@Model.ClientList.Count of @Model.FilteredCount customers shown</span>
+            @if (Model.PageCount > 1)
+            {
+                <nav class="request-pagination" aria-label="Customer pages">
+                    @if (Model.PageNumber > 1)
+                    {
+                        <a class="btn" asp-page="Index" asp-route-pageNumber="@(Model.PageNumber - 1)" asp-route-search="@Model.Search" asp-route-type="@Model.Type" asp-route-sort="@Model.Sort">Previous</a>
+                    }
+                    <span>Page @Model.PageNumber of @Model.PageCount</span>
+                    @if (Model.PageNumber < Model.PageCount)
+                    {
+                        <a class="btn" asp-page="Index" asp-route-pageNumber="@(Model.PageNumber + 1)" asp-route-search="@Model.Search" asp-route-type="@Model.Type" asp-route-sort="@Model.Sort">Next</a>
+                    }
+                </nav>
+            }
         </div>
     </section>
-
-    <div class="request-workflow-note">
-        <i class="icon fa-solid fa-circle-question" aria-hidden="true"></i>
-        <p><strong>Keep the conversation connected.</strong> Open a customer’s profile to find their requests and quotations, or start a new request with their details already filled in.</p>
-    </div>
 </div>
+

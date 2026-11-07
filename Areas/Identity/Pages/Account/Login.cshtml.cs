@@ -11,7 +11,7 @@ namespace BuildWise.Web.Areas.Identity.Pages.Account;
 public class LoginModel(CognitoSettings settings, IWebHostEnvironment environment) : PageModel
 {
     [BindProperty]
-    public string ReturnUrl { get; set; } = "/";
+    public string ReturnUrl { get; set; } = "/Overview";
 
     public bool IsConfigured => settings.IsConfigured;
 
@@ -19,7 +19,7 @@ public class LoginModel(CognitoSettings settings, IWebHostEnvironment environmen
 
     public IActionResult OnGet(string? returnUrl, string? error)
     {
-        ReturnUrl = Url.IsLocalUrl(returnUrl) ? returnUrl! : "/";
+        ReturnUrl = Url.IsLocalUrl(returnUrl) ? returnUrl! : "/Overview";
 
         if (User.Identity?.IsAuthenticated == true)
         {
@@ -40,7 +40,7 @@ public class LoginModel(CognitoSettings settings, IWebHostEnvironment environmen
 
     public IActionResult OnPost()
     {
-        var returnUrl = Url.IsLocalUrl(ReturnUrl) ? ReturnUrl : "/";
+        var returnUrl = Url.IsLocalUrl(ReturnUrl) ? ReturnUrl : "/Overview";
 
         if (User.Identity?.IsAuthenticated == true)
         {

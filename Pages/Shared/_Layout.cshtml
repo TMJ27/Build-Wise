@@ -26,11 +26,14 @@
     }
     else
     {
-        @await Html.PartialAsync("_WorkspaceHeader")
-        @await Html.PartialAsync("_Sidebar")
+        @await Html.PartialAsync(ViewData["CustomerPortal"] is true ? "_CustomerPortalHeader" : "_WorkspaceHeader")
+        @await Html.PartialAsync(ViewData["CustomerPortal"] is true ? "_CustomerPortalSidebar" : "_Sidebar")
         <main class="v2-main" id="main-content" tabindex="-1">
             <div class="content">
-                @await Html.PartialAsync("_Breadcrumbs")
+                @if (ViewData["HideBreadcrumbs"] is not true)
+                {
+                    @await Html.PartialAsync("_Breadcrumbs")
+                }
                 @if (ViewData["PageTitle"] is not null || IsSectionDefined("actionbar"))
                 {
                     <header class="page-head @ViewData["PageHeaderClass"]">
@@ -79,5 +82,6 @@
         <script src="~/js/dashboard-charts.js" asp-append-version="true"></script>
         <script src="~/js/dashboard-records.js" asp-append-version="true"></script>
     }
+    @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

@@ -1,6 +1,6 @@
 using BuildWise.Data;
 using BuildWise.Web.Services.GeneratedNumbers;
-using BuildWise.Lib.Rights;
+using BuildWise.Lib.Enums.Rights;
 using BuildWise.Web.Areas.Configuration.ViewModels.UserGroups;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;

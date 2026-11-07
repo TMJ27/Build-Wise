@@ -2,6 +2,7 @@ using BuildWise.Lib.Users;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace BuildWise.Web.Middleware;
 
@@ -10,6 +11,7 @@ public class UserProvisioningMiddleware(RequestDelegate next, ILogger<UserProvis
     public async Task InvokeAsync(HttpContext context, ICurrentUserService currentUser)
     {
         if (context.User.Identity?.IsAuthenticated != true
+            || context.GetEndpoint()?.Metadata.GetMetadata<PageActionDescriptor>()?.AreaName == "CustomerPortal"
             || context.GetEndpoint()?.Metadata.GetMetadata<IAllowAnonymous>() is not null)
         {
             await next(context);

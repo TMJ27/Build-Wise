@@ -1,70 +1,94 @@
 @page
 @model BuildWise.Web.Areas.Requests.Pages.IndexModel
+@using BuildWise.Lib.Enums.Statuses
+@using BuildWise.Web.Services.Requests
 @{
     ViewData["Title"] = "Requests";
-    ViewData["AccountName"] = "Tawanda M.";
-    ViewData["AccountRole"] = "Business owner";
-
-    ViewData["PageTitle"] = "Every request starts here.";
-    ViewData["PageSubTitle"] = "Keep the details together, shape the scope and move work forward.";
+    ViewData["PageTitle"] = ViewData["Title"];
+    ViewData["PageSubTitle"] = "Capture customer requests, prepare their scope and create quotations.";
+    var cards = new (ClientRequestStatus? Status, string Title, string Icon)[]
+    {
+        (null, "Total requests", "fa-file-lines"),
+        (ClientRequestStatus.Open, "Open requests", "fa-folder-open"),
+        (ClientRequestStatus.Pending_Verification, "Pending verification", "fa-clock"),
+        (ClientRequestStatus.Quoted, "Quoted requests", "fa-file-invoice-dollar")
+    };
 }
 
 @section actionbar {
-    <a class="btn primary" asp-page="Create"><i class="icon fa-solid fa-plus" aria-hidden="true"></i><span>New request</span></a>
+    <a class="btn primary" asp-page="Create"><i class="fa-solid fa-plus" aria-hidden="true"></i><span>New request</span></a>
 }
-<div class="requests-page">
 
+<div class="requests-page">
     <div class="request-summary" aria-label="Request summary">
-        @foreach (var item in new[] { ("all", "Total requests", "fa-file-lines"), ("Needs clarification", "Need clarification", "fa-triangle-exclamation"), ("Scope review", "In scope review", "fa-pen"), ("Ready to quote", "Ready to quote", "fa-check") })
+        @foreach (var card in cards)
         {
-            <a asp-page="Index" asp-route-status="@item.Item1" class="request-summary-card @(Model.Status == item.Item1 ? "selected" : null)">
-                <span class="summary-icon"><i class="icon fa-solid @item.Item3" aria-hidden="true"></i></span><span><span class="summary-label">@item.Item2</span><strong>@Model.Count(item.Item1).ToString("D2")</strong></span>
+            <a asp-page="Index" asp-route-status="@card.Status" class="request-summary-card @(Model.Status == card.Status ? "selected" : null)">
+                <span class="summary-icon"><i class="fa-solid @card.Icon" aria-hidden="true"></i></span>
+                <span><span class="summary-label">@card.Title</span><strong>@Model.Count(card.Status).ToString("D2")</strong></span>
             </a>
         }
     </div>
-    <section class="panel requests-panel" aria-labelledby="request-list-heading">
-        <div class="requests-panel-heading"><div><h2 id="request-list-heading">Request register</h2><p>From the first conversation to an approved quotation.</p></div><span class="badge">@Model.All.Count requests</span></div>
+    <section class="panel requests-panel">
+        <div class="requests-panel-heading"><div><h2>Request register</h2><p>Customer requests and their current status.</p></div><span class="badge">@Model.TotalCount requests</span></div>
         <nav class="request-tabs" aria-label="Request status">
-            <a asp-page="Index" asp-route-search="@Model.Search" asp-route-category="@Model.Category" asp-route-sort="@Model.Sort" class="@(Model.Status == "all" ? "active" : null)" aria-current="@(Model.Status == "all" ? "page" : null)">All requests <span>@Model.All.Count</span></a>
-            @foreach (var status in BuildWise.Web.Areas.Requests.Pages.IndexModel.Statuses)
+            <a asp-page="Index" asp-route-search="@Model.Search" asp-route-sort="@Model.Sort" class="@(!Model.Status.HasValue ? "active" : null)">All requests <span>@Model.TotalCount</span></a>
+            @foreach (var status in Enum.GetValues<ClientRequestStatus>())
             {
-                <a asp-page="Index" asp-route-status="@status" asp-route-search="@Model.Search" asp-route-category="@Model.Category" asp-route-sort="@Model.Sort" class="@(Model.Status == status ? "active" : null)" aria-current="@(Model.Status == status ? "page" : null)">@status <span>@Model.Count(status)</span></a>
+                <a asp-page="Index" asp-route-status="@status" asp-route-search="@Model.Search" asp-route-sort="@Model.Sort" class="@(Model.Status == status ? "active" : null)">@RequestDisplay.StatusName((int)status) <span>@Model.Count(status)</span></a>
             }
         </nav>
-        <form method="get" class="requests-filters" role="search">
+        <form method="get" class="form-filters" role="search">
             <input type="hidden" asp-for="Status" />
-            <label class="request-search"><i class="icon fa-solid fa-magnifying-glass" aria-hidden="true"></i><span class="visually-hidden">Search requests</span><input asp-for="Search" type="search" maxlength="120" placeholder="Search request, customer or reference…" /></label>
-            <label class="request-filter"><span>Service</span><select asp-for="Category"><option value="all">All services</option>@foreach (var category in Model.Categories) { <option value="@category">@category</option> }</select></label>
-            <label class="request-filter"><span>Sort by</span><select asp-for="Sort"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="customer">Customer name</option></select></label>
+            <label class="form-search">
+                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                <span class="sr-only">Search requests</span>
+                <input class="form-control" asp-for="Search" type="search" maxlength="120" placeholder="Search request, customer, reference or site..." />
+            </label>
+            <label class="form-filter"><span>Sort by</span><select class="form-control" asp-for="Sort"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="customer">Customer name</option></select></label>
             <button class="btn" type="submit">Apply filters</button>
-            @if (Model.Search != "" || Model.Category != "all" || Model.Status != "all" || Model.Sort != "newest") { <a class="request-clear" asp-page="Index">Clear filters</a> }
+            @if (Model.Search.Length > 0 || Model.Status.HasValue || Model.Sort != "newest")
+            {
+                <a class="request-clear" asp-page="Index">Clear filters</a>
+            }
         </form>
-        <div class="table-wrap requests-table-wrap" tabindex="0" role="region" aria-label="Request register; scroll horizontally on smaller screens">
-            <table class="requests-table"><thead><tr>
-                        <th scope="col">ID</th><th>Request / customer</th><th>Service</th><th>Status</th><th>Created</th></tr></thead><tbody>
-                @foreach (var request in Model.Records)
-                {
-                    <tr>
-                        <td>
-                            <a class="record-link record-id" asp-page="Details" asp-route-id="@request.Id">
-                                @request.RequestNumber
-                                <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
-                            </a>
-                        </td>
-                        <td>
-                            <strong>@request.Title</strong><small>@request.Customer <span>· REQ-@request.Id</span></small>
-                        </td><td class="request-category">@request.Category</td><td><span class="badge @request.BadgeClass">@request.Status</span></td><td class="request-date">@request.CreatedOn.ToString("dd MMM yyyy", System.Globalization.CultureInfo.InvariantCulture)</td></tr>
-                }
-                @if (Model.Total == 0) { <tr><td colspan="5"><div class="request-empty"><i class="icon fa-solid fa-magnifying-glass" aria-hidden="true"></i><h3>No matching requests</h3><p>Try a different customer name, reference or service.</p><a class="btn" asp-page="Index">Clear filters</a></div></td></tr> }
-            </tbody></table>
+        <div class="table-wrap">
+            <table class="configuration-table">
+                <caption class="sr-only">Customer requests matching the selected filters</caption>
+                <thead><tr><th scope="col">Reference</th><th scope="col">Title</th><th scope="col">Customer</th><th scope="col">Status</th><th scope="col">Scope items</th><th scope="col">Creation date</th></tr></thead>
+                <tbody>
+                    @foreach (var request in Model.Records)
+                    {
+                        <tr>
+                            <td><a class="record-link record-id" asp-page="Details" asp-route-id="@request.Id">@(request.ReferenceNumber ?? request.Id.ToString()) <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a></td>
+                            <td>@request.Title</td><td>@request.CustomerName</td>
+                            <td><span class="badge">@RequestDisplay.StatusName(request.StatusId)</span></td>
+                            <td>@request.ScopeItemCount</td><td>@request.CreationDate.ToString("dd MMM yyyy, HH:mm")</td>
+                        </tr>
+                    }
+                    @if (Model.Records.Count == 0)
+                    {
+                        <tr><td colspan="6">@(Model.TotalCount == 0 ? "No requests have been added." : "No requests match the selected filters.")</td></tr>
+                    }
+                </tbody>
+            </table>
         </div>
-        <div class="requests-table-footer"><span>@(Model.Total == 0 ? "0 requests" : $"Showing {(Model.PageNumber - 1) * 8 + 1}–{Math.Min(Model.PageNumber * 8, Model.Total)} of {Model.Total} requests")</span>
-            <nav class="request-pagination" aria-label="Request pages">
-                @if (Model.PageNumber > 1) { <a class="btn" asp-page="Index" asp-route-pageNumber="@(Model.PageNumber - 1)" asp-route-status="@Model.Status" asp-route-category="@Model.Category" asp-route-search="@Model.Search" asp-route-sort="@Model.Sort">Previous</a> }
-                <span>Page @Model.PageNumber of @Model.PageCount</span>
-                @if (Model.PageNumber < Model.PageCount) { <a class="btn" asp-page="Index" asp-route-pageNumber="@(Model.PageNumber + 1)" asp-route-status="@Model.Status" asp-route-category="@Model.Category" asp-route-search="@Model.Search" asp-route-sort="@Model.Sort">Next <i class="icon fa-solid fa-chevron-right" aria-hidden="true"></i></a> }
-            </nav>
+        <div class="requests-table-footer">
+            <span>@Model.Records.Count of @Model.FilteredCount requests shown</span>
+            @if (Model.PageCount > 1)
+            {
+                <nav class="request-pagination" aria-label="Request pages">
+                    @if (Model.PageNumber > 1)
+                    {
+                        <a class="btn" asp-page="Index" asp-route-pageNumber="@(Model.PageNumber - 1)" asp-route-status="@Model.Status" asp-route-search="@Model.Search" asp-route-sort="@Model.Sort">Previous</a>
+                    }
+                    <span>Page @Model.PageNumber of @Model.PageCount</span>
+                    @if (Model.PageNumber < Model.PageCount)
+                    {
+                        <a class="btn" asp-page="Index" asp-route-pageNumber="@(Model.PageNumber + 1)" asp-route-status="@Model.Status" asp-route-search="@Model.Search" asp-route-sort="@Model.Sort">Next</a>
+                    }
+                </nav>
+            }
         </div>
     </section>
-    <div class="request-workflow-note"><i class="icon fa-solid fa-circle-question" aria-hidden="true"></i><p><strong>A clear scope makes a stronger quotation.</strong> Confirm the missing details before preparing costs for your customer.</p></div>
 </div>

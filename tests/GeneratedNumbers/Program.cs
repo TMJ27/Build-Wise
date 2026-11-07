@@ -36,6 +36,11 @@ second.GroupId = group.Id;
 db.Currencies.AddRange(
     new Currency { Id = Guid.NewGuid(), Name = "Z dollar", Code = "ZZZ", Symbol = "$", CreatorId = first.Id, CreationDate = date },
     new Currency { Id = Guid.NewGuid(), Name = "A dollar", Code = "AAA", Symbol = "$", CreatorId = first.Id, CreationDate = date.AddDays(1) });
+var category = new ServiceCategory { Id = Guid.NewGuid(), Name = "Plumbing", IsActive = true, CreationDate = date };
+var earlierService = new Service { Id = Guid.NewGuid(), Name = "Zulu", CategoryId = category.Id, CreatorId = first.Id, IsActive = true, CreationDate = date };
+var laterService = new Service { Id = Guid.NewGuid(), Name = "Alpha", CategoryId = category.Id, CreatorId = first.Id, IsActive = true, CreationDate = date.AddDays(1) };
+db.ServiceCategories.Add(category);
+db.Services.AddRange(earlierService, laterService);
 await db.SaveChangesAsync();
 db.ChangeTracker.Clear();
 
@@ -59,6 +64,21 @@ Check(currencyIndex.Currencies[0].CurrencyNumber == "CUR-0002", "Currency sortin
 var currencyDetails = new BuildWise.Web.Areas.Configuration.Pages.Currencies.DetailsModel(db);
 await currencyDetails.OnGetAsync(currencyIndex.Currencies[0].Id);
 Check(currencyDetails.CurrencyDetails.CurrencyNumber == "CUR-0002", "Currency details number differs from list.");
+
+Check(await db.GetUserSequenceAsync(second) == 2, "User sequence lookup must use whole-table order.");
+Check(await db.GetUserGroupSequenceAsync(group) == 1, "Group sequence lookup must match its generated number.");
+var currency = await db.Currencies.AsNoTracking().FirstAsync(item => item.Id == currencyIndex.Currencies[0].Id);
+Check(await db.GetCurrencySequenceAsync(currency) == 2, "Currency sequence lookup must ignore name sorting.");
+Check(await db.GetServiceCategorySequenceAsync(category) == 1, "Category sequence lookup must be available.");
+Check(await db.GetServiceSequenceAsync(laterService) == 2, "Service sequence lookup must ignore name sorting.");
+await db.ApplyServiceCategoryNumberAsync(category);
+await db.ApplyServiceNumberAsync(laterService);
+var servicePage = await db.Services.AsNoTracking().OrderBy(item => item.Name).Take(1).ToListAsync();
+await db.ApplyServiceNumbersAsync(servicePage);
+Check(servicePage.Single().ServiceSequence == 2 && servicePage.Single().ServiceNumber == laterService.ServiceNumber,
+    "Filtered/paged services and single-record details must share the same generated number.");
+Check(await db.GetServiceSequenceAsync(new Service { Id = Guid.NewGuid() }) == 0,
+    "Missing sequence lookups must match Deporess's zero fallback.");
 
 Check(db.Model.FindEntityType(typeof(User))!.FindProperty(nameof(User.UserSequence)) is null, "Display sequence was mapped to SQL.");
 Check(db.Model.FindEntityType(typeof(UserGroup))!.FindProperty(nameof(UserGroup.UserGroupNumber)) is null, "Display number was mapped to SQL.");

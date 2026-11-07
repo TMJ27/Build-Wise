@@ -4,21 +4,16 @@ namespace BuildWise.Web.Areas.Requests.ViewModels;
 
 public sealed class RequestInputViewModel
 {
-    [Required, StringLength(120)]
-    public string Title { get; set; } = "";
-
-    [Required, StringLength(100)]
-    public string Customer { get; set; } = "";
-
-    [EmailAddress, StringLength(200)]
-    public string? Email { get; set; }
-
-    [Required]
-    public string Category { get; set; } = "";
-
-    [Required, StringLength(200)]
-    public string Location { get; set; } = "";
-
-    [Required, StringLength(3000), MinLength(20, ErrorMessage = "Add at least 20 characters about the work required.")]
-    public string Description { get; set; } = "";
+    [Required(ErrorMessage = "Choose a customer.")]
+    public Guid? ClientId { get; set; }
+    [Required, StringLength(50)]
+    public string Title { get; set; } = string.Empty;
+    [StringLength(50)]
+    public string? ReferenceNumber { get; set; }
+    [Required, StringLength(50)]
+    public string SiteAddress { get; set; } = string.Empty;
+    [StringLength(50)]
+    public string? PropertyType { get; set; }
+    [Required, StringLength(3000)]
+    public string Description { get; set; } = string.Empty;
 }

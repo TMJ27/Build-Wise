@@ -15,7 +15,7 @@ public partial class Client
 
     public string Address { get; set; } = null!;
 
-    public int CustomerTypeId { get; set; }
+    public int ClientTypeId { get; set; }
 
     public string? NotesJson { get; set; }
 

@@ -27,7 +27,7 @@ public sealed class AccessWorkspace
             members[member.Id] = member;
         }
 
-        integrations["ai"] = new("ai", "OpenAI", "", "", "", "", 587, true, false, 1);
+        integrations["ai"] = new("ai", "Gemini", "gemini-3.8-flash", "", "", "", 587, true, false, 1);
         integrations["email"] = new("email", "SMTP", "", "Mavambo Projects", "", "", 587, true, false, 1);
     }
 

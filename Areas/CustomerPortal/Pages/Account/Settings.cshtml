@@ -1,0 +1,85 @@
+@page
+@model BuildWise.Web.Areas.CustomerPortal.Pages.Account.SettingsModel
+@using BuildWise.Lib.Enums
+@{
+    ViewData["Title"] = "Account settings";
+    ViewData["PageTitle"] = "Account settings";
+    ViewData["PageSubTitle"] = "Keep your contact details current and manage your sign-in security.";
+    ViewData["Breadcrumbs"] = new BreadcrumbItem[]
+    {
+        new("My dashboard", Url.Page("/Index", new { area = "CustomerPortal" }))
+    };
+}
+
+<div class="requests-page customer-account-settings">
+    @if (TempData["AccountSuccessMessage"] is string message)
+    {
+        <div class="request-success" role="status"><i class="fa-solid fa-check" aria-hidden="true"></i>@message</div>
+    }
+    <div class="details-stack">
+        <section class="panel configuration-section form-panel">
+            <h2>Personal or business details</h2>
+            <form method="post" asp-page-handler="Profile" class="form-stack">
+                <div asp-validation-summary="All" class="configuration-errors" role="alert"></div>
+                <div class="form-fields">
+                    <div class="field form-wide">
+                        <label asp-for="Profile.ClientType">Customer type</label>
+                        <select class="form-control" asp-for="Profile.ClientType" asp-items="Html.GetEnumSelectList<ClientType>()" data-client-type></select>
+                        <span asp-validation-for="Profile.ClientType"></span>
+                    </div>
+                    <div class="field form-wide">
+                        <label asp-for="Profile.Name"><span data-client-label="Profile_ClientType" data-individual="Full name" data-business="Business name">Full name or business name</span> <span>*</span></label>
+                        <input class="form-control" asp-for="Profile.Name" maxlength="50" autocomplete="name" required />
+                        <span asp-validation-for="Profile.Name"></span>
+                    </div>
+                    <div class="field form-wide">
+                        <label asp-for="Profile.Email">Email address <span>*</span></label>
+                        <input class="form-control" asp-for="Profile.Email" type="email" maxlength="50" autocomplete="email" required />
+                        <span asp-validation-for="Profile.Email"></span>
+                    </div>
+                    <div class="field form-wide">
+                        <label asp-for="Profile.Phone">Phone number</label>
+                        <input class="form-control" asp-for="Profile.Phone" type="tel" maxlength="20" autocomplete="tel" />
+                        <span asp-validation-for="Profile.Phone"></span>
+                    </div>
+                    <div class="field form-wide">
+                        <label asp-for="Profile.Address"><span data-client-label="Profile_ClientType" data-individual="Home address" data-business="Business address">Home or business address</span> <span>*</span></label>
+                        <input class="form-control" asp-for="Profile.Address" maxlength="50" autocomplete="street-address" required />
+                        <span asp-validation-for="Profile.Address"></span>
+                    </div>
+                </div>
+                <div class="form-actions"><button class="btn primary" type="submit"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i><span>Save details</span></button></div>
+            </form>
+        </section>
+
+        <section class="panel configuration-section form-panel">
+            <h2>Change password</h2>
+            <form method="post" asp-page-handler="Password" class="form-stack">
+                <div asp-validation-summary="All" class="configuration-errors" role="alert"></div>
+                <div class="form-fields">
+                    <div class="field form-wide">
+                        <label asp-for="Password.CurrentPassword">Current password <span>*</span></label>
+                        <input class="form-control" asp-for="Password.CurrentPassword" type="password" autocomplete="current-password" required />
+                        <span asp-validation-for="Password.CurrentPassword"></span>
+                    </div>
+                    <div class="field form-wide">
+                        <label asp-for="Password.NewPassword">New password <span>*</span></label>
+                        <input class="form-control" asp-for="Password.NewPassword" type="password" autocomplete="new-password" minlength="12" maxlength="128" required aria-describedby="settings-password-help" />
+                        <small id="settings-password-help">Use at least 12 characters.</small>
+                        <span asp-validation-for="Password.NewPassword"></span>
+                    </div>
+                    <div class="field form-wide">
+                        <label asp-for="Password.ConfirmPassword">Confirm new password <span>*</span></label>
+                        <input class="form-control" asp-for="Password.ConfirmPassword" type="password" autocomplete="new-password" maxlength="128" required />
+                        <span asp-validation-for="Password.ConfirmPassword"></span>
+                    </div>
+                </div>
+                <div class="form-actions"><button class="btn primary" type="submit"><i class="fa-solid fa-key" aria-hidden="true"></i><span>Change password</span></button></div>
+            </form>
+        </section>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/customer-registration.js" asp-append-version="true"></script>
+}

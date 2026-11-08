@@ -76,7 +76,7 @@
                         <h3>Terms &amp; exclusions</h3>
                         <h3>Terms and validity</h3>
                         <p class="quotation-copy">@Model.Entry.Terms</p>
-                        <h3>Exclusions</h3>
+                        <h3>Assumptions and exclusions</h3>
                         <p class="quotation-copy">@Model.Entry.Exclusions</p>
                     </div>
                 </div>
@@ -129,6 +129,51 @@
                 </footer>
 
             </section>
+
+            @if (quotation.Status == "Draft")
+            {
+                <section class="panel detail-card quotation-review-panel" aria-labelledby="quotation-review-title">
+                    <header class="card-header">
+                        <h2 id="quotation-review-title">Quotation check</h2>
+                    </header>
+                    <div class="card-body">
+                        <p>Check the request against the quoted work and look for wording that may need attention.</p>
+                        <p class="ai-disclosure">This automated check offers suggestions only. It does not edit the quotation or change prices; you decide what to fix and whether to approve.</p>
+                        <div asp-validation-summary="All" class="request-validation" role="alert"></div>
+                        @if (!Model.ReviewConfigured)
+                        {
+                            <p class="ai-setup-note">Quotation checking is being set up. Contact your administrator to enable it.</p>
+                        }
+                        <form method="post" asp-page-handler="Review" asp-route-id="@quotation.Id">
+                            <button class="btn" type="submit" disabled="@(!Model.ReviewConfigured)">
+                                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                                <span>Check quotation</span>
+                            </button>
+                        </form>
+                        @if (Model.ReviewCompleted && Model.ReviewFindings.Count == 0)
+                        {
+                            <p class="request-success quotation-review-clear" role="status">No obvious wording or coverage gaps were found. Give the draft your own final review.</p>
+                        }
+                        @if (Model.ReviewFindings.Count > 0)
+                        {
+                            <div class="quotation-review-findings" role="status">
+                                <h3>Items to review</h3>
+                                @foreach (var finding in Model.ReviewFindings)
+                                {
+                                    <article class="quotation-review-finding">
+                                        <div class="quotation-review-finding-heading">
+                                            <strong>@finding.Category</strong>
+                                            <span class="badge">@finding.Severity</span>
+                                        </div>
+                                        <p>@finding.Issue</p>
+                                        <p><strong>Consider:</strong> @finding.Suggestion</p>
+                                    </article>
+                                }
+                            </div>
+                        }
+                    </div>
+                </section>
+            }
 
             @if (quotation.Status == "Draft")
             {

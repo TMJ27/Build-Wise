@@ -1,9 +1,11 @@
 using System.Data;
 using System.Text.Json;
 using BuildWise.Data;
+using BuildWise.Lib.Enums;
 using BuildWise.Lib.Enums.Statuses;
 using BuildWise.Lib.Users;
 using BuildWise.Web.Areas.Quotations.ViewModels;
+using BuildWise.Web.Services.Quotations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -11,7 +13,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BuildWise.Web.Areas.Quotations.Pages;
 
-public class UpsertModel(BuildWiseDbContext db, ICurrentUserService currentUser) : PageModel
+public class UpsertModel(
+    BuildWiseDbContext db,
+    ICurrentUserService currentUser,
+    GeminiQuotationWordingService wordingService,
+    IConfiguration configuration,
+    ILogger<UpsertModel> logger) : PageModel
 {
     [BindProperty]
     public QuotationUpsertViewModel Input { get; set; } = new();
@@ -20,6 +27,8 @@ public class UpsertModel(BuildWiseDbContext db, ICurrentUserService currentUser)
     public List<SelectListItem> Currencies { get; private set; } = [];
     public bool CreatesRevision { get; private set; }
     public int RevisionNumber { get; private set; } = 1;
+    public bool WordingConfigured { get; private set; }
+    public bool ScopeItemsReviewed { get; private set; }
 
     public async Task<IActionResult> OnGetAsync(Guid? id, Guid? requestId)
     {
@@ -74,6 +83,77 @@ public class UpsertModel(BuildWiseDbContext db, ICurrentUserService currentUser)
             ModelState.AddModelError("Input.RequestId", "Select an open request with scope items.");
         else
             ModelState.Clear();
+        await LoadOptionsAsync();
+        return Page();
+    }
+
+    public async Task<IActionResult> OnPostPrepareWordingAsync(Guid? id, CancellationToken cancellationToken)
+    {
+        if (id != Input.Id) return BadRequest();
+        Input.Items ??= [];
+        if (Input.Items.Count is < 1 or > 200)
+            ModelState.AddModelError(string.Empty, "Load scope items before preparing the quotation wording.");
+
+        var itemIds = Input.Items.Select(item => item.ScopeItemId).Distinct().ToList();
+        if (itemIds.Count != Input.Items.Count)
+            ModelState.AddModelError(string.Empty, "The quotation contains duplicate or missing scope items. Reload the scope before continuing.");
+
+        var request = await db.ClientRequests.AsNoTracking()
+            .Include(request => request.ScopeItems).ThenInclude(item => item.ScopeClauses)
+            .Include(request => request.ScopeItems).ThenInclude(item => item.ScopeStages)
+            .SingleOrDefaultAsync(request => request.Id == Input.RequestId
+                && request.StatusId != (int)ClientRequestStatus.Closed
+                && request.StatusId != (int)ClientRequestStatus.cancelled, cancellationToken);
+        var reviewedItems = request?.ScopeItems
+            .Where(item => itemIds.Contains(item.Id)
+                && item.ReviewStatusId == (int)ScopeReviewStatus.Reviewed)
+            .ToList() ?? [];
+        if (request is null || reviewedItems.Count != itemIds.Count || itemIds.Count == 0)
+            ModelState.AddModelError(string.Empty, "Review every included scope item before preparing quotation wording.");
+
+        if (ModelState.IsValid)
+        {
+            try
+            {
+                var source = reviewedItems.Select(item => new QuotationScopeSource(
+                    item.Id,
+                    item.Title,
+                    item.Description,
+                    item.Quantity,
+                    item.UnitCodeSnapshot,
+                    item.ScopeClauses.Select(clause => $"{(ScopeClauseType)clause.ClauseTypeId}: {clause.Description}").ToList(),
+                    item.ScopeStages.OrderBy(stage => stage.CreationDate).Select(stage => $"{stage.Name}: {stage.Description}").ToList()))
+                    .ToList();
+                var generated = await wordingService.GenerateAsync(source, cancellationToken);
+                foreach (var (item, index) in Input.Items.Select((item, index) => (item, index)))
+                {
+                    item.Description = generated.ItemDescriptions[item.ScopeItemId];
+                    ModelState.Remove($"Input.Items[{index}].Description");
+                }
+                Input.Exclusions = generated.AssumptionsAndExclusions;
+                ModelState.Remove("Input.Exclusions");
+                ViewData["QuotationWordingPrepared"] = true;
+            }
+            catch (QuotationWordingUnavailableException exception)
+            {
+                ModelState.AddModelError(string.Empty, exception.Message);
+            }
+            catch (HttpRequestException exception)
+            {
+                logger.LogWarning(exception, "Could not connect while preparing quotation wording for request {RequestId}.", Input.RequestId);
+                ModelState.AddModelError(string.Empty, "Quotation wording is temporarily unavailable. Try again shortly.");
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(exception, "Quotation wording preparation failed for request {RequestId}.", Input.RequestId);
+                ModelState.AddModelError(string.Empty, "Quotation wording could not be prepared. Try again.");
+            }
+        }
+
         await LoadOptionsAsync();
         return Page();
     }
@@ -247,6 +327,13 @@ public class UpsertModel(BuildWiseDbContext db, ICurrentUserService currentUser)
 
     private async Task LoadOptionsAsync()
     {
+        WordingConfigured = !string.IsNullOrWhiteSpace(configuration["Gemini:ApiKey"])
+            && !string.IsNullOrWhiteSpace(configuration["Gemini:Model"]);
+        var itemIds = Input.Items.Select(item => item.ScopeItemId).Distinct().ToList();
+        var reviewedCount = itemIds.Count == 0 ? 0 : await db.ScopeItems.AsNoTracking()
+            .CountAsync(item => item.RequestId == Input.RequestId && itemIds.Contains(item.Id)
+                && item.ReviewStatusId == (int)ScopeReviewStatus.Reviewed);
+        ScopeItemsReviewed = itemIds.Count > 0 && reviewedCount == Input.Items.Count;
         Requests = await db.ClientRequests.AsNoTracking()
             .Where(r => (r.StatusId != (int)ClientRequestStatus.Closed && r.StatusId != (int)ClientRequestStatus.cancelled
                 && r.ScopeItems.Any()) || r.Id == Input.RequestId)

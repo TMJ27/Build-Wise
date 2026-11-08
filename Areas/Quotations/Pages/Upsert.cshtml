@@ -6,10 +6,6 @@
     ViewData["PageSubTitle"] = "Prepare the scope, amounts and terms for your customer.";
 }
 
-@section actionbar {
-    <a class="btn" asp-page="Index">Back to quotations</a>
-}
-
 <div class="requests-page quotations-page">
     <form method="post" asp-route-id="@Model.Input.Id" class="quotation-editor quotation-upsert">
         <input type="hidden" asp-for="Input.Id" />
@@ -74,6 +70,29 @@
             <section class="panel request-detail-panel">
                 <h2>Quotation items</h2>
                 <p>Enter the full amount for each line, including its quantity.</p>
+                <div class="quotation-wording-tools">
+                    <button class="btn" type="submit" asp-page-handler="PrepareWording" formnovalidate
+                            disabled="@(!Model.WordingConfigured || !Model.ScopeItemsReviewed)">
+                        <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+                        <span>Prepare quotation wording</span>
+                    </button>
+                    @if (!Model.WordingConfigured)
+                    {
+                        <p class="ai-setup-note">Automatic wording preparation is being set up. Contact your administrator to enable it.</p>
+                    }
+                    else if (Model.Input.Items.Count > 0 && !Model.ScopeItemsReviewed)
+                    {
+                        <p class="ai-review-instruction">Review all scope items before preparing customer-ready wording.</p>
+                    }
+                    else if (Model.Input.Items.Count > 0)
+                    {
+                        <p class="ai-disclosure">Wording is prepared automatically from reviewed scope items. Review and edit it before saving. Prices and totals are unchanged.</p>
+                    }
+                    @if (ViewData["QuotationWordingPrepared"] is true)
+                    {
+                        <p class="request-success" role="status">Quotation wording is ready for your review.</p>
+                    }
+                </div>
                 @if (Model.Input.Items.Count == 0)
                 {
                     <p>Select a request and load its scope to begin.</p>
@@ -110,20 +129,19 @@
             </section>
 
             <section class="panel request-detail-panel form-panel">
-                <h2>Terms and exclusions</h2>
+                <h2>Terms, assumptions and exclusions</h2>
                 <div class="field">
                     <label asp-for="Input.Terms">Terms</label>
                     <textarea class="form-control" asp-for="Input.Terms" rows="4" maxlength="4000"></textarea>
                     <span asp-validation-for="Input.Terms"></span>
                 </div>
                 <div class="field">
-                    <label asp-for="Input.Exclusions">Exclusions</label>
+                    <label asp-for="Input.Exclusions">Assumptions and exclusions</label>
                     <textarea class="form-control" asp-for="Input.Exclusions" rows="3" maxlength="4000"></textarea>
                     <span asp-validation-for="Input.Exclusions"></span>
                 </div>
                 <div class="form-actions">
                     <button class="btn primary" type="submit">@(Model.CreatesRevision ? "Save new draft revision" : "Save draft")</button>
-                    <a class="btn" asp-page="Index">Cancel</a>
                 </div>
             </section>
         </div>

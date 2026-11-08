@@ -14,11 +14,13 @@
                 <div asp-validation-summary="All" class="auth-alert" role="alert"></div>
                 <div class="auth-field">
                     <label asp-for="Input.ClientType">Customer type</label>
-                    <select asp-for="Input.ClientType" asp-items="Html.GetEnumSelectList<ClientType>()"></select>
+                    <select asp-for="Input.ClientType" asp-items="Html.GetEnumSelectList<ClientType>()" data-client-type>
+                        <option value="" selected disabled>Select client type</option>
+                    </select>
                     <span class="field-error" asp-validation-for="Input.ClientType"></span>
                 </div>
                 <div class="auth-field">
-                    <label asp-for="Input.Name">Full name or business name <span>*</span></label>
+                    <label asp-for="Input.Name"><span data-client-label="Input_ClientType" data-individual="Full name" data-business="Business name">Full name or business name</span> <span>*</span></label>
                     <input asp-for="Input.Name" autocomplete="name" maxlength="50" required />
                     <span class="field-error" asp-validation-for="Input.Name"></span>
                 </div>
@@ -33,7 +35,7 @@
                     <span class="field-error" asp-validation-for="Input.Phone"></span>
                 </div>
                 <div class="auth-field">
-                    <label asp-for="Input.Address">Address <span>*</span></label>
+                    <label asp-for="Input.Address"><span data-client-label="Input_ClientType" data-individual="Home address" data-business="Business address">Home or business address</span> <span>*</span></label>
                     <input asp-for="Input.Address" autocomplete="street-address" maxlength="50" required />
                     <span class="field-error" asp-validation-for="Input.Address"></span>
                 </div>
@@ -55,3 +57,7 @@
     <p class="secure-note"><i class="fa-solid fa-lock" aria-hidden="true"></i> Your account keeps your requests and quotations together.</p>
     <p class="auth-switch">Already have an account? <a asp-page="Login">Sign in</a></p>
 </section>
+
+@section Scripts {
+    <script src="~/js/customer-registration.js" asp-append-version="true"></script>
+}

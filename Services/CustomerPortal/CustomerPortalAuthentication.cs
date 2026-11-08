@@ -17,6 +17,7 @@ public static class CustomerPortalAuthentication
     {
         services.AddScoped<CustomerPortalService>();
         services.AddScoped<CustomerRegistrationService>();
+        services.AddScoped<CustomerAccountSettingsService>();
         services.AddScoped<IPasswordHasher<CustomerAccount>, PasswordHasher<CustomerAccount>>();
         services.Configure<PasswordHasherOptions>(options => options.IterationCount = 600_000);
         // Cookie infrastructure only: the login handler is intentionally left for the user.
@@ -52,6 +53,16 @@ public static class CustomerPortalAuthentication
         services.AddRateLimiter(options =>
         {
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+            options.AddPolicy("GeminiScopeDraft", context => RateLimitPartition.GetFixedWindowLimiter(
+                context.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 5, Window = TimeSpan.FromMinutes(5), QueueLimit = 0
+                }));
+            options.AddPolicy("CustomerLogin", context => RateLimitPartition.GetFixedWindowLimiter(
+                context.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 5, Window = TimeSpan.FromMinutes(5), QueueLimit = 0
+                }));
             options.AddPolicy("CustomerRegistration", context => RateLimitPartition.GetFixedWindowLimiter(
                 context.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new FixedWindowRateLimiterOptions
                 {

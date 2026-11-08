@@ -13,6 +13,9 @@
         <a asp-area="CustomerPortal" asp-page="/Index" asp-fragment="my-quotations">
             <i class="fa-solid fa-file-invoice-dollar" aria-hidden="true"></i><span>My quotations</span>
         </a>
+        <a asp-area="CustomerPortal" asp-page="/Account/Settings" class="@(page == "/Account/Settings" ? "active" : null)" aria-current="@(page == "/Account/Settings" ? "page" : null)">
+            <i class="fa-solid fa-user-gear" aria-hidden="true"></i><span>Account settings</span>
+        </a>
     </nav>
 </aside>
 <button type="button" class="workspace-nav-backdrop" tabindex="-1" aria-label="Close navigation"></button>

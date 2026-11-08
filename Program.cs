@@ -34,6 +34,18 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<BuildWise.Lib.Users.ICurrentUserService, BuildWise.Web.Services.CurrentUserService>();
 builder.Services.AddCognitoAuthentication(builder.Configuration);
 builder.Services.AddCustomerPortal();
+builder.Services.AddHttpClient<BuildWise.Web.Services.Scopes.GeminiScopeDraftService>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(60);
+});
+builder.Services.AddHttpClient<BuildWise.Web.Services.Quotations.GeminiQuotationWordingService>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(60);
+});
+builder.Services.AddHttpClient<BuildWise.Web.Services.Quotations.GeminiQuotationReviewService>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(60);
+});
 builder.Services.AddDbContext<BuildWiseDbContext>(options =>
 {
     var connectionString = builder.Configuration.GetConnectionString("BuildWise")

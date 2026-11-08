@@ -6,7 +6,7 @@ namespace BuildWise.Web.Areas.CustomerPortal.ViewModels;
 public sealed class CustomerRegistrationViewModel
 {
     [EnumDataType(typeof(ClientType))]
-    public ClientType ClientType { get; set; } = ClientType.Individual;
+    public ClientType ClientType { get; set; }
     [Required, StringLength(50)]
     public string Name { get; set; } = string.Empty;
 

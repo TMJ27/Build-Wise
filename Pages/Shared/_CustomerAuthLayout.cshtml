@@ -3,7 +3,7 @@
     ViewData["CustomerAuth"] = true;
     var registering = ViewData["Registering"] is true;
 }
-<div class="auth-shell">
+<div class="auth-shell @(registering ? "auth-shell-register" : "")">
     <aside class="auth-story" aria-label="About BuildWise">
         <a class="auth-brand" asp-area="CustomerPortal" asp-page="/Welcome" aria-label="BuildWise home">
             <img src="~/brand/buildwise-mark-muted.svg" alt="" />BuildWise<span>.</span>

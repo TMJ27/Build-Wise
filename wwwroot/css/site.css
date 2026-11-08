@@ -8358,6 +8358,12 @@ body.bw-customer-auth .auth-alert-info {
     color: var(--accent);
 }
 
+body.bw-customer-auth .auth-alert-success {
+    background: #e9f5ef;
+    border-color: #cbe7d9;
+    color: #286b51;
+}
+
 body.bw-customer-auth .account-benefits {
     display: grid;
     gap: 13px;
@@ -8549,6 +8555,10 @@ body.bw-customer-auth .auth-brand { margin: 0; gap: 0; }
 body.bw-customer-auth .auth-brand img { width: 33px; height: 33px; margin-right: 10px; }
 body.bw-customer-auth .auth-brand > span { margin: 0; }
 body.bw-customer-auth .auth-content { background: transparent; padding-inline: 0; }
+body.bw-customer-auth .auth-shell-register .auth-content {
+    align-items: flex-start;
+    padding-top: 0;
+}
 body.bw-customer-auth .auth-form { max-width: none; width: 100%; margin: 0; padding: 0; justify-items: stretch; }
 body.bw-customer-auth .auth-passwords { align-items: start; }
 body.bw-customer-auth .auth-field { width: 100%; }
@@ -8642,4 +8652,41 @@ body.bw-customer-auth .project-art > p > span { width: 5px; height: 5px; border-
     body.bw-public .feature-list article:hover {
         transform: translateY(-3px);
     }
+}
+
+/* Gemini scope suggestions use the shared BuildWise form language. */
+.inline-action-form { display: inline-flex; margin: 0; }
+.quotation-wording-tools { display: grid; justify-items: start; gap: 4px; margin: 14px 0 20px; }
+.quotation-wording-tools .ai-disclosure, .quotation-wording-tools .ai-setup-note { margin: 4px 0; }
+.quotation-review-panel .card-body { display: grid; gap: 10px; }
+.quotation-review-panel .card-body > p { margin: 0; }
+.quotation-review-panel .ai-disclosure, .quotation-review-panel .ai-setup-note { margin: 0; }
+.quotation-review-findings { display: grid; gap: 10px; margin-top: 4px; }
+.quotation-review-findings h3 { margin: 0; font-size: 15px; }
+.quotation-review-finding { display: grid; gap: 6px; padding: 14px; border: 1px solid var(--line); border-radius: var(--control-radius); background: #fff; }
+.quotation-review-finding p { margin: 0; }
+.quotation-review-finding-heading { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.quotation-review-clear { margin-top: 4px !important; }
+.ai-scope-panel { padding: 22px; }
+.ai-scope-panel .configuration-preview-heading { align-items: flex-start; gap: 16px; }
+.ai-scope-panel .configuration-preview-heading p { color: var(--muted); margin: 6px 0 0; max-width: 760px; }
+.ai-disclosure, .ai-setup-note, .ai-review-instruction { border-radius: var(--control-radius); padding: 12px 14px; margin: 14px 0; font-size: 13px; line-height: 1.55; }
+.ai-disclosure { color: var(--ink); background: #f3f6fa; border: 1px solid var(--line); }
+.ai-setup-note { color: #6c4d1e; background: #fff8e9; border: 1px solid #edd9ad; }
+.ai-review-instruction { color: var(--muted); background: transparent; padding-inline: 0; }
+.ai-draft-form { display: grid; gap: 16px; }
+.ai-draft-card { display: grid; gap: 16px; padding: 18px; border: 1px solid var(--line); border-radius: var(--card-radius); background: #fff; }
+.ai-draft-select, .ai-assessment-field { display: flex; align-items: center; gap: 9px; }
+.ai-draft-select label, .ai-assessment-field label { margin: 0; font-weight: 600; }
+.ai-draft-card .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.ai-draft-card .form-group { display: grid; gap: 6px; }
+.ai-draft-card .form-group-wide { grid-column: 1 / -1; }
+.ai-draft-card .form-group input:not([type="checkbox"]), .ai-draft-card .form-group select, .ai-draft-card .form-group textarea, .ai-clause-row select, .ai-clause-row textarea { width: 100%; min-width: 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--control-radius); color: var(--ink); background: #fff; font: inherit; }
+.ai-clause-list { display: grid; gap: 10px; }
+.ai-clause-list h3 { margin: 0; font-size: 15px; }
+.ai-clause-row { display: grid; grid-template-columns: minmax(130px, 190px) 1fr; gap: 10px; }
+.request-validation-summary:empty { display: none; }
+@media (max-width: 700px) {
+    .ai-scope-panel .configuration-preview-heading { flex-direction: column; }
+    .ai-draft-card .form-grid, .ai-clause-row { grid-template-columns: 1fr; }
 }

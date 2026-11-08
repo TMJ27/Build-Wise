@@ -1,5 +1,6 @@
 @page "{id:guid}"
 @model BuildWise.Web.Areas.Scopes.Pages.DetailsModel
+@using BuildWise.Lib.Enums
 @{
     var scope = Model.Scope;
     ViewData["Title"] = "Scope details";
@@ -14,10 +15,16 @@
 @section actionbar {
     @if (scope.CanEdit)
     {
-    <a class="btn primary" asp-page="/Items/Upsert" asp-route-requestId="@scope.RequestId" asp-route-id="">
-        <i class="fa-solid fa-plus" aria-hidden="true"></i>
-        <span>Add scope item</span>
-    </a>
+        <a class="btn primary" asp-page="/Items/Upsert" asp-route-requestId="@scope.RequestId" asp-route-id="">
+            <i class="fa-solid fa-plus" aria-hidden="true"></i>
+            <span>Add scope item</span>
+        </a>
+        <form method="post" asp-page-handler="Generate" asp-route-id="@scope.RequestId" class="inline-action-form">
+            <button class="btn" type="submit" disabled="@(!Model.GeminiConfigured || string.IsNullOrWhiteSpace(scope.Description))">
+                <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+                <span>Prepare scope</span>
+            </button>
+        </form>
         @if (Model.Items.Count > 0)
         {
             <a class="btn" asp-area="Quotations" asp-page="/Upsert" asp-route-requestId="@scope.RequestId" asp-route-id="">Create quotation</a>
@@ -34,6 +41,7 @@
     {
         <div class="request-success" role="status">@message</div>
     }
+    <div asp-validation-summary="All" class="request-validation-summary" role="alert"></div>
     <div class="details-stack">
         <section class="detail-card panel configuration-section">
             <header class="card-header"><h2>Request details</h2></header>
@@ -46,6 +54,78 @@
                 </dl>
             </div>
         </section>
+        @if (scope.CanEdit)
+        {
+            <section class="panel ai-scope-panel" aria-labelledby="ai-scope-title">
+                <div class="configuration-preview-heading">
+                    <div>
+                        <h2 id="ai-scope-title">Suggested scope</h2>
+                        <p>A first draft of work items and clauses tailored to this request, ready for you to review.</p>
+                    </div>
+                    <span class="badge">Staff review required</span>
+                </div>
+                <p class="ai-disclosure">These suggestions are automatically prepared from the request details and active service catalogue. Customer contact details and the site address are excluded. Review and select the items you want; nothing is saved until you do.</p>
+                @if (!Model.GeminiConfigured)
+                {
+                    <p class="ai-setup-note">AI scope preparation is being set up. Contact your administrator to enable it.</p>
+                }
+                @if (Model.DraftItems.Count > 0)
+                {
+                    <form method="post" asp-page-handler="SaveDraft" asp-route-id="@scope.RequestId" class="ai-draft-form">
+                        <p class="ai-review-instruction">Review and edit each suggestion. Select the items you want to add; saving creates them as pending review.</p>
+                        @for (var i = 0; i < Model.DraftItems.Count; i++)
+                        {
+                            <article class="ai-draft-card">
+                                <div class="ai-draft-select">
+                                    <input asp-for="DraftItems[i].Selected" />
+                                    <label asp-for="DraftItems[i].Selected">Add this item</label>
+                                </div>
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label asp-for="DraftItems[i].Title">Scope item title</label>
+                                        <input asp-for="DraftItems[i].Title" maxlength="50" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label asp-for="DraftItems[i].ServiceId">Service</label>
+                                        <select asp-for="DraftItems[i].ServiceId" asp-items="Model.ActiveServices"></select>
+                                    </div>
+                                    <div class="form-group form-group-wide">
+                                        <label asp-for="DraftItems[i].Description">Work description</label>
+                                        <textarea asp-for="DraftItems[i].Description" rows="3" maxlength="4000"></textarea>
+                                    </div>
+                                    <div class="form-group">
+                                        <label asp-for="DraftItems[i].Quantity">Quantity</label>
+                                        <input asp-for="DraftItems[i].Quantity" type="number" min="1" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label asp-for="DraftItems[i].UnitCode">Unit</label>
+                                        <input asp-for="DraftItems[i].UnitCode" maxlength="50" />
+                                    </div>
+                                    <div class="form-group form-group-wide ai-assessment-field">
+                                        <input asp-for="DraftItems[i].RequireAssessment" />
+                                        <label asp-for="DraftItems[i].RequireAssessment">Site assessment required</label>
+                                    </div>
+                                </div>
+                                @if (Model.DraftItems[i].Clauses.Count > 0)
+                                {
+                                    <div class="ai-clause-list">
+                                        <h3>Suggested clauses</h3>
+                                        @for (var j = 0; j < Model.DraftItems[i].Clauses.Count; j++)
+                                        {
+                                            <div class="ai-clause-row">
+                                                <select asp-for="DraftItems[i].Clauses[j].Type" asp-items="Html.GetEnumSelectList<ScopeClauseType>()" aria-label="Clause type"></select>
+                                                <textarea asp-for="DraftItems[i].Clauses[j].Wording" rows="2" maxlength="4000" aria-label="Clause wording"></textarea>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            </article>
+                        }
+                        <button class="btn primary" type="submit"><i class="fa-solid fa-check" aria-hidden="true"></i><span>Add selected scope items</span></button>
+                    </form>
+                }
+            </section>
+        }
         <section class="panel configuration-section">
             <div class="configuration-preview-heading">
                 <h2>Scope items</h2>

@@ -1,6 +1,6 @@
 # Customer requests
 
-Index, Create and Details read/write ClientRequest through BuildWiseDbContext. IDs and customer/service context parameters use GUIDs. Creation selects an existing active Client, saves the authenticated creator and UTC creation date, and starts the request as Open. Field lengths match the existing database: Title, SiteAddress, ReferenceNumber and PropertyType are at most 50 characters. No migration is needed.
+Index, Create and Details read/write ClientRequest through BuildWiseDbContext. IDs and customer/service context parameters use GUIDs. Creation selects an existing active Client, saves the authenticated creator and UTC creation date, generates a daily `REQ-yyyyMMdd-####` reference, and starts the staff-created request as Open. The reference is system-generated and is not an input field. Field lengths match the existing database: Title, SiteAddress, ReferenceNumber and PropertyType are at most 50 characters. No migration is needed.
 
 The reference is optional: a blank value generates a persisted date/GUID reference. Supplied references are checked against existing values case-insensitively. Request creation does not create or modify customer records. Optional serviceId context only prefills text; actual services are selected when preparing scope items.
 

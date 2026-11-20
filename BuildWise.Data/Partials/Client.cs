@@ -8,5 +8,6 @@ public partial class Client
     public int ClientSequence { get; set; }
 
     [NotMapped]
-    public string ClientNumber => $"CUS-{ClientSequence:D4}";
+    public string ClientNumber => GeneratedNumberFormat.Format("CUS", CreationDate, ClientSequence);
 }
+

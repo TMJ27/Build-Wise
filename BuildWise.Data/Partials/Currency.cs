@@ -8,5 +8,6 @@ public partial class Currency
     public int CurrencySequence { get; set; }
 
     [NotMapped]
-    public string CurrencyNumber => $"CUR-{CurrencySequence:D4}";
+    public string CurrencyNumber => GeneratedNumberFormat.Format("CUR", CreationDate, CurrencySequence);
 }
+

@@ -1,6 +1,7 @@
 using System.Data;
 using System.Text.Json;
 using BuildWise.Data;
+using BuildWise.Web.Services.GeneratedNumbers;
 using BuildWise.Lib.Enums;
 using BuildWise.Lib.Enums.Statuses;
 using BuildWise.Lib.Users;
@@ -68,7 +69,7 @@ public class UpsertModel(
             var company = await db.Companies.AsNoTracking().FirstOrDefaultAsync();
             Input.CurrencyCode = company?.DefaultCurrency;
             Input.Terms = company?.DefaultQuotationTerms;
-            Input.IssueDate = DateTime.UtcNow.Date;
+            Input.IssueDate = DateTime.Now.Date;
             Input.ValidUntil = Input.IssueDate.Value.AddDays(company?.DefaultValidityDays ?? 14);
             if (requestId.HasValue && !await FillFromRequestAsync(requestId.Value)) return NotFound();
         }
@@ -102,6 +103,7 @@ public class UpsertModel(
             .Include(request => request.ScopeItems).ThenInclude(item => item.ScopeClauses)
             .Include(request => request.ScopeItems).ThenInclude(item => item.ScopeStages)
             .SingleOrDefaultAsync(request => request.Id == Input.RequestId
+                && request.StatusId != (int)ClientRequestStatus.Draft
                 && request.StatusId != (int)ClientRequestStatus.Closed
                 && request.StatusId != (int)ClientRequestStatus.cancelled, cancellationToken);
         var reviewedItems = request?.ScopeItems
@@ -147,6 +149,10 @@ public class UpsertModel(
             {
                 throw;
             }
+            catch (OperationCanceledException)
+            {
+                ModelState.AddModelError(string.Empty, "AI wording preparation timed out. Your quotation is unchanged; you can edit the wording manually.");
+            }
             catch (Exception exception)
             {
                 logger.LogError(exception, "Quotation wording preparation failed for request {RequestId}.", Input.RequestId);
@@ -180,9 +186,12 @@ public class UpsertModel(
             .Include(r => r.ScopeItems).ThenInclude(item => item.ScopeStages)
             .Include(r => r.ScopeItems).ThenInclude(item => item.ScopeDependencyScopeItems)
             .SingleOrDefaultAsync(r => r.Id == Input.RequestId);
-        if (request is null || request.StatusId == (int)ClientRequestStatus.Closed
+        if (request is null || request.StatusId == (int)ClientRequestStatus.Draft
+            || request.StatusId == (int)ClientRequestStatus.Closed
             || request.StatusId == (int)ClientRequestStatus.cancelled || request.ScopeItems.Count == 0)
             ModelState.AddModelError("Input.RequestId", "Select an open request with scope items.");
+        if (quotation is null && request is not null && request.ScopeItems.Any(item => item.ReviewStatusId != (int)ScopeReviewStatus.Reviewed))
+            ModelState.AddModelError("Input.RequestId", "Approve the request scope before creating a quotation.");
         var company = await db.Companies.AsNoTracking().FirstOrDefaultAsync();
         if (latest is null && company is null)
             ModelState.AddModelError(string.Empty, "Save the business profile before creating a quotation.");
@@ -219,14 +228,14 @@ public class UpsertModel(
             return Page();
         }
 
-        var now = DateTime.UtcNow;
+        var now = DateTime.Now;
         if (quotation is null)
         {
             var quotationId = Guid.NewGuid();
             quotation = new Quotation
             {
                 Id = quotationId, RequestId = request!.Id, CreatorId = creatorId.Value,
-                QuotationNumber = $"QT-{now:yyyyMMdd}-{quotationId:N}"
+                QuotationNumber = string.Empty
             };
             db.Quotations.Add(quotation);
         }
@@ -290,9 +299,15 @@ public class UpsertModel(
             });
         }
         await db.SaveChangesAsync();
+        await db.ApplyQuotationNumberAsync(quotation);
+        if (quotation.QuotationNumber.Length == 0)
+        {
+            quotation.QuotationNumber = quotation.GeneratedQuotationNumber;
+            await db.SaveChangesAsync();
+        }
         if (transaction is not null) await transaction.CommitAsync();
-        TempData["SuccessMessage"] = $"Quotation {quotation.QuotationNumber}, revision {revision.RevisionNumber}, saved as draft.";
-        return RedirectToPage("./Index");
+        TempData["SuccessMessage"] = $"Quotation {quotation.GeneratedQuotationNumber}, revision {revision.RevisionNumber}, saved as draft.";
+        return RedirectToPage("./Details", new { id = quotation.Id });
     }
 
     private Task<QuotationRevision?> LatestAsync(Guid id, bool tracking)
@@ -313,7 +328,8 @@ public class UpsertModel(
     private async Task<bool> FillFromRequestAsync(Guid id)
     {
         var request = await db.ClientRequests.AsNoTracking().Include(r => r.ScopeItems)
-            .SingleOrDefaultAsync(r => r.Id == id && r.StatusId != (int)ClientRequestStatus.Closed
+            .SingleOrDefaultAsync(r => r.Id == id && r.StatusId != (int)ClientRequestStatus.Draft
+                && r.StatusId != (int)ClientRequestStatus.Closed
                 && r.StatusId != (int)ClientRequestStatus.cancelled && r.ScopeItems.Any());
         if (request is null) return false;
         Input.RequestId = request.Id;
@@ -328,15 +344,18 @@ public class UpsertModel(
     private async Task LoadOptionsAsync()
     {
         WordingConfigured = !string.IsNullOrWhiteSpace(configuration["Gemini:ApiKey"])
-            && !string.IsNullOrWhiteSpace(configuration["Gemini:Model"]);
+            && (!string.IsNullOrWhiteSpace(configuration["Gemini:Model"])
+                || configuration.GetSection("Gemini:Models").GetChildren().Any(model => !string.IsNullOrWhiteSpace(model.Value)));
         var itemIds = Input.Items.Select(item => item.ScopeItemId).Distinct().ToList();
         var reviewedCount = itemIds.Count == 0 ? 0 : await db.ScopeItems.AsNoTracking()
             .CountAsync(item => item.RequestId == Input.RequestId && itemIds.Contains(item.Id)
                 && item.ReviewStatusId == (int)ScopeReviewStatus.Reviewed);
         ScopeItemsReviewed = itemIds.Count > 0 && reviewedCount == Input.Items.Count;
         Requests = await db.ClientRequests.AsNoTracking()
-            .Where(r => (r.StatusId != (int)ClientRequestStatus.Closed && r.StatusId != (int)ClientRequestStatus.cancelled
-                && r.ScopeItems.Any()) || r.Id == Input.RequestId)
+            .Where(r => (r.StatusId != (int)ClientRequestStatus.Draft
+                && r.StatusId != (int)ClientRequestStatus.Closed && r.StatusId != (int)ClientRequestStatus.cancelled
+                && r.ScopeItems.Any()
+                && r.ScopeItems.All(item => item.ReviewStatusId == (int)ScopeReviewStatus.Reviewed)) || r.Id == Input.RequestId)
             .OrderBy(r => r.Title).Select(r => new SelectListItem
             {
                 Value = r.Id.ToString(), Text = (r.ReferenceNumber ?? "Request") + " · " + r.Client.Name + " · " + r.Title

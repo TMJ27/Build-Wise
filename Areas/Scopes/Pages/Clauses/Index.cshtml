@@ -1,5 +1,6 @@
 @page "{scopeItemId:guid}"
 @model BuildWise.Web.Areas.Scopes.Pages.Clauses.IndexModel
+@inject Microsoft.AspNetCore.Routing.LinkGenerator PageLinks
 @{
     ViewData["Title"] = "Scope clauses";
     ViewData["PageTitle"] = ViewData["Title"];
@@ -15,7 +16,7 @@
 @section actionbar {
     @if (Model.CanEdit)
     {
-        <a class="btn primary" asp-page="Upsert" asp-route-id="" asp-route-scopeItemId="@Model.ScopeItemId" asp-route-requestId="">
+        <a class="btn primary" href="@PageLinks.GetPathByPage("/Clauses/Upsert", values: new { area = "Scopes", scopeItemId = Model.ScopeItemId })">
             <i class="fa-solid fa-plus" aria-hidden="true"></i>
             <span>Add clause</span>
         </a>

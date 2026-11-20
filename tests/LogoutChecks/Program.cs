@@ -73,7 +73,7 @@ Check(continued, "Provisioning blocked logout when the database was unavailable.
 
 var localHttp = new DefaultHttpContext { RequestServices = provider };
 var localPage = new LogoutModel(new CognitoSettings()) { PageContext = new PageContext { HttpContext = localHttp } };
-Check(await localPage.OnPostAsync() is RedirectToPageResult { PageName: "/Account/Login" }, "Unconfigured Cognito must still allow local logout.");
+Check(await localPage.OnPostAsync() is RedirectResult { Url: "/" }, "Unconfigured Cognito logout must return to the public landing page.");
 Console.WriteLine("PASS: cookie deletion, Cognito redirect, expired sessions, unavailable database and local-only logout.");
 
 sealed class UnavailableUserService : ICurrentUserService

@@ -8,5 +8,6 @@ public partial class ClientCategory
     public int CategorySequence { get; set; }
 
     [NotMapped]
-    public string CategoryNumber => $"CCAT-{CategorySequence:D4}";
+    public string CategoryNumber => GeneratedNumberFormat.Format("CCAT", CreationDate, CategorySequence);
 }
+

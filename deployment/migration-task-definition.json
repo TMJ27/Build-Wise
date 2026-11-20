@@ -1,0 +1,63 @@
+{
+  "containerDefinitions": [
+    {
+      "name": "Main",
+      "image": "896932223680.dkr.ecr.eu-north-1.amazonaws.com/buildwise:release-20261118-landing-banner-patched",
+      "cpu": 0,
+      "portMappings": [
+        {
+          "containerPort": 8080,
+          "hostPort": 8080,
+          "protocol": "tcp",
+          "name": "http",
+          "appProtocol": "http"
+        }
+      ],
+      "essential": true,
+      "command": [
+        "--migrate"
+      ],
+      "environment": [
+        {
+          "name": "ASPNETCORE_ENVIRONMENT",
+          "value": "Production"
+        },
+        {
+          "name": "TZ",
+          "value": "Africa/Harare"
+        }
+      ],
+      "mountPoints": [],
+      "volumesFrom": [],
+      "secrets": [
+        {
+          "name": "ConnectionStrings__BuildWiseMigrations",
+          "valueFrom": "arn:aws:secretsmanager:eu-north-1:896932223680:secret:buildwise/production/database-admin-grXSPK"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/buildwise",
+          "awslogs-region": "eu-north-1",
+          "awslogs-stream-prefix": "app"
+        }
+      },
+      "systemControls": []
+    }
+  ],
+  "family": "buildwise-migrations",
+  "executionRoleArn": "arn:aws:iam::896932223680:role/buildwise-migration-execution",
+  "networkMode": "awsvpc",
+  "volumes": [],
+  "placementConstraints": [],
+  "runtimePlatform": {
+    "cpuArchitecture": "X86_64",
+    "operatingSystemFamily": "LINUX"
+  },
+  "requiresCompatibilities": [
+    "FARGATE"
+  ],
+  "cpu": "512",
+  "memory": "1024"
+}

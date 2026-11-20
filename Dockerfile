@@ -2,8 +2,17 @@
 
 # This stage is used when running from VS in fast mode (Default for Debug configuration)
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
+USER root
+COPY deployment/rds-certificates/ /usr/local/share/ca-certificates/
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends --only-upgrade perl-base libc6 libc-bin \
+    && rm -rf /var/lib/apt/lists/* \
+    && update-ca-certificates \
+    && mkdir -p /app/keys /app/wwwroot/logos \
+    && chown -R $APP_UID:$APP_UID /app
 USER $APP_UID
 WORKDIR /app
+ENV TZ=Africa/Harare
 EXPOSE 8080
 EXPOSE 8081
 
@@ -28,5 +37,8 @@ RUN dotnet publish "./BuildWise.Web.csproj" -c $BUILD_CONFIGURATION -o /app/publ
 # This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
 FROM base AS final
 WORKDIR /app
-COPY --from=publish /app/publish .
+COPY --from=publish --chown=$APP_UID:$APP_UID /app/publish .
+USER root
+RUN rm -f /app/appsettings.Development.json
+USER $APP_UID
 ENTRYPOINT ["dotnet", "BuildWise.Web.dll"]

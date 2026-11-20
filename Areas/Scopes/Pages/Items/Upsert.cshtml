@@ -2,9 +2,9 @@
 @model BuildWise.Web.Areas.Scopes.Pages.Items.UpsertModel
 @{
     var editing = Model.Input.Id.HasValue;
-    ViewData["Title"] = editing ? "Edit scope item" : "Add scope item";
+    ViewData["Title"] = editing ? "Edit service in scope" : "Add service to scope";
     ViewData["PageTitle"] = ViewData["Title"];
-    ViewData["PageSubTitle"] = "Describe an individual piece of work for a customer request.";
+    ViewData["PageSubTitle"] = "Choose a catalogue service and describe the work included for this request.";
     var breadcrumbs = new List<BreadcrumbItem>
     {
         new("Scope", Url.Page("/Index", new { area = "Scopes", id = (Guid?)null, requestId = (Guid?)null }))
@@ -101,12 +101,14 @@
                     <small>Record your name and the review date when saving. Leave unchecked to keep the item pending.</small>
                 </span>
             </label>
+            <footer class="card-footer form-card-footer">
+                <div class="form-actions">
+                    <button class="btn primary" type="submit">
+                        <i class="fa-solid fa-check" aria-hidden="true"></i>
+                        <span>@(editing ? "Save changes" : "Add service")</span>
+                    </button>
+                </div>
+            </footer>
         </section>
-        <div class="form-actions">
-            <button class="btn primary" type="submit">
-                <i class="fa-solid fa-check" aria-hidden="true"></i>
-                <span>@(editing ? "Save changes" : "Create scope item")</span>
-            </button>
-        </div>
     </form>
 </div>

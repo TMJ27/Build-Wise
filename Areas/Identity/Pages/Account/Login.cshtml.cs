@@ -56,4 +56,17 @@ public class LoginModel(CognitoSettings settings, IWebHostEnvironment environmen
         return Challenge(new AuthenticationProperties { RedirectUri = returnUrl },
             OpenIdConnectDefaults.AuthenticationScheme);
     }
+
+    public IActionResult OnPostForgotPassword()
+    {
+        if (!settings.IsConfigured)
+        {
+            ModelState.AddModelError(string.Empty, "Password recovery is unavailable. Please contact your administrator.");
+            return Page();
+        }
+        var properties = new AuthenticationProperties { RedirectUri = "/Identity/Account/Login" };
+        properties.Items["BuildWise:PasswordRecovery"] = "true";
+        return Challenge(properties, OpenIdConnectDefaults.AuthenticationScheme);
+    }
 }
+ 

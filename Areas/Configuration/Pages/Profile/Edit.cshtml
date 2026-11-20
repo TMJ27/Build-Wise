@@ -20,13 +20,6 @@
     };
 }
 
-@section actionbar {
-    <button class="btn primary" type="submit" form="business-profile-form">
-        <i class="icon fa-solid fa-check" aria-hidden="true"></i>
-        <span>Save changes</span>
-    </button>
-}
-
 <div class="requests-page configuration-page">
 
     @if (TempData["ProfileMessage"] is string message)
@@ -140,13 +133,13 @@
                         <span asp-validation-for="Input.DefaultTerms"></span>
                     </div>
                 </div>
-                <div class="form-footer">
+                <footer class="card-footer form-card-footer">
                     <p>Review the defaults when preparing each quotation.</p>
                     <div class="form-actions">
                         <button class="btn" type="reset">Reset changes</button>
                         <button class="btn primary" type="submit">Save changes</button>
                     </div>
-                </div>
+                </footer>
             </section>
         </form>
 

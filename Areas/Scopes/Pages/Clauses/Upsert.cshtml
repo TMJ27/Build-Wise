@@ -42,12 +42,14 @@
                 </div>
             </div>
             <p>Adding or changing a clause returns the scope item to pending review.</p>
+            <footer class="card-footer form-card-footer">
+                <div class="form-actions">
+                    <button class="btn primary" type="submit">
+                        <i class="fa-solid fa-check" aria-hidden="true"></i>
+                        <span>@(editing ? "Save changes" : "Create clause")</span>
+                    </button>
+                </div>
+            </footer>
         </section>
-        <div class="form-actions">
-            <button class="btn primary" type="submit">
-                <i class="fa-solid fa-check" aria-hidden="true"></i>
-                <span>@(editing ? "Save changes" : "Create clause")</span>
-            </button>
-        </div>
     </form>
 </div>

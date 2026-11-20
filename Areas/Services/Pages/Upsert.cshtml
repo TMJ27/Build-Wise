@@ -61,14 +61,15 @@
                     <small>Available for new customer requests.</small>
                 </span>
             </label>
+            <footer class="card-footer form-card-footer">
+                <div class="form-actions">
+                    <button class="btn primary" type="submit">
+                        <i class="fa-solid fa-check" aria-hidden="true"></i>
+                        <span>@(editing ? "Save changes" : "Create service")</span>
+                    </button>
+                </div>
+            </footer>
         </section>
-
-        <div class="form-actions">
-            <button class="btn primary" type="submit">
-                <i class="fa-solid fa-check" aria-hidden="true"></i>
-                <span>@(editing ? "Save changes" : "Create service")</span>
-            </button>
-        </div>
     </form>
 </div>
 

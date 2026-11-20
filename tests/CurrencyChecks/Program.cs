@@ -42,7 +42,7 @@ Check(await create.OnPostAsync(null) is RedirectToPageResult, "Create should red
 var saved = await db.Currencies.SingleAsync();
 Check(saved.Code == "USD" && saved.CreatorId == creator.Id, "Normalize code and assign actual creator.");
 var creationDate = saved.CreationDate;
-Check(creationDate.Kind == DateTimeKind.Utc, "Creation date should use UTC.");
+Check(creationDate.Kind == DateTimeKind.Local, "Creation date should use local time.");
 Check((string?)create.TempData["SuccessMessage"] == "Currency created successfully.", "Create message.");
 
 var duplicate = Form("usd");

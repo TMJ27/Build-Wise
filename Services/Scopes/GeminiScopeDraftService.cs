@@ -22,14 +22,59 @@ public sealed class GeminiScopeDraftService(
         IReadOnlyList<Service> services,
         CancellationToken cancellationToken = default)
     {
+        var models = configuration.GetSection("Gemini:Models").Get<string[]>() ?? [];
+        if (models.Length == 0)
+            models = [configuration["Gemini:Model"] ?? string.Empty];
+        models = models.Where(model => !string.IsNullOrWhiteSpace(model))
+            .Select(model => model.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).Take(5).ToArray();
+        if (models.Length == 0)
+            throw new ScopeDraftUnavailableException("AI scope preparation is not configured yet. Contact your administrator.");
+
+        using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        deadline.CancelAfter(TimeSpan.FromSeconds(Math.Clamp(configuration.GetValue("Gemini:ScopeTimeoutSeconds", 120), 15, 180)));
+        foreach (var model in models)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            try
+            {
+                logger.LogInformation("Preparing scope draft using Gemini model {Model}.", model);
+                return await GenerateForModelAsync(request, services, model, deadline.Token);
+            }
+            catch (OperationCanceledException) when (!deadline.IsCancellationRequested)
+            {
+                logger.LogWarning("Gemini model {Model} timed out; moving to the next configured model.", model);
+            }
+            catch (HttpRequestException exception)
+            {
+                logger.LogWarning(exception, "Gemini model {Model} connection failed; moving to the next configured model.", model);
+            }
+            catch (ScopeDraftUnavailableException exception) when (exception.TryNextModel)
+            {
+                logger.LogWarning("Gemini model {Model} unavailable: {Reason} Moving to the next configured model.", model, exception.Message);
+            }
+        }
+
+        throw new ScopeDraftUnavailableException("None of the configured AI models could prepare the scope. Try again later or add scope items manually.");
+    }
+
+    private async Task<IReadOnlyList<GeneratedScopeItem>> GenerateForModelAsync(
+        ClientRequest request,
+        IReadOnlyList<Service> services,
+        string model,
+        CancellationToken cancellationToken)
+    {
         var apiKey = configuration["Gemini:ApiKey"];
-        var model = configuration["Gemini:Model"];
         if (string.IsNullOrWhiteSpace(apiKey) || string.IsNullOrWhiteSpace(model))
             throw new ScopeDraftUnavailableException("AI scope preparation is not configured yet. Contact your administrator.");
         if (string.IsNullOrWhiteSpace(request.Description))
             throw new ScopeDraftUnavailableException("Add a request description before preparing an AI scope draft.");
         if (services.Count == 0)
             throw new ScopeDraftUnavailableException("Add active services to the service catalogue before generating a scope draft.");
+
+        using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        var timeoutSeconds = Math.Clamp(configuration.GetValue("Gemini:ScopeModelTimeoutSeconds", 35), 1, 60);
+        deadline.CancelAfter(TimeSpan.FromSeconds(timeoutSeconds));
+        var requestToken = deadline.Token;
 
         var serviceOptions = services.Select(service => new
         {
@@ -57,6 +102,11 @@ public sealed class GeminiScopeDraftService(
             model,
             input = prompt,
             store = false,
+            generation_config = new
+            {
+                thinking_level = "low",
+                max_output_tokens = 8192
+            },
             response_format = new[]
             {
                 new
@@ -107,24 +157,52 @@ public sealed class GeminiScopeDraftService(
             }
         };
 
-        using var message = new HttpRequestMessage(
-            HttpMethod.Post,
-            "https://generativelanguage.googleapis.com/v1beta/interactions")
+        HttpRequestMessage CreateMessage()
         {
-            Content = JsonContent.Create(body, options: JsonOptions)
-        };
-        message.Headers.Add("x-goog-api-key", apiKey);
-        message.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            var message = new HttpRequestMessage(
+                HttpMethod.Post,
+                "https://generativelanguage.googleapis.com/v1beta/interactions")
+            {
+                Content = JsonContent.Create(body, options: JsonOptions)
+            };
+            message.Headers.Add("x-goog-api-key", apiKey);
+            message.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            return message;
+        }
 
-        using var response = await httpClient.SendAsync(message, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+        using var message = CreateMessage();
+        using var response = await httpClient.SendAsync(message, HttpCompletionOption.ResponseHeadersRead, requestToken);
         if (!response.IsSuccessStatusCode)
         {
             logger.LogWarning("Gemini scope drafting failed with HTTP status {StatusCode}.", (int)response.StatusCode);
-            throw new ScopeDraftUnavailableException("AI could not prepare a draft right now. Try again shortly.");
+            var failure = (int)response.StatusCode switch
+            {
+                400 => "AI rejected the scope-generation request. Ask your administrator to check the Gemini model and request settings.",
+                401 or 403 => "AI access was denied. Ask your administrator to check the Gemini API key and permissions.",
+                404 => "The configured AI model or endpoint was not found. Ask your administrator to check the Gemini model setting.",
+                429 => "AI usage limits have been reached. Check the Gemini quota or try again later.",
+                503 => "Google's AI service is temporarily unavailable (503). Try generating the scope again later.",
+                _ => "AI could not prepare a draft right now. Try again shortly."
+            };
+            var status = (int)response.StatusCode;
+            var tryNextModel = status is 400 or 404 or 408 or 410 or 422 or 429 || status >= 500;
+            throw new ScopeDraftUnavailableException(failure, tryNextModel);
         }
 
-        await using var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
-        using var document = await JsonDocument.ParseAsync(responseStream, cancellationToken: cancellationToken);
+        await using var responseStream = await response.Content.ReadAsStreamAsync(requestToken);
+        JsonDocument document;
+        try
+        {
+            document = await JsonDocument.ParseAsync(responseStream, cancellationToken: requestToken);
+        }
+        catch (JsonException exception)
+        {
+            logger.LogWarning(exception, "Gemini returned an invalid scope response envelope.");
+            throw new ScopeDraftUnavailableException("AI returned a response BuildWise could not read. Try again.");
+        }
+        using var responseDocument = document;
+        if (document.RootElement.ValueKind != JsonValueKind.Object)
+            throw new ScopeDraftUnavailableException("AI returned an unexpected response format. Try again.");
         var outputText = ReadOutputText(document.RootElement);
         if (string.IsNullOrWhiteSpace(outputText))
             throw new ScopeDraftUnavailableException("AI returned an empty draft. Try again.");
@@ -252,4 +330,7 @@ public sealed record GeneratedScopeItem(
 
 public sealed record GeneratedScopeClause(BuildWise.Lib.Enums.ScopeClauseType Type, string? Wording);
 
-public sealed class ScopeDraftUnavailableException(string message) : Exception(message);
+public sealed class ScopeDraftUnavailableException(string message, bool tryNextModel = false) : Exception(message)
+{
+    public bool TryNextModel { get; } = tryNextModel;
+}

@@ -1,0 +1,50 @@
+@page "{id:guid}/{revisionId:guid}"
+@model BuildWise.Web.Areas.Quotations.Pages.SendModel
+@{
+    ViewData["Title"] = "Send quotation";
+    ViewData["PageTitle"] = "Send quotation";
+    ViewData["QuotationPdfData"] = BuildWise.Web.Services.Quotations.QuotationPdfData.Create(Model.Document);
+    ViewData["PageSubTitle"] = $"{Model.Document.Number} · Revision {Model.Document.Revision.RevisionNumber}";
+    ViewData["Breadcrumbs"] = new BreadcrumbItem[]
+    {
+        new("Quotations", Url.Page("/Index", new { area = "Quotations", id = (Guid?)null })),
+        new(Model.Document.Number, Url.Page("/Details", new { id = Model.Document.Id, revisionId = Model.Document.Revision.Id }))
+    };
+}
+<div class="requests-page quotations-page">
+    <form method="post" enctype="multipart/form-data" class="form-stack" data-send-quotation>
+        <input type="file" name="PdfAttachment" accept="application/pdf" hidden data-pdf-attachment />
+        <input type="hidden" asp-for="Input.Version" />
+        <input type="hidden" asp-for="Input.SendId" />
+        <div asp-validation-summary="All" class="configuration-errors" role="alert"></div>
+        <p data-pdf-status role="status" aria-live="polite" hidden></p>
+        <section class="panel detail-card">
+            <header class="card-header"><h2>Email quotation</h2></header>
+            <div class="card-body form-fields">
+                <div class="field form-wide">
+                    <label asp-for="Input.RecipientEmail">Recipient email *</label>
+                    <input class="form-control" asp-for="Input.RecipientEmail" type="email" />
+                    <span asp-validation-for="Input.RecipientEmail"></span>
+                </div>
+                <div class="field form-wide">
+                    <label asp-for="Input.Subject">Subject *</label>
+                    <input class="form-control" asp-for="Input.Subject" />
+                    <span asp-validation-for="Input.Subject"></span>
+                </div>
+                <div class="field form-wide">
+                    <label asp-for="Input.Message">Message *</label>
+                    <textarea class="form-control" asp-for="Input.Message" rows="7"></textarea>
+                    <span asp-validation-for="Input.Message"></span>
+                </div>
+                <div class="field form-wide">
+                    <strong>Attachment</strong>
+                    <span>@(Model.Document.Number)-revision-@(Model.Document.Revision.RevisionNumber).pdf</span>
+                    <a asp-page="/Preview" asp-route-id="@Model.Document.Id" asp-route-revisionId="@Model.Document.Revision.Id">Preview quotation</a>
+                </div>
+            </div>
+            <footer class="card-footer form-actions">
+                <button class="btn primary" type="submit"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Send quotation</button>
+            </footer>
+        </section>
+    </form>
+</div>

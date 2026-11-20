@@ -37,10 +37,10 @@ await using var db = new BuildWiseDbContext(new DbContextOptionsBuilder<BuildWis
 var empty = new IndexModel(db);
 await empty.OnGetAsync();
 Check(empty.TotalCount == 0 && empty.Records.Count == 0, "Empty catalogue must not show sample services.");
-var creator = new User { Id = Guid.NewGuid(), Name = "Test", Surname = "Owner", Email = "owner@example.test", PasswordHash = "test", CreationDate = DateTime.UtcNow };
-var plumbing = new ServiceCategory { Id = Guid.NewGuid(), Name = "Plumbing", IsActive = true, CreationDate = DateTime.UtcNow };
-var electrical = new ServiceCategory { Id = Guid.NewGuid(), Name = "Electrical", IsActive = true, CreationDate = DateTime.UtcNow };
-var inactive = new ServiceCategory { Id = Guid.NewGuid(), Name = "Old category", IsActive = false, CreationDate = DateTime.UtcNow };
+var creator = new User { Id = Guid.NewGuid(), Name = "Test", Surname = "Owner", Email = "owner@example.test", PasswordHash = "test", CreationDate = DateTime.Now };
+var plumbing = new ServiceCategory { Id = Guid.NewGuid(), Name = "Plumbing", IsActive = true, CreationDate = DateTime.Now };
+var electrical = new ServiceCategory { Id = Guid.NewGuid(), Name = "Electrical", IsActive = true, CreationDate = DateTime.Now };
+var inactive = new ServiceCategory { Id = Guid.NewGuid(), Name = "Old category", IsActive = false, CreationDate = DateTime.Now };
 db.Users.Add(creator);
 db.ServiceCategories.AddRange(plumbing, electrical, inactive);
 await db.SaveChangesAsync();
@@ -49,13 +49,13 @@ var create = Form(db, creator.Id, new() { Name = " Zulu repairs ", CategoryId = 
 Check(await create.OnPostAsync(null) is RedirectToPageResult { PageName: "./Details" }, "New service must save and redirect to details.");
 var service = await db.Services.SingleAsync();
 Check(service.Name == "Zulu repairs" && service.Description == "Pipe repairs", "Service inputs must be trimmed.");
-Check(service.CreatorId == creator.Id && service.CategoryId == plumbing.Id && service.CreationDate.Kind == DateTimeKind.Utc, "Creator, category and UTC creation date must be saved.");
+Check(service.CreatorId == creator.Id && service.CategoryId == plumbing.Id && service.CreationDate.Kind == DateTimeKind.Local, "Creator, category and local creation date must be saved.");
 var creationDate = service.CreationDate;
 Check(create.TempData["SuccessMessage"] is string, "Successful saves must show a message.");
 var details = new DetailsModel(db);
 await details.OnGetAsync(service.Id);
 Check(details.ServiceDetails.CreatorName == "Test Owner" && details.ServiceDetails.CategoryName == "Plumbing"
-    && details.ServiceDetails.ServiceNumber == "SRV-0001", "Details must show real relationships and display number.");
+    && details.ServiceDetails.ServiceNumber == $"SRV-{creationDate:yyyyMMdd}-0001", "Details must show real relationships and the agreed dated display number.");
 
 var duplicate = Form(db, creator.Id, new() { Name = "zulu repairs", CategoryId = plumbing.Id });
 Check(await duplicate.OnPostAsync(null) is PageResult && !duplicate.ModelState.IsValid, "Duplicate names within a category must be rejected.");
@@ -85,7 +85,7 @@ await db.SaveChangesAsync();
 var index = new IndexModel(db);
 await index.OnGetAsync();
 Check(index.TotalCount == 3 && index.ActiveCount == 2 && index.InactiveCount == 1 && index.AssessmentCount == 1 && index.CategoryCount == 2, "Summary counts must use actual database records.");
-Check(index.Records.Count == 2 && index.Records.Single(row => row.Id == service.Id).ServiceNumber == "SRV-0001", "Alphabetic sorting must not change service numbers.");
+Check(index.Records.Count == 2 && index.Records.Single(row => row.Id == service.Id).ServiceNumber == $"SRV-{creationDate:yyyyMMdd}-0001", "Alphabetic sorting must not change service numbers.");
 var filtered = new IndexModel(db) { CategoryId = plumbing.Id, Search = "zulu", Status = StatusFilter.All };
 await filtered.OnGetAsync();
 Check(filtered.Records.Count == 1 && filtered.Records[0].Id == service.Id, "Category and case-insensitive name search must combine correctly.");

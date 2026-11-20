@@ -2,6 +2,7 @@ using BuildWise.Data;
 using BuildWise.Web.Areas.Requests.ViewModels;
 using BuildWise.Web.Areas.Quotations.ViewModels;
 using BuildWise.Web.Services.Scopes;
+using BuildWise.Web.Services.GeneratedNumbers;
 using BuildWise.Lib.Enums.Statuses;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -19,7 +20,7 @@ public class DetailsModel(BuildWiseDbContext db) : PageModel
     {
         var request = await db.ClientRequests.AsNoTracking().Include(request => request.Client)
             .Include(request => request.Creator).SingleOrDefaultAsync(request => request.Id == id);
-        if (request is null) return NotFound();
+        if (request is null || request.StatusId == (int)ClientRequestStatus.Draft) return NotFound();
         RequestDetails = new RequestDetailsViewModel
         {
             Id = request.Id, ClientId = request.ClientId, ReferenceNumber = request.ReferenceNumber,
@@ -45,6 +46,12 @@ public class DetailsModel(BuildWiseDbContext db) : PageModel
                 CurrencyCode = row.Revision == null ? null : row.Revision.CurrencyCode,
                 Total = row.Revision == null ? null : row.Revision.Total
             }).ToListAsync();
+        var quotationIds = Quotations.Select(quotation => quotation.Id).ToList();
+        var numbered = await db.Quotations.AsNoTracking().Where(quotation => quotationIds.Contains(quotation.Id)).ToListAsync();
+        await db.ApplyQuotationNumbersAsync(numbered);
+        var numbers = numbered.ToDictionary(quotation => quotation.Id, quotation => quotation.GeneratedQuotationNumber);
+        foreach (var quotation in Quotations)
+            quotation.QuotationNumber = numbers[quotation.Id];
         return Page();
     }
 }

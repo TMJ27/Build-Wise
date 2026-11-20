@@ -1,208 +1,147 @@
-@page "{id:int}"
+@page "{id:guid}"
 @model BuildWise.Web.Areas.Quotations.Pages.DetailsModel
+@using BuildWise.Lib.Enums.Statuses
 @{
-    ViewData["Title"] = Model.Entry.Number;
-    ViewData["AccountName"] = "Tawanda M.";
-    ViewData["AccountRole"] = "Business owner";
-    var quotation = Model.Entry.Quotation;
-
-    ViewData["PageTitle"] = Model.Entry.Number;
-    ViewData["PageSubTitle"] = $"{Model.SourceRequest.Request.Title} · {Model.SourceRequest.Request.Customer}";
+    var document = Model.Document;
+    var revision = document.Revision;
+    var status = (QuotationStatus)revision.StatusId;
+    ViewData["Title"] = "Quotation details";
+    ViewData["PageTitle"] = document.Number;
+    ViewData["PageSubTitle"] = revision.Title;
     ViewData["Breadcrumbs"] = new BreadcrumbItem[]
     {
-        new("Quotations", Url.Page("/Index", new { area = "Quotations" }))
+        new("Quotations", Url.Page("/Index", new { area = "Quotations", id = (Guid?)null }))
     };
 }
 
 @section actionbar {
-    <div class="quotation-actions">
-        @if (quotation.Status == "Draft")
-        {
-            <a class="btn" asp-page="Edit" asp-route-id="@quotation.Id">
-                <i class="icon fa-solid fa-pen" aria-hidden="true"></i>
-                <span>Edit draft</span>
-            </a>
-        }
-        <a class="btn primary" asp-page="Preview" asp-route-id="@quotation.Id">
-            <i class="icon fa-solid fa-file-lines" aria-hidden="true"></i>
-            <span>Preview quotation</span>
+    @if (status == QuotationStatus.Approved && revision.ApprovalDate.HasValue
+        && document.Revisions.FirstOrDefault(item => item.StatusId == (int)QuotationStatus.Approved)?.Id == revision.Id)
+    {
+        <a class="btn primary" asp-page="Send" asp-route-id="@document.Id" asp-route-revisionId="@revision.Id">
+            <i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Send quotation
         </a>
-    </div>
-
+    }
+    @if (document.IsLatest && status != QuotationStatus.Cancelled)
+    {
+        <a class="btn edit" asp-page="Upsert" asp-route-id="@document.Id">
+            <i class="fa-solid fa-pen" aria-hidden="true"></i>
+            <span>@(status == QuotationStatus.Approved ? "Create revision" : "Edit draft")</span>
+        </a>
+    }
+    <a class="btn secondary" asp-page="Preview" asp-route-id="@document.Id" asp-route-revisionId="@revision.Id">
+        <i class="fa-solid fa-file-lines" aria-hidden="true"></i>
+        <span>Preview quotation</span>
+    </a>
 }
 
 <div class="requests-page quotations-page">
-    @if (TempData["QuotationMessage"] is string message)
+    @if (TempData["SuccessMessage"] is string message)
     {
-        <div class="request-success" role="status">
-            <i class="icon fa-solid fa-check" aria-hidden="true"></i>
-            @message
-        </div>
-
+        <div class="request-success" role="status">@message</div>
     }
-
-    <div class="quotation-detail-grid">
-        <div class="quotation-column">
-            <section class="detail-card panel request-detail-panel">
-                <header class="card-header">
-                    <div class="quotation-overview-heading">
-                        <h2>Quotation overview</h2>
-                        <span class="badge @(quotation.Status == "Approved" ? "green" : "")">@quotation.Status</span>
-                    </div>
+    <div asp-validation-summary="All" class="configuration-errors" role="alert"></div>
+    <div class="details-stack">
+        @if (status == QuotationStatus.Approved || Model.CustomerResponse is not null)
+        {
+            <section class="panel detail-card">
+                <header class="card-header card-header-between">
+                    <h2>Customer response</h2>
+                    @if (Model.CustomerResponse is { } response)
+                    { <span class="badge @(response.StatusId == (int)QuotationResponseStatus.Accepted ? "green" : "amber")">@((QuotationResponseStatus)response.StatusId)</span> }
                 </header>
-
                 <div class="card-body">
-                    <div class="quotation-total">
-                        @BuildWise.Web.Pages.IndexModel.Money(quotation.Amount)<span>USD · Total quotation value</span>
-                    </div>
-                    <dl>
-                        <div>
-                            <dt>Customer</dt>
-                            <dd>
-                                <a asp-area="Customers" asp-page="/Details" asp-route-id="@Model.SourceRequest.CustomerId">@Model.SourceRequest.Request.Customer</a>
-                            </dd>
-                        </div>
-                        <div>
-                            <dt>Site location</dt>
-                            <dd>@Model.SourceRequest.Location</dd>
-                        </div>
-                        <div>
-                            <dt>Source request</dt>
-                            <dd><a asp-area="Requests" asp-page="/Details" asp-route-id="@quotation.RequestId">@Model.SourceRequest.Request.RequestNumber →</a></dd>
-                        </div>
-                    </dl>
-
-                    <div class="detail-section">
-                        <h3>Terms &amp; exclusions</h3>
-                        <h3>Terms and validity</h3>
-                        <p class="quotation-copy">@Model.Entry.Terms</p>
-                        <h3>Assumptions and exclusions</h3>
-                        <p class="quotation-copy">@Model.Entry.Exclusions</p>
-                    </div>
+                    @if (Model.CustomerResponse is { } saved)
+                    {
+                        <dl class="profile-detail-list">
+                            <div><dt>Customer</dt><dd>@saved.CustomerNameSnapshot</dd></div>
+                            <div><dt>Email</dt><dd><a href="mailto:@saved.CustomerEmailSnapshot">@saved.CustomerEmailSnapshot</a></dd></div>
+                            @if (!string.IsNullOrWhiteSpace(saved.Reason))
+                            { <div class="profile-detail-wide"><dt>Reason for declining</dt><dd>@saved.Reason</dd></div> }
+                        </dl>
+                    }
+                    else
+                    { <p>Awaiting customer response.</p> }
                 </div>
-
                 <footer class="card-footer">
                     <dl class="record-metadata">
-                        <div>
-                            <dt>Prepared on</dt>
-                            <dd>@quotation.PreparedOn.ToString("dd MMM yyyy")</dd>
-                        </div>
-                        <div>
-                            <dt>Revision</dt>
-                            <dd>@quotation.Revision</dd>
-                        </div>
+                        <div><dt>Revision</dt><dd>@revision.RevisionNumber</dd></div>
+                        @if (Model.CustomerResponse is { } audit)
+                        { <div><dt>Responded</dt><dd>@audit.CreationDate.ToString("dd MMM yyyy, HH:mm")</dd></div> }
                     </dl>
-
                 </footer>
-
             </section>
-
-            <section class="detail-card panel requests-panel">
-                <header class="card-header">
-                    <div class="requests-panel-heading">
-                        <h2>Scope &amp; pricing</h2>
-                        <span class="badge">@Model.Entry.Lines.Count items</span>
-                    </div>
-                </header>
-
+        }
+        <section class="detail-card panel configuration-section">
+            <header class="card-header card-header-between">
+                <h2>Quotation details</h2>
+                <span class="badge @(status == QuotationStatus.Approved ? "green" : null)">@status · Revision @revision.RevisionNumber</span>
+            </header>
+            <div class="card-body">
+                <dl class="profile-detail-list">
+                    <div><dt>Customer</dt><dd>@revision.CustomerNameSnapshot</dd></div>
+                    <div><dt>Request</dt><dd>@(document.RequestReference ?? "Not assigned")</dd></div>
+                    <div><dt>Issue date</dt><dd>@(revision.IssueDate?.ToString("dd MMM yyyy") ?? "Not set")</dd></div>
+                    <div><dt>Valid until</dt><dd>@(revision.ValidUntil?.ToString("dd MMM yyyy") ?? "Not set")</dd></div>
+                    <div class="profile-detail-wide"><dt>Site address</dt><dd>@revision.SiteAddressSnapshot</dd></div>
+                    <div class="profile-detail-wide"><dt>Terms</dt><dd>@(revision.Terms ?? "Not provided")</dd></div>
+                    <div class="profile-detail-wide"><dt>Assumptions and exclusions</dt><dd>@(revision.Exclusions ?? "Not provided")</dd></div>
+                </dl>
+            </div>
+            <footer class="card-footer">
+                <dl class="record-metadata">
+                    <div><dt>Creator</dt><dd>@(revision.Creator.Name ?? revision.Creator.Email)</dd></div>
+                    <div><dt>Created</dt><dd>@revision.CreationDate.ToString("dd MMM yyyy, HH:mm")</dd></div>
+                    @if (revision.ApprovalDate.HasValue)
+                    {
+                        <div><dt>Approved by</dt><dd>@(revision.ApprovedByUser?.Name ?? revision.ApprovedByUser?.Email ?? "Not set")</dd></div>
+                        <div><dt>Approved</dt><dd>@revision.ApprovalDate.Value.ToString("dd MMM yyyy, HH:mm")</dd></div>
+                    }
+                </dl>
+            </footer>
+        </section>
+        <section class="detail-card panel configuration-section">
+            <header class="card-header"><h2>Quoted services</h2></header>
+            <div class="card-body">
+                @await Html.PartialAsync("_QuotationRevisionItems", revision)
+            </div>
+            <footer class="card-footer"><span>@revision.QuotationItems.Count services · @(revision.IncludesPrices ? revision.CurrencyCode : "Without prices")</span></footer>
+        </section>
+        @if (document.IsLatest && status == QuotationStatus.Draft)
+        {
+            <form method="post" asp-page-handler="Approve" asp-route-id="@document.Id" class="detail-card panel configuration-section">
+                <input type="hidden" name="revisionId" value="@revision.Id" />
+                <input type="hidden" name="version" value="@document.Version" />
+                <header class="card-header"><h2>Approve quotation</h2></header>
                 <div class="card-body">
-                    @await Html.PartialAsync("_QuotationLines", Model.Entry)
+                    <label class="form-check">
+                        <input type="checkbox" name="confirm" value="true" required />
+                        <span>I have reviewed the work, amounts and terms for this revision.</span>
+                    </label>
                 </div>
-                <footer class="card-footer">
-                    <span>@Model.Entry.Lines.Count quotation items</span>
+                <footer class="card-footer form-card-footer">
+                    <button class="btn primary" type="submit"><i class="fa-solid fa-check" aria-hidden="true"></i><span>Approve quotation</span></button>
                 </footer>
-
-            </section>
-
-        </div>
-        <aside class="quotation-column">
-            <section class="panel detail-card">
-                <header class="card-header">
-                    <h2>@(quotation.Status == "Approved" ? "Ready when you are." : "Your approval comes next.")</h2>
-                </header>
-
-                <div class="card-body">
-                    <p>@(quotation.Status == "Approved" ? "This quotation has been approved by the provider. Open the preview to print or save a PDF." : "Check the work, prices and terms. A draft remains editable until you approve it.")</p>
-                </div>
-                <footer class="card-footer">
-                    <a class="btn soft" asp-page="Preview" asp-route-id="@quotation.Id">Open document</a>
-                </footer>
-
-            </section>
-
-            @if (quotation.Status == "Draft")
-            {
-                <section class="panel detail-card quotation-review-panel" aria-labelledby="quotation-review-title">
-                    <header class="card-header">
-                        <h2 id="quotation-review-title">Quotation check</h2>
-                    </header>
-                    <div class="card-body">
-                        <p>Check the request against the quoted work and look for wording that may need attention.</p>
-                        <p class="ai-disclosure">This automated check offers suggestions only. It does not edit the quotation or change prices; you decide what to fix and whether to approve.</p>
-                        <div asp-validation-summary="All" class="request-validation" role="alert"></div>
-                        @if (!Model.ReviewConfigured)
+            </form>
+        }
+        <section class="detail-card panel configuration-section">
+            <header class="card-header"><h2>Revision history</h2></header>
+            <div class="card-body table-wrap">
+                <table class="configuration-table">
+                    <thead><tr><th scope="col">Revision</th><th scope="col">Status</th><th scope="col">Created</th></tr></thead>
+                    <tbody>
+                        @foreach (var entry in document.Revisions)
                         {
-                            <p class="ai-setup-note">Quotation checking is being set up. Contact your administrator to enable it.</p>
+                            <tr>
+                                <td><a class="record-link" asp-page="Details" asp-route-id="@document.Id" asp-route-revisionId="@entry.Id">Revision @entry.RevisionNumber <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a></td>
+                                <td>@((QuotationStatus)entry.StatusId)</td>
+                                <td>@entry.CreationDate.ToString("dd MMM yyyy, HH:mm")</td>
+                            </tr>
                         }
-                        <form method="post" asp-page-handler="Review" asp-route-id="@quotation.Id">
-                            <button class="btn" type="submit" disabled="@(!Model.ReviewConfigured)">
-                                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-                                <span>Check quotation</span>
-                            </button>
-                        </form>
-                        @if (Model.ReviewCompleted && Model.ReviewFindings.Count == 0)
-                        {
-                            <p class="request-success quotation-review-clear" role="status">No obvious wording or coverage gaps were found. Give the draft your own final review.</p>
-                        }
-                        @if (Model.ReviewFindings.Count > 0)
-                        {
-                            <div class="quotation-review-findings" role="status">
-                                <h3>Items to review</h3>
-                                @foreach (var finding in Model.ReviewFindings)
-                                {
-                                    <article class="quotation-review-finding">
-                                        <div class="quotation-review-finding-heading">
-                                            <strong>@finding.Category</strong>
-                                            <span class="badge">@finding.Severity</span>
-                                        </div>
-                                        <p>@finding.Issue</p>
-                                        <p><strong>Consider:</strong> @finding.Suggestion</p>
-                                    </article>
-                                }
-                            </div>
-                        }
-                    </div>
-                </section>
-            }
-
-            @if (quotation.Status == "Draft")
-            {
-                <form method="post" asp-page-handler="Approve" asp-route-id="@quotation.Id" class="detail-card panel request-detail-panel quotation-approval">
-                    <header class="card-header">
-                        <h2>Provider approval</h2>
-                    </header>
-
-                    <div class="card-body">
-                        <p>Approve this version once you are satisfied with its scope and pricing.</p>
-                        <div asp-validation-summary="All" class="request-validation" role="alert">
-                        </div>
-                        <label class="form-check">
-                            <input type="checkbox" name="confirm" value="true" required />
-                            <span>I have reviewed the scope, prices and terms.</span>
-                        </label>
-                    </div>
-                    <footer class="card-footer">
-                        <button class="btn primary" type="submit">
-                            <i class="icon fa-solid fa-check" aria-hidden="true"></i>
-                            <span>Approve quotation</span>
-                        </button>
-                    </footer>
-
-                </form>
-
-            }
-        </aside>
-
+                    </tbody>
+                </table>
+            </div>
+            <footer class="card-footer"><span>@document.Revisions.Count revisions</span></footer>
+        </section>
     </div>
 </div>
-

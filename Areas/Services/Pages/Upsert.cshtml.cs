@@ -117,7 +117,7 @@ public class UpsertModel(BuildWiseDbContext db, ICurrentUserService CurrentUser)
             Service.RequireSiteAssessment = Input.RequireSiteAssessment;
             Service.IsActive = Input.IsActive;
             Service.CategoryId = Input.CategoryId.Value;
-            Service.LastUpdated = DateTime.UtcNow;
+            Service.LastUpdated = DateTime.Now;
             db.Services.Update(Service);
 
         }

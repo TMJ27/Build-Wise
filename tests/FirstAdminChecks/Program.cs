@@ -45,7 +45,7 @@ await using var pendingDb = new BuildWiseDbContext(new DbContextOptionsBuilder<B
 var pending = new User
 {
     Id = Guid.NewGuid(), Email = "pending@company.test", IsActive = false,
-    PasswordHash = "unused", CreationDate = DateTime.UtcNow
+    PasswordHash = "unused", CreationDate = DateTime.Now
 };
 pendingDb.Users.Add(pending);
 await pendingDb.SaveChangesAsync();

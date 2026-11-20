@@ -8,8 +8,6 @@ public sealed class RequestInputViewModel
     public Guid? ClientId { get; set; }
     [Required, StringLength(50)]
     public string Title { get; set; } = string.Empty;
-    [StringLength(50)]
-    public string? ReferenceNumber { get; set; }
     [Required, StringLength(50)]
     public string SiteAddress { get; set; } = string.Empty;
     [StringLength(50)]

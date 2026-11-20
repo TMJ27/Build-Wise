@@ -1,6 +1,7 @@
 using BuildWise.Web.Areas.Scopes.ViewModels;
 using BuildWise.Data;
 using BuildWise.Web.Services.Scopes;
+using BuildWise.Web.Services.GeneratedNumbers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -17,6 +18,7 @@ public class DetailsModel(BuildWiseDbContext db) : PageModel
         var item = await db.ScopeItems.AsNoTracking().Include(item => item.Service)
             .Include(item => item.Request).Include(item => item.ReviewedByUser).SingleOrDefaultAsync(item => item.Id == id);
         if (item is null || (requestId.HasValue && item.RequestId != requestId)) return NotFound();
+        await db.ApplyScopeItemNumberAsync(item);
         Item = ScopeQueries.MapItem(item);
         var clauses = await db.ScopeClauses.AsNoTracking().Include(clause => clause.Creator)
             .Include(clause => clause.ScopeItem).ThenInclude(parent => parent.Request)

@@ -72,14 +72,14 @@ public class UpsertModel(BuildWiseDbContext db) : PageModel
             }
 
             category = existing;
-            category.LastUpdated = DateTime.UtcNow;
+            category.LastUpdated = DateTime.Now;
         }
         else
         {
             category = new ServiceCategory
             {
                 Id = Guid.NewGuid(),
-                CreationDate = DateTime.UtcNow
+                CreationDate = DateTime.Now
             };
             db.ServiceCategories.Add(category);
         }

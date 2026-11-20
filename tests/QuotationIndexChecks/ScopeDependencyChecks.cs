@@ -43,7 +43,7 @@ internal static class ScopeDependencyChecks
         Check(await create.OnPostAsync(null, item.Id) is RedirectToPageResult, "Valid dependency must save.");
         var dependency = await db.ScopeDependencies.SingleAsync(d => d.ScopeItemId == item.Id);
         Check(dependency.DependsOnScopeItemId == second.Id && dependency.RequestId == item.RequestId
-            && dependency.CreatorId == user.Id && dependency.CreationDate.Kind == DateTimeKind.Utc
+            && dependency.CreatorId == user.Id && dependency.CreationDate.Kind == DateTimeKind.Local
             && ScopeQueries.ReadNotes(dependency.NotesJson) == "Finish this first", "Saving must derive request, creator and JSON notes correctly.");
         Check(item.ReviewStatusId == (int)ScopeReviewStatus.Pending && item.ReviewedOn == null, "Changes must reset item review.");
         var duplicate = Form(item.Id, second.Id, user.Id);
@@ -74,7 +74,7 @@ internal static class ScopeDependencyChecks
             && await new DetailsModel(db).OnGetAsync(dependency.Id, fourth.Id) is NotFoundResult,
             "Mismatched route parents must be rejected.");
         item.ReviewStatusId = (int)ScopeReviewStatus.Reviewed;
-        item.ReviewedOn = DateTime.UtcNow;
+        item.ReviewedOn = DateTime.Now;
         await db.SaveChangesAsync();
         var edit = Form(item.Id, second.Id, user.Id);
         await edit.OnGetAsync(dependency.Id, item.Id);

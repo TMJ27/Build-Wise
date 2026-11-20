@@ -2,8 +2,9 @@
 @model BuildWise.Web.Areas.CustomerPortal.Pages.Account.RegisterModel
 @using BuildWise.Lib.Enums
 @{
-    Layout = "/Pages/Shared/_CustomerAuthLayout.cshtml";
+    Layout = "/Pages/Shared/_CustomerPublicLayout.cshtml";
     ViewData["Title"] = "Create an account";
+    ViewData["CustomerAuth"] = true;
     ViewData["Registering"] = true;
 }
 <section aria-labelledby="register-title">

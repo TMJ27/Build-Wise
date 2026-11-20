@@ -2,6 +2,8 @@ using BuildWise.Data;
 using Microsoft.EntityFrameworkCore;
 using BuildWise.Web.Services.Authentication;
 using BuildWise.Web.Services.CustomerPortal;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.DataProtection;
 
 var migrateOnly = args.Contains("--migrate", StringComparer.OrdinalIgnoreCase);
 var builder = WebApplication.CreateBuilder(args
@@ -29,18 +31,32 @@ if (migrateOnly)
 }
 
 // Add services to the container.
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    if (builder.Configuration["Hosting:TrustedProxyNetwork"] is { Length: > 0 } network)
+        options.KnownIPNetworks.Add(System.Net.IPNetwork.Parse(network));
+});
+if (builder.Configuration["DataProtection:KeysPath"] is { Length: > 0 } keysPath)
+{
+    Directory.CreateDirectory(keysPath);
+    builder.Services.AddDataProtection().SetApplicationName("BuildWise")
+        .PersistKeysToFileSystem(new DirectoryInfo(keysPath));
+}
 builder.Services.AddRazorPages();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<BuildWise.Lib.Users.ICurrentUserService, BuildWise.Web.Services.CurrentUserService>();
 builder.Services.AddCognitoAuthentication(builder.Configuration);
 builder.Services.AddCustomerPortal();
+builder.Services.AddScoped<BuildWise.Web.Services.Email.IEmailSender, BuildWise.Web.Services.Email.SesEmailSender>();
 builder.Services.AddHttpClient<BuildWise.Web.Services.Scopes.GeminiScopeDraftService>(client =>
 {
-    client.Timeout = TimeSpan.FromSeconds(60);
+    // The service applies one deadline to both the headers and response body.
+    client.Timeout = Timeout.InfiniteTimeSpan;
 });
 builder.Services.AddHttpClient<BuildWise.Web.Services.Quotations.GeminiQuotationWordingService>(client =>
 {
-    client.Timeout = TimeSpan.FromSeconds(60);
+    client.Timeout = Timeout.InfiniteTimeSpan;
 });
 builder.Services.AddHttpClient<BuildWise.Web.Services.Quotations.GeminiQuotationReviewService>(client =>
 {
@@ -55,22 +71,19 @@ builder.Services.AddDbContext<BuildWiseDbContext>(options =>
     options.UseSqlServer(connectionString);
 });
 
-builder.Services.AddSingleton<BuildWise.Web.Services.AccessWorkspace>();
-builder.Services.AddSingleton<BuildWise.Web.Services.CatalogueWorkspace>();
-builder.Services.AddSingleton<BuildWise.Web.Services.CustomerWorkspace>();
-builder.Services.AddSingleton<BuildWise.Web.Services.RequestWorkspace>();
-builder.Services.AddSingleton<BuildWise.Web.Services.QuotationWorkspace>();
 
 var app = builder.Build();
 
-// Apply existing EF migrations before serving requests.
-await using (var scope = app.Services.CreateAsyncScope())
+// Deployment runs migrations explicitly; development keeps its existing startup behaviour.
+if (app.Environment.IsDevelopment() || builder.Configuration.GetValue<bool>("Database:ApplyMigrationsOnStartup"))
 {
+    await using var scope = app.Services.CreateAsyncScope();
     var database = scope.ServiceProvider.GetRequiredService<BuildWiseDbContext>();
     await database.Database.MigrateAsync();
 }
 
 // Configure the HTTP request pipeline.
+app.UseForwardedHeaders();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
@@ -88,6 +101,10 @@ app.UseStaticFiles();
 app.UseAuthentication();
 app.UseMiddleware<BuildWise.Web.Middleware.UserProvisioningMiddleware>();
 app.UseAuthorization();
+
+app.MapGet("/health", async (BuildWiseDbContext database) =>
+    await database.Database.CanConnectAsync() ? Results.Ok("Healthy") : Results.StatusCode(503))
+    .AllowAnonymous();
 
 app.MapStaticAssets().AllowAnonymous();
 app.MapRazorPages()

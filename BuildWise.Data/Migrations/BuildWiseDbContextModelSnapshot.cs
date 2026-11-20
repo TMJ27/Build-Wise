@@ -271,6 +271,101 @@ namespace BuildWise.Data.Migrations
                     b.ToTable("CustomerAccount", (string)null);
                 });
 
+            modelBuilder.Entity("BuildWise.Data.EmailConfiguration", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("datetime");
+
+                    b.Property<Guid>("CreatorId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastUpdate")
+                        .HasColumnType("datetime");
+
+                    b.Property<string>("Region")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("ReplyToEmail")
+                        .HasMaxLength(254)
+                        .HasColumnType("nvarchar(254)");
+
+                    b.Property<string>("SenderEmail")
+                        .IsRequired()
+                        .HasMaxLength(254)
+                        .HasColumnType("nvarchar(254)");
+
+                    b.Property<string>("SenderName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatorId");
+
+                    b.ToTable("EmailConfiguration", (string)null);
+                });
+
+            modelBuilder.Entity("BuildWise.Data.EmailMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("BodyHtml")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("datetime");
+
+                    b.Property<Guid>("CreatorId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("FailureReason")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ProviderMessageId")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid?>("QuotationRevisionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("RecipientEmail")
+                        .IsRequired()
+                        .HasMaxLength(254)
+                        .HasColumnType("nvarchar(254)");
+
+                    b.Property<DateTime?>("SentDate")
+                        .HasColumnType("datetime");
+
+                    b.Property<int>("StatusId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(998)
+                        .HasColumnType("nvarchar(998)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatorId");
+
+                    b.HasIndex("QuotationRevisionId");
+
+                    b.HasIndex("StatusId", "CreationDate");
+
+                    b.ToTable("EmailMessage", (string)null);
+                });
+
             modelBuilder.Entity("BuildWise.Data.Quotation", b =>
                 {
                     b.Property<Guid>("Id")
@@ -360,6 +455,47 @@ namespace BuildWise.Data.Migrations
                     b.HasIndex("ServiceId");
 
                     b.ToTable("QuotationItem", (string)null);
+                });
+
+            modelBuilder.Entity("BuildWise.Data.QuotationResponse", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("datetime");
+
+                    b.Property<Guid>("CustomerAccountId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CustomerEmailSnapshot")
+                        .IsRequired()
+                        .HasMaxLength(254)
+                        .HasColumnType("nvarchar(254)");
+
+                    b.Property<string>("CustomerNameSnapshot")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid>("QuotationRevisionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<int>("StatusId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerAccountId");
+
+                    b.HasIndex("QuotationRevisionId")
+                        .IsUnique();
+
+                    b.ToTable("QuotationResponse", (string)null);
                 });
 
             modelBuilder.Entity("BuildWise.Data.QuotationRevision", b =>
@@ -1057,6 +1193,35 @@ namespace BuildWise.Data.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("BuildWise.Data.EmailConfiguration", b =>
+                {
+                    b.HasOne("BuildWise.Data.User", "Creator")
+                        .WithMany()
+                        .HasForeignKey("CreatorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Creator");
+                });
+
+            modelBuilder.Entity("BuildWise.Data.EmailMessage", b =>
+                {
+                    b.HasOne("BuildWise.Data.User", "Creator")
+                        .WithMany()
+                        .HasForeignKey("CreatorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("BuildWise.Data.QuotationRevision", "QuotationRevision")
+                        .WithMany()
+                        .HasForeignKey("QuotationRevisionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Creator");
+
+                    b.Navigation("QuotationRevision");
+                });
+
             modelBuilder.Entity("BuildWise.Data.Quotation", b =>
                 {
                     b.HasOne("BuildWise.Data.User", "Creator")
@@ -1109,6 +1274,25 @@ namespace BuildWise.Data.Migrations
                     b.Navigation("ScopeItem");
 
                     b.Navigation("Service");
+                });
+
+            modelBuilder.Entity("BuildWise.Data.QuotationResponse", b =>
+                {
+                    b.HasOne("BuildWise.Data.CustomerAccount", "CustomerAccount")
+                        .WithMany()
+                        .HasForeignKey("CustomerAccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("BuildWise.Data.QuotationRevision", "QuotationRevision")
+                        .WithOne()
+                        .HasForeignKey("BuildWise.Data.QuotationResponse", "QuotationRevisionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CustomerAccount");
+
+                    b.Navigation("QuotationRevision");
                 });
 
             modelBuilder.Entity("BuildWise.Data.QuotationRevision", b =>

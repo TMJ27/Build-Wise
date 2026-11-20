@@ -8,5 +8,6 @@ public partial class UserGroup
     public int UserGroupSequence { get; set; }
 
     [NotMapped]
-    public string UserGroupNumber => $"UG-{UserGroupSequence:D4}";
+    public string UserGroupNumber => GeneratedNumberFormat.Format("UG", CreationDate, UserGroupSequence);
 }
+

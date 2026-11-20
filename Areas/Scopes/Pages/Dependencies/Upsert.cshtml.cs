@@ -108,7 +108,7 @@ public class UpsertModel(BuildWiseDbContext db, ICurrentUserService currentUser)
             dependency = new ScopeDependency
             {
                 Id = Guid.NewGuid(), RequestId = item.RequestId, ScopeItemId = item.Id,
-                CreatorId = userId.Value, CreationDate = DateTime.UtcNow
+                CreatorId = userId.Value, CreationDate = DateTime.Now
             };
             db.ScopeDependencies.Add(dependency);
         }

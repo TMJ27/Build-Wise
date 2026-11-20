@@ -59,9 +59,9 @@ Check(await new DetailsModel(db).OnGetAsync(missingId) is NotFoundResult, "Missi
 Check(await Form(db, new() { Id = missingId, Name = "Missing" }).OnPostAsync(missingId) is NotFoundResult,
     "Missing edits must never create replacement records.");
 
-var user = new User { Id = Guid.NewGuid(), Email = "test@example.test", PasswordHash = "test", CreationDate = DateTime.UtcNow };
+var user = new User { Id = Guid.NewGuid(), Email = "test@example.test", PasswordHash = "test", CreationDate = DateTime.Now };
 db.Users.Add(user);
-var service = new Service { Id = Guid.NewGuid(), Name = "Pipe repairs", CategoryId = saved.Id, CreatorId = user.Id, CreationDate = DateTime.UtcNow, IsActive = true };
+var service = new Service { Id = Guid.NewGuid(), Name = "Pipe repairs", CategoryId = saved.Id, CreatorId = user.Id, CreationDate = DateTime.Now, IsActive = true };
 db.Services.Add(service);
 var other = new ServiceCategory { Id = Guid.NewGuid(), Name = "Electrical", CreationDate = createdAt.AddDays(1), IsActive = true };
 db.ServiceCategories.Add(other);

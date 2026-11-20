@@ -52,7 +52,7 @@ await using var db = new BuildWiseDbContext(new DbContextOptionsBuilder<BuildWis
 var creator = new User
 {
     Id = Guid.NewGuid(), Name = "Test", Surname = "Creator", Email = "creator@example.test",
-    IsActive = true, PasswordHash = "unused", CreationDate = DateTime.UtcNow
+    IsActive = true, PasswordHash = "unused", CreationDate = DateTime.Now
 };
 db.Users.Add(creator);
 await db.SaveChangesAsync();
@@ -71,11 +71,11 @@ await db.SaveChangesAsync();
 var rights = (int)(AccessRights.ViewUsers | AccessRights.CreateUsers);
 var create = Form(db, currentUser, http, "Office", rights);
 Check(await create.OnGetAsync(null) is PageResult, "Create GET should show a blank form.");
-var beforeCreate = DateTime.UtcNow;
+var beforeCreate = DateTime.Now;
 Check(await create.OnPostAsync(null) is RedirectToPageResult, "Valid creation should redirect to details.");
 var saved = await db.UserGroups.SingleAsync();
 Check(saved.Id != Guid.Empty && saved.CreatorId == creator.Id, "Creation must store the actual local creator ID.");
-Check(saved.CreationDate >= beforeCreate && saved.CreationDate <= DateTime.UtcNow, "Creation date must be assigned on the server.");
+Check(saved.CreationDate >= beforeCreate && saved.CreationDate <= DateTime.Now, "Creation date must be assigned on the server.");
 Check(saved.RightsId == rights, "Selected flags must persist unchanged.");
 Check((string?)create.TempData["SuccessMessage"] == "User group created successfully.", "Creation message must be correct.");
 var originalDate = saved.CreationDate;
@@ -83,7 +83,7 @@ var originalDate = saved.CreationDate;
 var editor = new User
 {
     Id = Guid.NewGuid(), Name = "Another", Surname = "Editor", Email = "editor@example.test",
-    IsActive = true, PasswordHash = "unused", CreationDate = DateTime.UtcNow
+    IsActive = true, PasswordHash = "unused", CreationDate = DateTime.Now
 };
 db.Users.Add(editor);
 await db.SaveChangesAsync();
@@ -127,11 +127,28 @@ var services = new ServiceCollection();
 services.AddLogging();
 services.AddDataProtection().UseEphemeralDataProtectionProvider();
 services.AddSingleton<ICurrentUserService>(currentUser);
+services.AddSingleton(db);
 services.AddCognitoAuthentication(new ConfigurationBuilder().AddInMemoryCollection(settings).Build());
 using var provider = services.BuildServiceProvider();
 var policy = provider.GetRequiredService<IOptions<AuthorizationOptions>>().Value.FallbackPolicy;
 Check(policy is not null && policy.Requirements.Count > 0, "Workspace endpoints need a default authorization policy.");
 var oidc = provider.GetRequiredService<IOptionsMonitor<OpenIdConnectOptions>>().Get(OpenIdConnectDefaults.AuthenticationScheme);
+var recoveryLogin = new BuildWise.Web.Areas.Identity.Pages.Account.LoginModel(provider.GetRequiredService<CognitoSettings>(), null!);
+var recoveryChallenge = recoveryLogin.OnPostForgotPassword() as ChallengeResult;
+Check(recoveryChallenge?.Properties?.Items["BuildWise:PasswordRecovery"] == "true"
+    && recoveryChallenge.AuthenticationSchemes.Contains(OpenIdConnectDefaults.AuthenticationScheme),
+    "Staff recovery must use the existing Cognito challenge, not a local password reset.");
+var recoveryRedirect = new Microsoft.AspNetCore.Authentication.OpenIdConnect.RedirectContext(new DefaultHttpContext(),
+    new AuthenticationScheme("oidc", null, typeof(OpenIdConnectHandler)), oidc, recoveryChallenge!.Properties!)
+{
+    ProtocolMessage = new Microsoft.IdentityModel.Protocols.OpenIdConnect.OpenIdConnectMessage
+    { IssuerAddress = "https://issuer.example.test/authorize", State = "protected-state" }
+};
+recoveryRedirect.ProtocolMessage.SetParameter("code_challenge", "pkce");
+await oidc.Events.OnRedirectToIdentityProvider(recoveryRedirect);
+Check(recoveryRedirect.ProtocolMessage.IssuerAddress == "https://login.example.test/forgotPassword"
+    && recoveryRedirect.ProtocolMessage.State == "protected-state" && recoveryRedirect.ProtocolMessage.GetParameter("code_challenge") == "pkce",
+    "Staff recovery must retain the protected OIDC state and PKCE parameters.");
 Check(oidc.CallbackPath == "/signin-oidc" && oidc.UsePkce && oidc.ResponseType == "code", "OIDC callback and code flow must be configured.");
 Check(oidc.Scope.Contains("openid") && oidc.Scope.Contains("email") && oidc.Scope.Contains("profile"), "Cognito scopes must match the application.");
 var scheme = new AuthenticationScheme(OpenIdConnectDefaults.AuthenticationScheme, null, typeof(OpenIdConnectHandler));
@@ -211,7 +228,11 @@ failureHttp.Response.Body = new MemoryStream();
 middlewareUser.ThrowError = true;
 await middleware.InvokeAsync(failureHttp, middlewareUser);
 Check(nextCalls == 3 && failureHttp.Response.StatusCode == 503, "Provisioning failure must not allow the request through.");
-var logoutHttp = new DefaultHttpContext { RequestServices = provider };
+using var logoutScope = provider.CreateScope();
+var logoutHttp = new DefaultHttpContext { RequestServices = logoutScope.ServiceProvider };
+logoutHttp.Request.Scheme = "https";
+logoutHttp.Request.Method = "POST";
+logoutHttp.Request.Path = "/Identity/Account/Logout";
 var logout = new BuildWise.Web.Areas.Identity.Pages.Account.LogoutModel(provider.GetRequiredService<CognitoSettings>())
 {
     PageContext = new PageContext { HttpContext = logoutHttp }
@@ -222,6 +243,7 @@ Check(logoutLocation.StartsWith("https://login.example.test/logout?"), "Logout m
 Check(logoutLocation.Contains("logout_uri=" + Uri.EscapeDataString("https://localhost:7213/")), "Logout must return to the configured URL.");
 Check(logoutHttp.Response.Headers.SetCookie.ToString().Contains("BuildWise.Auth=;"), "Logout must expire the local authentication cookie.");
 Console.WriteLine("Passed: provisioning, duplicate prevention, pending accounts, explicit bootstrap administrator, middleware gating/failure, creator tracking, details and authentication settings.");
+await UserFormChecks.RunAsync();
 Console.WriteLine("Checks used an isolated in-memory database and dummy authentication settings. No real database records or Cognito users were modified.");
 
 sealed class MemoryTempData : ITempDataProvider

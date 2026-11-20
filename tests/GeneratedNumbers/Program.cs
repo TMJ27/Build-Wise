@@ -47,23 +47,23 @@ db.ChangeTracker.Clear();
 // A filtered list must retain the complete table's numbering.
 var subset = await db.Users.AsNoTracking().Where(user => user.Id != first.Id).OrderBy(user => user.Name).ToListAsync();
 await db.ApplyUserNumbersAsync(subset);
-Check(subset[0].UserNumber == "USR-0002" && subset[1].UserNumber == "USR-0003", "Filtered numbering or timestamp tie order changed.");
+Check(subset[0].UserNumber == "USR-20260101-0002" && subset[1].UserNumber == "USR-20260102-0003", "Filtered numbering or timestamp tie order changed.");
 var details = new BuildWise.Web.Areas.Configuration.Pages.Users.DetailsModel(db);
 await details.OnGet(second.Id);
-Check(details.Person?.UserNumber == "USR-0002", "User details number differs from list.");
+Check(details.Person?.UserNumber == "USR-20260101-0002", "User details number differs from list.");
 await db.ApplyUserGroupNumberAsync(group);
-Check(group.UserGroupNumber == "UG-0001", "Group format is incorrect.");
+Check(group.UserGroupNumber == "UG-20260101-0001", "Group format is incorrect.");
 var groupDetails = new BuildWise.Web.Areas.Configuration.Pages.UserGroups.DetailsModel(db);
 await groupDetails.OnGetAsync(group.Id);
-Check(groupDetails.GroupDetails.UserGroupNumber == "UG-0001", "Group details number is incorrect.");
-Check(groupDetails.GroupDetails.Members.Single().UserNumber == "USR-0002", "Group members must use the global user number.");
+Check(groupDetails.GroupDetails.UserGroupNumber == "UG-20260101-0001", "Group details number is incorrect.");
+Check(groupDetails.GroupDetails.Members.Single().UserNumber == "USR-20260101-0002", "Group members must use the global user number.");
 
 var currencyIndex = new BuildWise.Web.Areas.Configuration.Pages.Currencies.IndexModel(db);
 await currencyIndex.OnGetAsync();
-Check(currencyIndex.Currencies[0].CurrencyNumber == "CUR-0002", "Currency sorting changed its global number.");
+Check(currencyIndex.Currencies[0].CurrencyNumber == "CUR-20260102-0002", "Currency sorting changed its global number.");
 var currencyDetails = new BuildWise.Web.Areas.Configuration.Pages.Currencies.DetailsModel(db);
 await currencyDetails.OnGetAsync(currencyIndex.Currencies[0].Id);
-Check(currencyDetails.CurrencyDetails.CurrencyNumber == "CUR-0002", "Currency details number differs from list.");
+Check(currencyDetails.CurrencyDetails.CurrencyNumber == "CUR-20260102-0002", "Currency details number differs from list.");
 
 Check(await db.GetUserSequenceAsync(second) == 2, "User sequence lookup must use whole-table order.");
 Check(await db.GetUserGroupSequenceAsync(group) == 1, "Group sequence lookup must match its generated number.");
@@ -83,4 +83,11 @@ Check(await db.GetServiceSequenceAsync(new Service { Id = Guid.NewGuid() }) == 0
 Check(db.Model.FindEntityType(typeof(User))!.FindProperty(nameof(User.UserSequence)) is null, "Display sequence was mapped to SQL.");
 Check(db.Model.FindEntityType(typeof(UserGroup))!.FindProperty(nameof(UserGroup.UserGroupNumber)) is null, "Display number was mapped to SQL.");
 Check(!db.ChangeTracker.HasChanges(), "Reading display numbers modified database records.");
+Check(GeneratedNumberFormat.Format("REQ", date, 1) == "REQ-20260101-0001", "Request format must remain unchanged.");
+Check(earlierService.ServiceNumber.StartsWith("SRV-20260101-") && laterService.ServiceNumber == "SRV-20260102-0002", "Services must use their original creation dates.");
+Check(new Client { CreationDate = date, ClientSequence = 1 }.ClientNumber == "CUS-20260101-0001", "Client format must include its creation date.");
+Check(new ClientCategory { CreationDate = date, CategorySequence = 1 }.CategoryNumber == "CCAT-20260101-0001", "Client category format must include its creation date.");
+Check(new Quotation { QuotationNumberDate = date, QuotationSequence = 1 }.GeneratedQuotationNumber == "QT-20260101-0001", "Quotation format must include its original date.");
+Check(new ScopeItem { ScopeItemNumberDate = date, ScopeItemSequence = 1 }.ScopeItemNumber == "SCP-20260101-0001", "Scope number format must include its request date.");
 Console.WriteLine("PASS: global numbering, filtered rows, timestamp ties, details consistency, currency projections and unmapped display fields.");
+

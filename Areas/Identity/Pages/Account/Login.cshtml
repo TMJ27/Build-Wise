@@ -44,6 +44,12 @@
                     <span>Sign in</span>
                 </button>
             </form>
+            @if (Model.IsConfigured)
+            {
+                <form method="post" asp-page-handler="ForgotPassword">
+                    <button class="btn secondary" type="submit">Forgot password?</button>
+                </form>
+            }
             <p>Customer? <a asp-area="CustomerPortal" asp-page="/Account/Login">Sign in to your customer account</a></p>
         </section>
     </div>

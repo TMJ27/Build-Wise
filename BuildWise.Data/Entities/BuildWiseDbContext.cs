@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 
@@ -52,6 +52,14 @@ public partial class BuildWiseDbContext : DbContext
     public virtual DbSet<UserGroup> UserGroups { get; set; }
 
     public virtual DbSet<UserSession> UserSessions { get; set; }
+
+    public virtual DbSet<CustomerAccount> CustomerAccounts { get; set; }
+
+    public virtual DbSet<EmailConfiguration> EmailConfigurations { get; set; }
+
+    public virtual DbSet<EmailMessage> EmailMessages { get; set; }
+
+    public virtual DbSet<QuotationResponse> QuotationResponses { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -504,6 +512,68 @@ public partial class BuildWiseDbContext : DbContext
                 .HasForeignKey<UserSession>(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_UserSession_User");
+        });
+
+        modelBuilder.Entity<CustomerAccount>(entity =>
+        {
+            entity.ToTable("CustomerAccount");
+            entity.Property(account => account.Id).ValueGeneratedNever();
+            entity.Property(account => account.Email).HasMaxLength(50).IsRequired();
+            entity.Property(account => account.NormalizedEmail).HasMaxLength(50).IsRequired();
+            entity.Property(account => account.PasswordHash).HasMaxLength(1000).IsRequired();
+            entity.Property(account => account.SecurityStamp).HasMaxLength(64).IsRequired();
+            entity.Property(account => account.CreationDate).HasColumnType("datetime");
+            entity.HasIndex(account => account.NormalizedEmail).IsUnique();
+            entity.HasIndex(account => account.ClientId).IsUnique();
+            entity.HasIndex(account => account.UserId).IsUnique();
+            entity.HasOne(account => account.Client).WithMany().HasForeignKey(account => account.ClientId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(account => account.User).WithMany().HasForeignKey(account => account.UserId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<EmailConfiguration>(entity =>
+        {
+            entity.ToTable("EmailConfiguration");
+            entity.Property(email => email.Id).ValueGeneratedNever();
+            entity.Property(email => email.SenderName).HasMaxLength(200).IsRequired();
+            entity.Property(email => email.SenderEmail).HasMaxLength(254).IsRequired();
+            entity.Property(email => email.ReplyToEmail).HasMaxLength(254);
+            entity.Property(email => email.Region).HasMaxLength(50).IsRequired();
+            entity.Property(email => email.CreationDate).HasColumnType("datetime");
+            entity.Property(email => email.LastUpdate).HasColumnType("datetime");
+            entity.HasOne(email => email.Creator).WithMany()
+                .HasForeignKey(email => email.CreatorId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<EmailMessage>(entity =>
+        {
+            entity.ToTable("EmailMessage");
+            entity.Property(email => email.Id).ValueGeneratedNever();
+            entity.Property(email => email.RecipientEmail).HasMaxLength(254).IsRequired();
+            entity.Property(email => email.Subject).HasMaxLength(998).IsRequired();
+            entity.Property(email => email.BodyHtml).IsRequired();
+            entity.Property(email => email.ProviderMessageId).HasMaxLength(200);
+            entity.Property(email => email.CreationDate).HasColumnType("datetime");
+            entity.Property(email => email.SentDate).HasColumnType("datetime");
+            entity.HasIndex(email => new { email.StatusId, email.CreationDate });
+            entity.HasOne(email => email.Creator).WithMany()
+                .HasForeignKey(email => email.CreatorId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(email => email.QuotationRevision).WithMany()
+                .HasForeignKey(email => email.QuotationRevisionId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<QuotationResponse>(entity =>
+        {
+            entity.ToTable("QuotationResponse");
+            entity.Property(response => response.Id).ValueGeneratedNever();
+            entity.Property(response => response.Reason).HasMaxLength(2000);
+            entity.Property(response => response.CustomerNameSnapshot).HasMaxLength(200).IsRequired();
+            entity.Property(response => response.CustomerEmailSnapshot).HasMaxLength(254).IsRequired();
+            entity.Property(response => response.CreationDate).HasColumnType("datetime");
+            entity.HasIndex(response => response.QuotationRevisionId).IsUnique();
+            entity.HasOne(response => response.QuotationRevision).WithOne()
+                .HasForeignKey<QuotationResponse>(response => response.QuotationRevisionId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(response => response.CustomerAccount).WithMany()
+                .HasForeignKey(response => response.CustomerAccountId).OnDelete(DeleteBehavior.Restrict);
         });
 
         OnModelCreatingPartial(modelBuilder);

@@ -23,7 +23,7 @@
 @section actionbar {
     @if (person is not null)
     {
-        <a class="btn primary" asp-area="Configuration" asp-page="/Users/Upsert" asp-route-id="@person.Id">
+        <a class="btn edit" asp-area="Configuration" asp-page="/Users/Upsert" asp-route-id="@person.Id">
             <i class="fa-solid fa-pen" aria-hidden="true"></i>
             <span>Edit user</span>
         </a>

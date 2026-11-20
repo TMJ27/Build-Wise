@@ -29,7 +29,7 @@ internal static class ScopeStageChecks
         form.Input.Description = " One coat ";
         Check(await form.OnPostAsync(null, item.Id) is RedirectToPageResult, "A valid stage must save.");
         var stage = await db.ScopeStages.SingleAsync(s => s.Name == "Apply primer");
-        Check(stage.Description == "One coat" && stage.CreatorId == user.Id && stage.CreationDate.Kind == DateTimeKind.Utc
+        Check(stage.Description == "One coat" && stage.CreatorId == user.Id && stage.CreationDate.Kind == DateTimeKind.Local
             && stage.ScopeItemId == item.Id, "Saving must trim fields and record the parent and authenticated creator.");
         Check(item.ReviewStatusId == (int)ScopeReviewStatus.Pending && item.ReviewedOn == null, "Stage creation must invalidate review.");
         var index = new IndexModel(db);
@@ -44,7 +44,7 @@ internal static class ScopeStageChecks
         Check(await empty.OnGetAsync(otherItem.Id, null) is PageResult && empty.Stages.Count == 0, "Stages must not leak into other items.");
 
         item.ReviewStatusId = (int)ScopeReviewStatus.Reviewed;
-        item.ReviewedOn = DateTime.UtcNow;
+        item.ReviewedOn = DateTime.Now;
         await db.SaveChangesAsync();
         var edit = Form(user.Id);
         await edit.OnGetAsync(stage.Id, item.Id);

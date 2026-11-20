@@ -4,11 +4,14 @@ using BuildWise.Lib.Enums.Statuses;
 using BuildWise.Lib.Users;
 using BuildWise.Web.Areas.Scopes.ViewModels;
 using BuildWise.Web.Services.Scopes;
+using BuildWise.Web.Services.Quotations;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging.Abstractions;
 using ScopeIndex = BuildWise.Web.Areas.Scopes.Pages.IndexModel;
 using ScopeDetails = BuildWise.Web.Areas.Scopes.Pages.DetailsModel;
 using ItemDetails = BuildWise.Web.Areas.Scopes.Pages.Items.DetailsModel;
@@ -26,6 +29,7 @@ internal static class ScopeChecks
         await using var db = new BuildWiseDbContext(new DbContextOptionsBuilder<BuildWiseDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
         var user = new User { Id = Guid.NewGuid(), Email = "scope@example.test", PasswordHash = "test" };
+        var configuration = new ConfigurationBuilder().Build();
         var client = new Client { Id = Guid.NewGuid(), Name = "Customer", Email = "customer@example.test", Address = "Harare", Creator = user };
         var request = new ClientRequest
         {
@@ -52,6 +56,9 @@ internal static class ScopeChecks
         {
             TempData = new TempDataDictionary(new DefaultHttpContext(), new MemoryTempData())
         };
+        ScopeDetails Details() => new(db,
+            new GeminiScopeDraftService(new HttpClient(), configuration, NullLogger<GeminiScopeDraftService>.Instance),
+            new CurrentUser(user.Id), configuration, NullLogger<ScopeDetails>.Instance);
         var index = new ScopeIndex(db);
         await index.OnGetAsync();
         Check(index.Requests.Count == 2 && index.Requests.All(r => r.ItemCount == 0), "Requests without items must appear in Scope.");
@@ -66,11 +73,11 @@ internal static class ScopeChecks
         Check(await form.OnPostAsync(null, request.Id) is RedirectToPageResult, "A valid scope item must save.");
         var item = await db.ScopeItems.SingleAsync();
         Check(item.Title == "Paint walls" && item.Description == "Two coats" && item.UnitCodeSnapshot == "rooms"
-            && item.ServiceCodeSnapshot == "SRV-0001", "Saved fields, default units and catalogue snapshots must be correct.");
+            && item.ServiceCodeSnapshot == GeneratedNumberFormat.Format("SRV", service.CreationDate, 1), "Saved fields, default units and catalogue snapshots must be correct.");
         Check(item.RequireAssessment && ScopeQueries.ReadNotes(item.AssessmentNotesJson) == "Check access"
             && item.ReviewStatusId == (int)ScopeReviewStatus.Reviewed && item.ReviewedByUserId == user.Id
             && item.ReviewedOn.HasValue, "Assessment and authenticated review metadata must be saved.");
-        var details = new ScopeDetails(db);
+        var details = Details();
         Check(await details.OnGetAsync(request.Id) is PageResult && details.Items.Count == 1
             && details.Scope.AssessmentCount == 1, "Request scope must show only its own items and real counts.");
         await details.OnGetAsync(other.Id);
@@ -121,11 +128,13 @@ internal static class ScopeChecks
         Check(await inactiveEdit.OnPostAsync(item.Id, request.Id) is PageResult && !inactiveEdit.ModelState.IsValid,
             "A request closed after loading the form must reject saving.");
         Check(await Form(null).OnPostAsync(null, null) is UnauthorizedResult, "Saving requires an authenticated user.");
-        Check(await new ScopeDetails(db).OnGetAsync(Guid.NewGuid()) is NotFoundResult
+        Check(await Details().OnGetAsync(Guid.NewGuid()) is NotFoundResult
             && await new ItemDetails(db).OnGetAsync(Guid.NewGuid(), null) is NotFoundResult, "Missing records must return 404.");
         Check(ScopeQueries.ReadNotes("legacy text") == "legacy text"
             && ScopeQueries.ReadNotes("\"string notes\"") == "string notes", "Legacy notes must remain readable.");
-        var quotation = new BuildWise.Web.Areas.Quotations.Pages.UpsertModel(db, new CurrentUser(user.Id));
+        var quotation = new BuildWise.Web.Areas.Quotations.Pages.UpsertModel(db, new CurrentUser(user.Id),
+            new GeminiQuotationWordingService(new HttpClient(), configuration, NullLogger<GeminiQuotationWordingService>.Instance),
+            configuration, NullLogger<BuildWise.Web.Areas.Quotations.Pages.UpsertModel>.Instance);
         await quotation.OnGetAsync(null, other.Id);
         Check(quotation.Input.Items.Count == 0, "Quotation loading must not import scope from a different request.");
         request.StatusId = (int)ClientRequestStatus.Open;

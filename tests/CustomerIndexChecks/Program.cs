@@ -16,7 +16,7 @@ var empty = new IndexModel(db);
 await empty.OnGetAsync();
 Check(empty.ClientList.Count == 0 && empty.TotalCount == 0 && empty.OpenCount == 0, "An empty register must have zero counts.");
 
-var creator = new User { Id = Guid.NewGuid(), Email = "creator@example.test", PasswordHash = "test", CreationDate = DateTime.UtcNow };
+var creator = new User { Id = Guid.NewGuid(), Email = "creator@example.test", PasswordHash = "test", CreationDate = DateTime.Now };
 var date = new DateTime(2026, 1, 1);
 var first = new Client { Id = Guid.NewGuid(), Name = "Zulu", Email = "zulu@example.test", Address = "Harare", ClientTypeId = (int)ClientType.Business, IsActive = true, Creator = creator, CreationDate = date };
 var second = new Client { Id = Guid.NewGuid(), Name = "Alpha", Email = "alpha@example.test", Address = "Bulawayo", ClientTypeId = (int)ClientType.Individual, Creator = creator, CreationDate = date.AddDays(1) };

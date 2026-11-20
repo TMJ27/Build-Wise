@@ -37,7 +37,7 @@ await using var db = new BuildWiseDbContext(new DbContextOptionsBuilder<BuildWis
 var empty = new IndexModel(db);
 await empty.OnGetAsync();
 Check(empty.Categories.Count == 0, "Empty register must not show sample categories.");
-var creator = new User { Id = Guid.NewGuid(), Name = "Test", Surname = "Creator", Email = "creator@example.test", PasswordHash = "test", CreationDate = DateTime.UtcNow };
+var creator = new User { Id = Guid.NewGuid(), Name = "Test", Surname = "Creator", Email = "creator@example.test", PasswordHash = "test", CreationDate = DateTime.Now };
 db.Users.Add(creator);
 await db.SaveChangesAsync();
 
@@ -47,7 +47,7 @@ var category = await db.ClientCategories.SingleAsync();
 var creationDate = category.CreationDate;
 Check(category.Name == "Individuals" && category.Description == "Personal clients" && category.CreatorId == creator.Id,
     "Category must save trimmed values and the current creator.");
-Check(category.CreationDate.Kind == DateTimeKind.Utc && category.LastUpdated is null, "Creation audit fields must be set correctly.");
+Check(category.CreationDate.Kind == DateTimeKind.Local && category.LastUpdated is null, "Creation audit fields must be set correctly.");
 Check(create.TempData["SuccessMessage"] is string, "Create must set a success message.");
 
 var duplicate = Form(db, creator.Id, new() { Name = "individuals" });
@@ -78,8 +78,8 @@ Check(category.Description is null && category.CreatorId == creator.Id && catego
 var business = new ClientCategory { Id = Guid.NewGuid(), Name = "Businesses", CreatorId = creator.Id, CreationDate = creationDate.AddDays(1) };
 db.ClientCategories.Add(business);
 db.Clients.AddRange(
-    new Client { Id = Guid.NewGuid(), Name = "Client one", Email = "one@example.test", Address = "Harare", ClientTypeId = category.Id, CreatorId = creator.Id, CreationDate = DateTime.UtcNow },
-    new Client { Id = Guid.NewGuid(), Name = "Client two", Email = "two@example.test", Address = "Harare", ClientTypeId = category.Id, CreatorId = creator.Id, CreationDate = DateTime.UtcNow });
+    new Client { Id = Guid.NewGuid(), Name = "Client one", Email = "one@example.test", Address = "Harare", ClientTypeId = category.Id, CreatorId = creator.Id, CreationDate = DateTime.Now },
+    new Client { Id = Guid.NewGuid(), Name = "Client two", Email = "two@example.test", Address = "Harare", ClientTypeId = category.Id, CreatorId = creator.Id, CreationDate = DateTime.Now });
 await db.SaveChangesAsync();
 
 var index = new IndexModel(db);

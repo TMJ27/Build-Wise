@@ -1,0 +1,83 @@
+@page
+@model BuildWise.Web.Areas.Configuration.Pages.Email.DetailsModel
+@{
+    ViewData["Title"] = "Email settings";
+    ViewData["PageTitle"] = "Email settings";
+    ViewData["PageSubTitle"] = "Amazon SES configuration and email delivery.";
+    ViewData["Breadcrumbs"] = new BreadcrumbItem[] { new("Configuration") };
+}
+@section actionbar {
+    <a class="btn edit" asp-page="/Email/Upsert"><i class="fa-solid fa-pen" aria-hidden="true"></i> Edit settings</a>
+}
+<div class="requests-page configuration-page form-stack">
+    <div asp-validation-summary="All" class="configuration-errors" role="alert"></div>
+    <section class="panel detail-card">
+        <header class="card-header card-header-between">
+            <h2>Email configuration</h2>
+            <span class="badge @(Model.Settings.IsEnabled ? "green" : null)">@(Model.Settings.IsEnabled ? ActiveStatus.Active : ActiveStatus.Inactive)</span>
+        </header>
+        <div class="card-body">
+            <dl class="profile-detail-list">
+                <div><dt>Provider</dt><dd>Amazon SES</dd></div>
+                <div><dt>AWS region</dt><dd>@Model.Settings.Region</dd></div>
+                <div><dt>Sender name</dt><dd>@Model.Settings.SenderName</dd></div>
+                <div><dt>Sender email</dt><dd>@Model.Settings.SenderEmail</dd></div>
+                <div><dt>Reply-to email</dt><dd>@(Model.Settings.ReplyToEmail ?? "Not provided")</dd></div>
+            </dl>
+        </div>
+        <footer class="card-footer">
+            <dl class="record-metadata">
+                <div><dt>Creator</dt><dd>@(Model.Settings.Creator.Name ?? Model.Settings.Creator.Email)</dd></div>
+                <div><dt>Creation date</dt><dd>@Model.Settings.CreationDate.ToString("dd MMM yyyy, HH:mm")</dd></div>
+                @if (Model.Settings.LastUpdate.HasValue)
+                { <div><dt>Updated</dt><dd>@Model.Settings.LastUpdate.Value.ToString("dd MMM yyyy, HH:mm")</dd></div> }
+            </dl>
+        </footer>
+    </section>
+    <form method="post" asp-page-handler="Test" class="form-stack">
+        <section class="panel configuration-section form-panel">
+            <h2>Send test email</h2>
+            <p class="configuration-muted">Uses your saved settings. In the SES sandbox, the recipient must also be verified in the selected AWS region.</p>
+            <div class="form-fields">
+                <div class="field form-wide">
+                    <label asp-for="Test.RecipientEmail">Recipient email *</label>
+                    <input asp-for="Test.RecipientEmail" type="email" class="form-control" />
+                    <span asp-validation-for="Test.RecipientEmail"></span>
+                </div>
+            </div>
+            <footer class="card-footer form-card-footer">
+                <button type="submit" class="btn primary">
+                    <i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Send test email
+                </button>
+            </footer>
+        </section>
+    </form>
+
+    <section class="panel detail-card">
+        <header class="card-header"><h2>Recent emails</h2></header>
+        <div class="table-wrap">
+            <table class="configuration-table">
+                <thead><tr><th scope="col">Recipient</th><th scope="col">Subject</th><th scope="col">Status</th><th scope="col">Created</th></tr></thead>
+                <tbody>
+                    @foreach (var message in Model.RecentMessages)
+                    {
+                        <tr>
+                            <td>@message.RecipientEmail</td>
+                            <td>@message.Subject</td>
+                            <td><span class="badge">@((EmailStatus)message.StatusId)</span>
+                                @if (message.FailureReason is not null)
+                                { <p>@message.FailureReason</p> }
+                            </td>
+                            <td>@message.CreationDate.ToString("dd MMM yyyy, HH:mm")</td>
+                        </tr>
+                    }
+                    @if (Model.RecentMessages.Count == 0)
+                    {
+                        <tr><td colspan="4">No emails have been sent yet.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <footer class="card-footer">Sent means Amazon SES accepted the email; it does not confirm delivery.</footer>
+    </section>
+</div>

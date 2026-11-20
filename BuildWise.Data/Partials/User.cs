@@ -8,5 +8,6 @@ public partial class User
     public int UserSequence { get; set; }
 
     [NotMapped]
-    public string UserNumber => $"USR-{UserSequence:D4}";
+    public string UserNumber => GeneratedNumberFormat.Format("USR", CreationDate, UserSequence);
 }
+

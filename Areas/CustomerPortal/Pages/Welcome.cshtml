@@ -12,7 +12,13 @@
             <a href="#how-it-works">How it works</a>
             <a href="#features">Why BuildWise</a>
             <a href="#questions">FAQs</a>
-            <a class="nav-signin" asp-page="/Account/Login">Sign in <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a>
+            <details class="nav-login-menu">
+                <summary>Sign in <i class="fa-solid fa-chevron-down" aria-hidden="true"></i></summary>
+                <div class="nav-login-options">
+                    <a asp-page="/Account/Login">Customer sign in</a>
+                    <a asp-area="Identity" asp-page="/Account/Login">Staff sign in</a>
+                </div>
+            </details>
             <a class="button button-primary" asp-page="/Account/Register">Create account <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
         </nav>
     </div>
@@ -30,38 +36,11 @@
                 </div>
                 <p class="hero-note"><i class="fa-solid fa-check" aria-hidden="true"></i> For your home, business and the work you have in mind.</p>
             </div>
-            <div class="hero-visual">
-                <div class="plan-card">
-                    <div class="plan-heading"><div><span class="tiny-label">YOUR NEXT PROJECT, ORGANISED</span><h2>From idea to quotation.</h2></div><span class="example-badge">Illustrative project</span></div>
-                    <div class="preview-tabs" role="tablist" aria-label="Example project view">
-                        <button id="request-tab" type="button" role="tab" aria-selected="true" aria-controls="request-preview" tabindex="0"><i class="fa-solid fa-file-lines" aria-hidden="true"></i> Your request</button>
-                        <button id="quotation-tab" type="button" role="tab" aria-selected="false" aria-controls="quotation-preview" tabindex="-1"><i class="fa-solid fa-file-invoice-dollar" aria-hidden="true"></i> Your quotation</button>
-                    </div>
-                    <div class="preview-stage">
-                        <div id="request-preview" role="tabpanel" aria-labelledby="request-tab" tabindex="0">
-                            <div class="ruler"><span>A space worth reimagining</span></div>
-                            <div class="project-plan" role="img" aria-label="Illustrative kitchen renovation scope: preparation, cabinets and finishes.">
-                                <div class="project-plan-main"><i class="fa-solid fa-house" aria-hidden="true"></i><strong>Kitchen renovation</strong><small>Your space. Your vision.</small></div>
-                                <div class="project-plan-task"><span>01</span><strong>Preparation</strong><small>Make room for what comes next.</small></div>
-                                <div class="project-plan-task"><span>02</span><strong>Cabinets</strong><small>A place for every detail.</small></div>
-                                <div class="project-plan-finish"><span>03</span><strong>Finishes &amp; fittings</strong><i class="fa-solid fa-check" aria-hidden="true"></i></div>
-                            </div>
-                            <div class="fabric-caption"><span>One request. A clear scope.</span><span><i class="fa-solid fa-drafting-compass" aria-hidden="true"></i> Built around your needs.</span></div>
-                        </div>
-                        <div id="quotation-preview" role="tabpanel" aria-labelledby="quotation-tab" tabindex="0" hidden>
-                            <table class="example-table">
-                                <caption>Kitchen renovation · Illustrative quotation</caption>
-                                <thead><tr><th scope="col">Scope item</th><th scope="col">Quantity</th><th scope="col">Amount</th></tr></thead>
-                                <tbody><tr><th scope="row">Preparation</th><td>1 lot</td><td>$250.00</td></tr><tr><th scope="row">Cabinets</th><td>1 lot</td><td>$1,200.00</td></tr><tr><th scope="row">Finishes &amp; fittings</th><td>1 lot</td><td>$350.00</td></tr></tbody>
-                                <tfoot><tr><th scope="row" colspan="2">Example total (USD)</th><td>$1,800.00</td></tr></tfoot>
-                            </table>
-                            <p class="example-disclaimer">Sample amounts only. Your quotation is prepared for your own request.</p>
-                        </div>
-                    </div>
-                    <div class="plan-footer"><div><span class="status-dot"></span>Every detail has its place.</div><span>Example project · Sample information</span></div>
-                </div>
-                <div class="visual-note"><i class="fa-solid fa-drafting-compass" aria-hidden="true"></i><span>Make room for<br /><strong>what comes next.</strong></span></div>
-            </div>
+            <figure class="hero-visual hero-banner">
+                <img src="~/images/buildwise-banner.png" asp-append-version="true"
+                     alt="BuildWise construction request and quotation management, illustrated with homes, a commercial building and a quotation."
+                     width="1734" height="907" fetchpriority="high" />
+            </figure>
         </section>
     </div>
     <div class="use-cases container"><span>MADE FOR YOUR NEXT PROJECT</span><div><i class="fa-solid fa-check" aria-hidden="true"></i> Home improvements</div><div><i class="fa-solid fa-check" aria-hidden="true"></i> Business spaces</div><div><i class="fa-solid fa-check" aria-hidden="true"></i> Repairs &amp; renovations</div></div>
@@ -69,7 +48,7 @@
         <div class="section-heading"><p class="eyebrow">FROM YOUR FIRST IDEA TO A CLEAR QUOTATION</p><h2 id="steps-title">Good work starts<br />with a clear request.</h2><p>A few details to begin.<br />A workspace to keep them together.</p></div>
         <div class="steps">
             <article class="step"><span class="step-number">01</span><i class="fa-solid fa-user-plus step-icon" aria-hidden="true"></i><h3>Make yourself at home.</h3><p>Create your customer account with your contact details. Your requests and quotations will have a place of their own.</p><span class="step-detail">Your account. Your workspace.</span></article>
-            <article class="step"><span class="step-number">02</span><i class="fa-solid fa-pen-ruler step-icon" aria-hidden="true"></i><h3>Tell us what you need.</h3><p>Describe the work, add your site details and submit your request. Find it again from your customer dashboard.</p><span class="step-detail">Your idea, ready for the next step.</span></article>
+            <article class="step"><span class="step-number">02</span><i class="fa-solid fa-pen-ruler step-icon" aria-hidden="true"></i><h3>Tell us what you need.</h3><p>Save your request as a draft, edit the details, then submit when you are ready.</p><span class="step-detail">Your idea, ready for the next step.</span></article>
             <article class="step"><span class="step-number">03</span><i class="fa-solid fa-file-invoice-dollar step-icon" aria-hidden="true"></i><h3>See the work take shape.</h3><p>View the approved quotation prepared for your request. Read the scope, prices and terms together in one place.</p><span class="step-detail">Clear details before the work begins.</span></article>
         </div>
     </section>
@@ -87,7 +66,7 @@
     <section id="questions" class="section container faq-section" aria-labelledby="faq-title">
         <div><p class="eyebrow">A FEW USEFUL ANSWERS</p><h2 id="faq-title">Before you<br />get started.</h2><p>Good projects start with a little clarity.</p></div>
         <div class="faq-list">
-            <details><summary>How do I submit a request?</summary><p>Create an account, sign in and choose New request from your dashboard. Add a title, site address and description of the work you need.</p></details>
+            <details><summary>How do I submit a request?</summary><p>Create an account, sign in and choose New request from your dashboard. Save a draft first, then edit it or submit it when you are ready.</p></details>
             <details><summary>What should I include in my request?</summary><p>Describe the work, where it will happen and any requirements you already know. Clear site details help the team prepare the scope.</p></details>
             <details><summary>Where will I find my quotation?</summary><p>Approved quotations shared with your account appear on your customer dashboard. Open a quotation to view its scope, amounts and terms.</p></details>
             <details><summary>Can I view my previous requests?</summary><p>Yes. Your dashboard lists your recent requests and quotations. Open a request to read its saved details and current status.</p></details>
@@ -97,6 +76,6 @@
 </main>
 <footer class="container site-footer">
     <div><a class="brand" asp-page="/Welcome" aria-label="BuildWise home"><img src="~/brand/buildwise-mark-muted.svg" alt="" />BuildWise<span>.</span></a><p>Your ideas. A clearer way forward.</p></div>
-    <div class="footer-links"><a href="#how-it-works">How it works</a><a href="#features">Why BuildWise</a><a asp-page="/Account/Login">Sign in</a><a asp-area="Identity" asp-page="/Account/Login">Staff portal</a></div>
+    <div class="footer-links"><a href="#how-it-works">How it works</a><a href="#features">Why BuildWise</a><a asp-page="/Account/Login">Customer sign in</a><a asp-area="Identity" asp-page="/Account/Login">Staff sign in</a></div>
     <p class="copyright">© @DateTime.Now.Year BuildWise. Built for the way you work.</p>
 </footer>

@@ -2,6 +2,7 @@ using BuildWise.Data;
 using BuildWise.Lib.Enums.Statuses;
 using BuildWise.Lib.Users;
 using BuildWise.Web.Areas.Requests.ViewModels;
+using BuildWise.Web.Services.GeneratedNumbers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -41,7 +42,6 @@ public class CreateModel(BuildWiseDbContext db, ICurrentUserService currentUser)
         Input.Title = (Input.Title ?? string.Empty).Trim();
         Input.SiteAddress = (Input.SiteAddress ?? string.Empty).Trim();
         Input.Description = (Input.Description ?? string.Empty).Trim();
-        Input.ReferenceNumber = Clean(Input.ReferenceNumber);
         Input.PropertyType = Clean(Input.PropertyType);
         if (!await db.Clients.AnyAsync(client => client.Id == Input.ClientId && client.IsActive))
             ModelState.AddModelError("Input.ClientId", "Choose an active customer.");
@@ -49,29 +49,24 @@ public class CreateModel(BuildWiseDbContext db, ICurrentUserService currentUser)
         if (Input.SiteAddress.Length is < 1 or > 50) ModelState.AddModelError("Input.SiteAddress", "Enter a site address of 1 to 50 characters.");
         if (Input.Description.Length is < 1 or > 3000) ModelState.AddModelError("Input.Description", "Enter a description of 1 to 3000 characters.");
         if (Input.PropertyType?.Length > 50) ModelState.AddModelError("Input.PropertyType", "Property type must not exceed 50 characters.");
-        if (Input.ReferenceNumber?.Length > 50) ModelState.AddModelError("Input.ReferenceNumber", "Reference must not exceed 50 characters.");
-        if (Input.ReferenceNumber is not null)
-        {
-            var reference = Input.ReferenceNumber.ToUpper();
-            if (await db.ClientRequests.AnyAsync(request => request.ReferenceNumber != null && request.ReferenceNumber.ToUpper() == reference))
-                ModelState.AddModelError("Input.ReferenceNumber", "This request reference is already in use.");
-        }
         if (!ModelState.IsValid)
         {
             await LoadCustomersAsync();
             return Page();
         }
         var id = Guid.NewGuid();
-        var now = DateTime.UtcNow;
+        var now = DateTime.Now;
+        await using var transaction = await RequestReferenceGenerator.BeginCreationTransactionAsync(db);
         var request = new ClientRequest
         {
             Id = id, ClientId = Input.ClientId!.Value, Title = Input.Title, Description = Input.Description,
             SiteAddress = Input.SiteAddress, PropertyType = Input.PropertyType,
-            ReferenceNumber = Input.ReferenceNumber ?? $"REQ-{now:yyyyMMdd}-{id:N}",
+            ReferenceNumber = await RequestReferenceGenerator.GenerateAsync(db, now),
             StatusId = (int)ClientRequestStatus.Open, CreatorId = userId.Value, CreationDate = now
         };
         db.ClientRequests.Add(request);
         await db.SaveChangesAsync();
+        if (transaction is not null) await transaction.CommitAsync();
         TempData["SuccessMessage"] = "Request created successfully. You can now prepare its scope.";
         return RedirectToPage("./Details", new { id = request.Id });
     }

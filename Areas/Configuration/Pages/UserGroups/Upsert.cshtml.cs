@@ -72,6 +72,11 @@ namespace BuildWise.Web.Areas.Configuration.Pages.UserGroups
             else
             {
                 var creatorId = await currentUser.GetUserIdAsync();
+                if (!creatorId.HasValue)
+                {
+                    ModelState.AddModelError(string.Empty, "Your account could not be identified. Sign in again before saving.");
+                    return Page();
+                }
                
                 UserGroup = new UserGroup
                 {

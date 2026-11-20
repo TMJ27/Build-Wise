@@ -35,7 +35,7 @@ internal static class ScopeClauseChecks
         var clauses = await db.ScopeClauses.Where(c => c.ScopeItemId == item.Id).ToListAsync();
         Check(clauses.Count == 3 && clauses.All(c => c.CreatorId == user.Id && c.CreationDate.HasValue
             && c.Description == ((ScopeClauseType)c.ClauseTypeId) + " wording"),
-            "Clause saves must trim wording and track the actual creator and UTC creation date.");
+            "Clause saves must trim wording and track the actual creator and local creation date.");
         Check(item.ReviewStatusId == (int)ScopeReviewStatus.Pending && item.ReviewedOn == null,
             "Clause changes must invalidate scope review.");
         var inclusion = clauses.Single(c => c.ClauseTypeId == (int)ScopeClauseType.Inclusion);
@@ -59,7 +59,7 @@ internal static class ScopeClauseChecks
         var creatorId = inclusion.CreatorId;
         var creationDate = inclusion.CreationDate;
         item.ReviewStatusId = (int)ScopeReviewStatus.Reviewed;
-        item.ReviewedOn = DateTime.UtcNow;
+        item.ReviewedOn = DateTime.Now;
         await db.SaveChangesAsync();
         var unchanged = Form(user.Id);
         await unchanged.OnGetAsync(inclusion.Id, null);

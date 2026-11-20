@@ -1,7 +1,6 @@
 @page
 @model BuildWise.Web.Areas.Requests.Pages.IndexModel
 @using BuildWise.Lib.Enums.Statuses
-@using BuildWise.Web.Services.Requests
 @{
     ViewData["Title"] = "Requests";
     ViewData["PageTitle"] = ViewData["Title"];
@@ -31,23 +30,25 @@
     </div>
     <section class="panel requests-panel">
         <div class="requests-panel-heading"><div><h2>Request register</h2><p>Customer requests and their current status.</p></div><span class="badge">@Model.TotalCount requests</span></div>
-        <nav class="request-tabs" aria-label="Request status">
-            <a asp-page="Index" asp-route-search="@Model.Search" asp-route-sort="@Model.Sort" class="@(!Model.Status.HasValue ? "active" : null)">All requests <span>@Model.TotalCount</span></a>
-            @foreach (var status in Enum.GetValues<ClientRequestStatus>())
-            {
-                <a asp-page="Index" asp-route-status="@status" asp-route-search="@Model.Search" asp-route-sort="@Model.Sort" class="@(Model.Status == status ? "active" : null)">@RequestDisplay.StatusName((int)status) <span>@Model.Count(status)</span></a>
-            }
-        </nav>
         <form method="get" class="form-filters" role="search">
-            <input type="hidden" asp-for="Status" />
             <label class="form-search">
                 <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
                 <span class="sr-only">Search requests</span>
                 <input class="form-control" asp-for="Search" type="search" maxlength="120" placeholder="Search request, customer, reference or site..." />
             </label>
+            <label class="form-filter">
+                <span>Status</span>
+                <select class="form-control" asp-for="Status">
+                    <option value="">All statuses</option>
+                    @foreach (var status in Enum.GetValues<ClientRequestStatus>().Where(status => status != ClientRequestStatus.Draft))
+                    {
+                        <option value="@status">@ClientRequestStatusDisplay.StatusName((int)status)</option>
+                    }
+                </select>
+            </label>
             <label class="form-filter"><span>Sort by</span><select class="form-control" asp-for="Sort"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="customer">Customer name</option></select></label>
             <button class="btn" type="submit">Apply filters</button>
-            @if (Model.Search.Length > 0 || Model.Status.HasValue || Model.Sort != "newest")
+            @if (!string.IsNullOrWhiteSpace(Model.Search) || Model.Status.HasValue || Model.Sort != "newest")
             {
                 <a class="request-clear" asp-page="Index">Clear filters</a>
             }
@@ -62,7 +63,7 @@
                         <tr>
                             <td><a class="record-link record-id" asp-page="Details" asp-route-id="@request.Id">@(request.ReferenceNumber ?? request.Id.ToString()) <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a></td>
                             <td>@request.Title</td><td>@request.CustomerName</td>
-                            <td><span class="badge">@RequestDisplay.StatusName(request.StatusId)</span></td>
+                            <td><span class="badge">@ClientRequestStatusDisplay.StatusName(request.StatusId)</span></td>
                             <td>@request.ScopeItemCount</td><td>@request.CreationDate.ToString("dd MMM yyyy, HH:mm")</td>
                         </tr>
                     }

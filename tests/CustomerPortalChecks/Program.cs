@@ -9,7 +9,8 @@ if (args.Contains("--script"))
     await using var db = new BuildWiseDbContext(new DbContextOptionsBuilder<BuildWiseDbContext>()
         .UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=BuildWise_ScriptOnly;Trusted_Connection=True;TrustServerCertificate=True").Options);
     var migrations = db.Database.GetMigrations().ToArray();
-    var sql = db.GetService<IMigrator>().GenerateScript(migrations[^2], migrations[^1], MigrationsSqlGenerationOptions.Idempotent);
+    var accountMigrationIndex = Array.FindIndex(migrations, migration => migration.EndsWith("CustomerPortalAccounts"));
+    var sql = db.GetService<IMigrator>().GenerateScript(migrations[accountMigrationIndex - 1], migrations[accountMigrationIndex], MigrationsSqlGenerationOptions.Idempotent);
     var directory = Path.GetFullPath("database/customer-portal");
     Directory.CreateDirectory(directory);
     var path = Path.Combine(directory, "CustomerPortalAccounts.sql");
@@ -19,3 +20,5 @@ if (args.Contains("--script"))
 }
 
 await CustomerPortalChecks.RunAsync();
+await QuotationResponseChecks.RunAsync();
+await PasswordRecoveryChecks.RunAsync();

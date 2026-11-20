@@ -5,6 +5,9 @@ using BuildWise.Lib.Enums.Statuses;
 using BuildWise.Lib.Users;
 using BuildWise.Web.Areas.Quotations.Pages;
 using BuildWise.Web.Areas.Quotations.ViewModels;
+using BuildWise.Web.Services.Quotations;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -55,12 +58,16 @@ internal static class QuotationUpsertChecks
         {
             Id = Guid.NewGuid(), Request = request, Service = service, ServiceCodeSnapshot = "PAINT-1",
             Title = "Paint walls", Quantity = 2, UnitCodeSnapshot = "rooms", ReviewedByUser = user,
-            RequireAssessment = true, AssessmentNotesJson = "Access required"
+            RequireAssessment = true, AssessmentNotesJson = "Access required",
+            ReviewStatusId = (int)ScopeReviewStatus.Reviewed
         };
         db.AddRange(company, user, client, request, category, service, scope,
             new Currency { Id = Guid.NewGuid(), Code = "USD", Name = "US Dollar", Symbol = "$", Creator = user });
         await db.SaveChangesAsync();
-        UpsertModel Form(Guid? userId = null) => new(db, new CurrentUser(userId ?? user.Id))
+        var configuration = new ConfigurationBuilder().Build();
+        UpsertModel Form(Guid? userId = null) => new(db, new CurrentUser(userId ?? user.Id),
+            new GeminiQuotationWordingService(new HttpClient(), configuration, NullLogger<GeminiQuotationWordingService>.Instance),
+            configuration, NullLogger<UpsertModel>.Instance)
         {
             TempData = new TempDataDictionary(new DefaultHttpContext(), new MemoryTempData())
         };
@@ -98,7 +105,7 @@ internal static class QuotationUpsertChecks
 
         revision.StatusId = (int)QuotationStatus.Approved;
         revision.ApprovedByUserId = user.Id;
-        revision.ApprovalDate = DateTime.UtcNow;
+        revision.ApprovalDate = DateTime.Now;
         revision.ApprovedDocumentJson = "approved document";
         await db.SaveChangesAsync();
         client.Name = "Changed customer";
@@ -134,7 +141,9 @@ internal static class QuotationUpsertChecks
         Check(await missing.OnGetAsync(Guid.NewGuid(), null) is NotFoundResult, "Missing quotation must return 404.");
         var tampered = Form();
         Check(await tampered.OnPostAsync(quote.Id) is BadRequestResult, "Route and form IDs must match.");
-        var unauthorized = new UpsertModel(db, new CurrentUser(null));
+        var unauthorized = new UpsertModel(db, new CurrentUser(null),
+            new GeminiQuotationWordingService(new HttpClient(), configuration, NullLogger<GeminiQuotationWordingService>.Instance),
+            configuration, NullLogger<UpsertModel>.Instance);
         Check(await unauthorized.OnPostAsync(null) is UnauthorizedResult, "Saving requires a current user.");
         Console.WriteLine("PASS: quotation create/edit, totals, snapshots, revision history, stale forms, scope validation, unpriced quotes and identity checks.");
     }

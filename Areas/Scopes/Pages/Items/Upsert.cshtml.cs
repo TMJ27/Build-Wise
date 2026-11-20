@@ -83,7 +83,7 @@ public class UpsertModel(BuildWiseDbContext db, ICurrentUserService currentUser)
             return Page();
         }
 
-        var now = DateTime.UtcNow;
+        var now = DateTime.Now;
         if (item is null)
         {
             service!.ServiceSequence = await db.GetServiceSequenceAsync(service);
@@ -121,7 +121,8 @@ public class UpsertModel(BuildWiseDbContext db, ICurrentUserService currentUser)
     private async Task LoadOptionsAsync(Guid? existingServiceId = null)
     {
         Requests = await db.ClientRequests.AsNoTracking()
-            .Where(request => request.StatusId != (int)ClientRequestStatus.Closed && request.StatusId != (int)ClientRequestStatus.cancelled)
+            .Where(request => request.StatusId != (int)ClientRequestStatus.Draft
+                && request.StatusId != (int)ClientRequestStatus.Closed && request.StatusId != (int)ClientRequestStatus.cancelled)
             .OrderBy(request => request.Title).Select(request => new SelectListItem
             {
                 Value = request.Id.ToString(), Text = (request.ReferenceNumber ?? "Request") + " · " + request.Client.Name + " · " + request.Title

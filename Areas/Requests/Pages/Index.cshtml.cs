@@ -9,7 +9,7 @@ namespace BuildWise.Web.Areas.Requests.Pages;
 
 public class IndexModel(BuildWiseDbContext db) : PageModel
 {
-    [BindProperty(SupportsGet = true)] public string Search { get; set; } = string.Empty;
+    [BindProperty(SupportsGet = true)] public string? Search { get; set; }
     [BindProperty(SupportsGet = true)] public ClientRequestStatus? Status { get; set; }
     [BindProperty(SupportsGet = true)] public string Sort { get; set; } = "newest";
     [BindProperty(SupportsGet = true)] public int PageNumber { get; set; } = 1;
@@ -31,11 +31,13 @@ public class IndexModel(BuildWiseDbContext db) : PageModel
             ModelState.Remove(nameof(Status));
         }
         Sort = Sort is "oldest" or "customer" ? Sort : "newest";
-        StatusCounts = await db.ClientRequests.AsNoTracking().GroupBy(request => request.StatusId)
+        StatusCounts = await db.ClientRequests.AsNoTracking()
+            .Where(request => request.StatusId != (int)ClientRequestStatus.Draft)
+            .GroupBy(request => request.StatusId)
             .Select(group => new { Status = group.Key, Count = group.Count() })
             .ToDictionaryAsync(group => group.Status, group => group.Count);
         TotalCount = StatusCounts.Values.Sum();
-        var query = db.ClientRequests.AsNoTracking();
+        var query = db.ClientRequests.AsNoTracking().Where(request => request.StatusId != (int)ClientRequestStatus.Draft);
         if (Status.HasValue) query = query.Where(request => request.StatusId == (int)Status.Value);
         if (Search.Length > 0)
         {

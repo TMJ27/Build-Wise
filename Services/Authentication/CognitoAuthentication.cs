@@ -66,6 +66,13 @@ public static class CognitoAuthentication
                 options.Scope.Add("email");
                 options.Scope.Add("profile");
 
+                options.Events.OnRedirectToIdentityProvider = context =>
+                {
+                    if (context.Properties.Items.TryGetValue("BuildWise:PasswordRecovery", out var recovery) && recovery == "true")
+                        context.ProtocolMessage.IssuerAddress = settings.Domain.TrimEnd('/') + "/forgotPassword";
+                    return Task.CompletedTask;
+                };
+
                 options.Events.OnTicketReceived = async context =>
                 {
                     var currentUser = context.HttpContext.RequestServices.GetRequiredService<ICurrentUserService>();

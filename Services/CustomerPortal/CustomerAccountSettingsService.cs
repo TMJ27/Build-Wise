@@ -41,7 +41,7 @@ public sealed class CustomerAccountSettingsService(
         account.User.Name = account.Client.Name;
         account.User.Email = account.Email;
         account.User.Phone = account.Client.Phone;
-        account.User.LastUpdated = DateTime.UtcNow;
+        account.User.LastUpdated = DateTime.Now;
         if (emailChanged)
         {
             account.SecurityStamp = Guid.NewGuid().ToString("N");
@@ -74,7 +74,7 @@ public sealed class CustomerAccountSettingsService(
         account.PasswordHash = passwordHasher.HashPassword(account, newPassword);
         account.SecurityStamp = Guid.NewGuid().ToString("N");
         account.User.SecurityStamp = account.SecurityStamp;
-        account.User.LastUpdated = DateTime.UtcNow;
+        account.User.LastUpdated = DateTime.Now;
         await db.SaveChangesAsync();
         return account;
     }

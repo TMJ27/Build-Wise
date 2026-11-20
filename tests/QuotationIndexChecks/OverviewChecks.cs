@@ -23,17 +23,17 @@ internal static class OverviewChecks
     {
         await using var db = new BuildWiseDbContext(new DbContextOptionsBuilder<BuildWiseDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
-        var clock = new Clock(new DateTimeOffset(2026, 11, 7, 22, 30, 0, TimeSpan.Zero));
+        var clock = new Clock(new DateTimeOffset(2026, 11, 8, 0, 30, 0, TimeSpan.Zero));
         var page = new Overview(db, clock);
         await page.OnGetAsync();
         Check(page.Today == new DateOnly(2026, 11, 8) && page.Requests.Count == 0 && page.Quotations.Count == 0
             && page.CustomerCount == 0 && page.Days.Count == 7 && page.Days.All(day => day.Prepared == 0 && day.Approved == 0),
-            "Empty Overview must show zeros and use Harare calendar dates, not sample dates.");
+            "Empty Overview must show zeros and use the server's local calendar dates.");
         var user = new User { Id = Guid.NewGuid(), Email = "overview@example.test", PasswordHash = "test" };
         var customer = new Client { Id = Guid.NewGuid(), Name = "Customer", Email = "customer@example.test", Address = "Harare", Creator = user };
         db.AddRange(user, customer);
-        var boundary = new DateTime(2026, 11, 1, 22, 0, 0, DateTimeKind.Utc);
-        var today = new DateTime(2026, 11, 7, 22, 15, 0, DateTimeKind.Utc);
+        var boundary = new DateTime(2026, 11, 2, 0, 0, 0, DateTimeKind.Local);
+        var today = new DateTime(2026, 11, 8, 0, 15, 0, DateTimeKind.Local);
         ClientRequest Request(string title, DateTime date, ClientRequestStatus status = ClientRequestStatus.Open)
         {
             var request = new ClientRequest
@@ -49,7 +49,7 @@ internal static class OverviewChecks
         var closed = Request("Closed", today, ClientRequestStatus.Closed);
         var pending = Request("Pending", today, ClientRequestStatus.Pending_Verification);
         var older = Request("Older request", boundary.AddTicks(-1));
-        var future = Request("Tomorrow", new DateTime(2026, 11, 8, 22, 0, 0, DateTimeKind.Utc));
+        var future = Request("Tomorrow", new DateTime(2026, 11, 9, 0, 0, 0, DateTimeKind.Local));
         foreach (var name in new[] { "Painting", "Electrical" })
         {
             var category = new ServiceCategory { Id = Guid.NewGuid(), Name = name };
@@ -154,6 +154,7 @@ internal static class OverviewChecks
     private sealed class Clock(DateTimeOffset now) : TimeProvider
     {
         public override DateTimeOffset GetUtcNow() => now;
+        public override TimeZoneInfo LocalTimeZone => TimeZoneInfo.Utc;
     }
 
     private sealed class TestUrls : IUrlHelper

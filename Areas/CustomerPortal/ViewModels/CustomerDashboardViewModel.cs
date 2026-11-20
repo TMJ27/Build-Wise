@@ -5,6 +5,7 @@ public sealed class CustomerDashboardViewModel
     public string? CustomerName { get; set; }
     public int RequestCount { get; set; }
     public int OpenRequestCount { get; set; }
+    public int ClosedRequestCount { get; set; }
     public int ApprovedQuotationCount { get; set; }
     public IReadOnlyList<CustomerRequestRowViewModel> Requests { get; set; } = [];
     public IReadOnlyList<CustomerQuotationRowViewModel> Quotations { get; set; } = [];
@@ -25,7 +26,8 @@ public sealed class CustomerQuotationRowViewModel
     public string QuotationNumber { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
     public int RevisionNumber { get; set; }
-    public string Status { get; set; } = string.Empty;
+    public BuildWise.Lib.Enums.Statuses.QuotationStatus Status { get; set; }
+    public BuildWise.Lib.Enums.Statuses.QuotationResponseStatus? ResponseStatus { get; set; }
     public bool IncludesPrices { get; set; }
     public decimal? Total { get; set; }
     public string? CurrencyCode { get; set; }

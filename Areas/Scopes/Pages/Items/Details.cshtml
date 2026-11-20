@@ -1,5 +1,6 @@
 @page "{id:guid}"
 @model BuildWise.Web.Areas.Scopes.Pages.Items.DetailsModel
+@inject Microsoft.AspNetCore.Routing.LinkGenerator PageLinks
 @{
     var item = Model.Item;
     ViewData["Title"] = "Scope item details";
@@ -17,25 +18,17 @@
 }
 
 @section actionbar {
-    <a class="btn" asp-page="/Dependencies/Index" asp-route-id="" asp-route-scopeItemId="@item.Id" asp-route-requestId="">
-        <i class="fa-solid fa-link" aria-hidden="true"></i>
-        <span>View dependencies</span>
-    </a>
-    <a class="btn" asp-page="/Stages/Index" asp-route-id="" asp-route-scopeItemId="@item.Id" asp-route-requestId="">
-        <i class="fa-solid fa-list-check" aria-hidden="true"></i>
-        <span>View stages</span>
-    </a>
     <a class="btn" asp-page="/Clauses/Index" asp-route-id="" asp-route-scopeItemId="@item.Id" asp-route-requestId="">
         <i class="fa-solid fa-list" aria-hidden="true"></i>
         <span>View clauses</span>
     </a>
     @if (item.CanEdit)
     {
-    <a class="btn primary" asp-page="Upsert" asp-route-id="@item.Id" asp-route-requestId="@item.RequestId">
+    <a class="btn edit" asp-page="Upsert" asp-route-id="@item.Id" asp-route-requestId="@item.RequestId">
         <i class="fa-solid fa-pen" aria-hidden="true"></i>
         <span>Edit scope item</span>
     </a>
-        <a class="btn" asp-page="/Clauses/Upsert" asp-route-id="" asp-route-scopeItemId="@item.Id" asp-route-requestId="">
+        <a class="btn" href="@PageLinks.GetPathByPage("/Clauses/Upsert", values: new { area = "Scopes", scopeItemId = item.Id })">
             <i class="fa-solid fa-plus" aria-hidden="true"></i>
             <span>Add clause</span>
         </a>
@@ -52,8 +45,8 @@
             <header class="card-header"><h2>Scope item details</h2></header>
             <div class="card-body">
                 <dl class="profile-detail-list">
-                    <div><dt>Scope item ID</dt><dd>@item.Id</dd></div>
-                    <div><dt>Request ID</dt><dd>@(item.RequestId?.ToString() ?? "Not set")</dd></div>
+                    <div><dt>Scope item number</dt><dd>@item.ScopeItemNumber</dd></div>
+                    <div><dt>Request reference</dt><dd>@(item.RequestReference ?? "Not assigned")</dd></div>
                     <div><dt>Title</dt><dd>@(string.IsNullOrWhiteSpace(item.Title) ? "Not provided" : item.Title)</dd></div>
                     <div><dt>Service</dt><dd>@(item.ServiceName ?? "Not set")</dd></div>
                     <div><dt>Service code</dt><dd>@(item.ServiceCodeSnapshot ?? "Not set")</dd></div>

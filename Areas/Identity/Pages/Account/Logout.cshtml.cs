@@ -17,7 +17,7 @@ public class LogoutModel(CognitoSettings settings) : PageModel
 
         if (!settings.IsConfigured)
         {
-            return RedirectToPage("/Account/Login", new { area = "Identity" });
+            return Redirect("/");
         }
 
         var logoutUrl = QueryHelpers.AddQueryString(settings.Domain.TrimEnd('/') + "/logout",

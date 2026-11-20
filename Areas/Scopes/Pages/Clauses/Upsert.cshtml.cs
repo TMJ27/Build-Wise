@@ -66,7 +66,7 @@ public class UpsertModel(BuildWiseDbContext db, ICurrentUserService currentUser)
         {
             clause = new ScopeClause
             {
-                Id = Guid.NewGuid(), ScopeItemId = item.Id, CreatorId = userId.Value, CreationDate = DateTime.UtcNow
+                Id = Guid.NewGuid(), ScopeItemId = item.Id, CreatorId = userId.Value, CreationDate = DateTime.Now
             };
             db.ScopeClauses.Add(clause);
         }

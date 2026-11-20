@@ -1,6 +1,6 @@
 @page "{id:guid}"
 @model BuildWise.Web.Areas.Requests.Pages.DetailsModel
-@using BuildWise.Web.Services.Requests
+@using BuildWise.Lib.Enums.Statuses
 @{
     var request = Model.RequestDetails;
     ViewData["Title"] = "Request details";
@@ -31,24 +31,21 @@
             <div class="card-body">
                 <dl class="profile-detail-list">
                     <div><dt>Reference</dt><dd>@(request.ReferenceNumber ?? request.Id.ToString())</dd></div>
-                    <div><dt>Status</dt><dd><span class="badge">@RequestDisplay.StatusName(request.StatusId)</span></dd></div>
+                    <div><dt>Status</dt><dd><span class="badge">@ClientRequestStatusDisplay.StatusName(request.StatusId)</span></dd></div>
                     <div><dt>Site address</dt><dd>@request.SiteAddress</dd></div>
                     <div><dt>Property type</dt><dd>@(request.PropertyType ?? "Not provided")</dd></div>
                     <div><dt>Scope items</dt><dd>@request.ScopeItemCount</dd></div>
                     <div class="profile-detail-wide"><dt>Description</dt><dd>@(request.Description ?? "Not provided")</dd></div>
                 </dl>
-            </div>
-            <footer class="card-footer"><dl class="record-metadata"><div><dt>Creator</dt><dd>@request.CreatorName</dd></div><div><dt>Creation date</dt><dd>@request.CreationDate.ToString("dd MMM yyyy, HH:mm")</dd></div></dl></footer>
-        </section>
-        <section class="detail-card panel configuration-section">
-            <header class="card-header"><h2>Customer</h2></header>
-            <div class="card-body">
+                <hr />
+                <h3>Customer</h3>
                 <dl class="profile-detail-list">
                     <div><dt>Name</dt><dd>@request.CustomerName</dd></div>
                     <div><dt>Email</dt><dd>@(request.CustomerEmail ?? "Not provided")</dd></div>
                     <div><dt>Phone</dt><dd>@(request.CustomerPhone ?? "Not provided")</dd></div>
                 </dl>
             </div>
+            <footer class="card-footer"><dl class="record-metadata"><div><dt>Creator</dt><dd>@request.CreatorName</dd></div><div><dt>Creation date</dt><dd>@request.CreationDate.ToString("dd MMM yyyy, HH:mm")</dd></div></dl></footer>
         </section>
         <section class="panel configuration-section">
             <div class="configuration-preview-heading"><h2>Quotations</h2><span class="badge">@Model.Quotations.Count quotations</span></div>
@@ -60,7 +57,7 @@
                         @foreach (var quotation in Model.Quotations)
                         {
                             <tr>
-                                <td><a class="record-link" asp-area="Quotations" asp-page="/Upsert" asp-route-id="@quotation.Id">@quotation.QuotationNumber <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a></td>
+                                <td><a class="record-link" asp-area="Quotations" asp-page="/Details" asp-route-id="@quotation.Id">@quotation.QuotationNumber <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a></td>
                                 <td>@quotation.RevisionNumber</td><td><span class="badge">@(quotation.Status?.ToString() ?? "Not set")</span></td>
                                 <td>@(quotation.IncludesPrices ? quotation.Total?.ToString("N2") ?? "Not set" : "Not priced")</td>
                                 <td>@(quotation.IncludesPrices ? quotation.CurrencyCode ?? "Not set" : "—")</td>

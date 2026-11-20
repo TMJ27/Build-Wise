@@ -28,6 +28,45 @@ public class DetailsModel(
     public IReadOnlyList<ScopeItemDetailsViewModel> Items { get; set; } = [];
     public List<SelectListItem> ActiveServices { get; private set; } = [];
     public bool GeminiConfigured { get; private set; }
+    public string? GenerationDiagnostic { get; private set; }
+    public bool ScopeApproved { get; private set; }
+
+    public async Task<IActionResult> OnPostApproveAsync(Guid id, bool confirmScope)
+    {
+        var userId = await currentUser.GetUserIdAsync();
+        if (!userId.HasValue) return Unauthorized();
+
+        await using var transaction = db.Database.IsRelational()
+            ? await db.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable) : null;
+        var request = await db.ClientRequests.Include(request => request.ScopeItems)
+            .SingleOrDefaultAsync(request => request.Id == id);
+        if (request is null) return NotFound();
+        if (!ScopeQueries.CanEdit(request.StatusId)) return StatusCode(403);
+        if (!confirmScope)
+        {
+            ModelState.AddModelError(string.Empty, "Confirm that you have reviewed the work items and clauses.");
+            await LoadPageAsync(id);
+            return Page();
+        }
+        if (request.ScopeItems.Count == 0)
+        {
+            ModelState.AddModelError(string.Empty, "Add at least one work item before approving the scope.");
+            await LoadPageAsync(id);
+            return Page();
+        }
+
+        var now = DateTime.Now;
+        foreach (var item in request.ScopeItems.Where(item => item.ReviewStatusId != (int)ScopeReviewStatus.Reviewed))
+        {
+            item.ReviewStatusId = (int)ScopeReviewStatus.Reviewed;
+            item.ReviewedByUserId = userId.Value;
+            item.ReviewedOn = now;
+        }
+        await db.SaveChangesAsync();
+        if (transaction is not null) await transaction.CommitAsync();
+        TempData["SuccessMessage"] = "Scope approved. You can now create a quotation.";
+        return RedirectToPage(new { id });
+    }
 
     public async Task<IActionResult> OnGetAsync(Guid id)
     {
@@ -78,10 +117,18 @@ public class DetailsModel(
         {
             throw;
         }
+        catch (OperationCanceledException exception)
+        {
+            logger.LogWarning(exception, "Gemini scope drafting timed out for request {RequestId}.", id);
+            ModelState.AddModelError(string.Empty, "AI scope preparation took too long. Try again shortly.");
+        }
         catch (Exception exception)
         {
             logger.LogError(exception, "Scope draft generation failed for request {RequestId}.", id);
             ModelState.AddModelError(string.Empty, "The scope draft could not be generated. Try again.");
+            var environment = HttpContext?.RequestServices.GetService<IWebHostEnvironment>();
+            if (environment?.IsDevelopment() == true)
+                GenerationDiagnostic = $"Generation failed with {exception.GetType().Name}. Check the server output for request {id}.";
         }
 
         return Page();
@@ -134,7 +181,7 @@ public class DetailsModel(
 
         await using var transaction = db.Database.IsRelational()
             ? await db.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable) : null;
-        var now = DateTime.UtcNow;
+        var now = DateTime.Now;
         foreach (var draft in selected)
         {
             var service = services[draft.ServiceId];
@@ -186,12 +233,15 @@ public class DetailsModel(
         var items = await db.ScopeItems.AsNoTracking().Include(item => item.Service)
             .Include(item => item.Request).Include(item => item.ReviewedByUser)
             .Where(item => item.RequestId == id).OrderBy(item => item.Title).ThenBy(item => item.Id).ToListAsync();
+        await db.ApplyScopeItemNumbersAsync(items);
         Items = items.Select(ScopeQueries.MapItem).ToList();
+        ScopeApproved = items.Count > 0 && items.All(item => item.ReviewStatusId == (int)ScopeReviewStatus.Reviewed);
         ActiveServices = await db.Services.AsNoTracking().Where(service => service.IsActive)
             .OrderBy(service => service.Name)
             .Select(service => new SelectListItem(service.Name, service.Id.ToString())).ToListAsync();
         GeminiConfigured = !string.IsNullOrWhiteSpace(configuration["Gemini:ApiKey"])
-            && !string.IsNullOrWhiteSpace(configuration["Gemini:Model"]);
+            && (!string.IsNullOrWhiteSpace(configuration["Gemini:Model"])
+                || configuration.GetSection("Gemini:Models").GetChildren().Any(model => !string.IsNullOrWhiteSpace(model.Value)));
         return true;
     }
 

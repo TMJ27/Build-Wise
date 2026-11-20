@@ -17,7 +17,7 @@
 @section actionbar {
     @if (company is not null)
     {
-        <a class="btn primary" asp-page="/Profile/Edit" asp-route-id="@company.Id">
+        <a class="btn edit" asp-page="/Profile/Edit" asp-route-id="@company.Id">
             <i class="fa-solid fa-pen" aria-hidden="true"></i>
             <span>Edit profile</span>
         </a>

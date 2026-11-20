@@ -12,5 +12,6 @@ namespace BuildWise.Lib.Enums.Statuses
         cancelled = 4,
         Sent_To_Client = 5,
         Pending_Verification = 6,
+        Draft = 7,
     }
 }

@@ -5,24 +5,13 @@
     ViewData["Title"] = "Quotations";
     ViewData["PageTitle"] = ViewData["Title"];
     ViewData["PageSubTitle"] = "Manage customer quotations and their latest revisions.";
-    var upsertUrl = Url.Page("/Upsert", new { area = "Quotations" });
 }
 
 @section actionbar {
-    @if (upsertUrl is not null)
-    {
-        <a class="btn primary" href="@upsertUrl">
+        <a class="btn primary" asp-page="/Upsert" asp-area="Quotations">
             <i class="fa-solid fa-plus" aria-hidden="true"></i>
             <span>Create quotation</span>
         </a>
-    }
-    else
-    {
-        <button class="btn primary" type="button" disabled title="The quotation Upsert page is not available yet.">
-            <i class="fa-solid fa-plus" aria-hidden="true"></i>
-            <span>Create quotation</span>
-        </button>
-    }
 }
 
 <div class="requests-page quotations-page">
@@ -124,7 +113,7 @@
                 <tbody>
                     @foreach (var quotation in Model.Quotations)
                     {
-                        var detailsUrl = Url.Page("/Upsert", new { area = "Quotations", id = quotation.Id });
+                        var detailsUrl = Url.Page("/Details", new { area = "Quotations", id = quotation.Id });
                         <tr>
                             <td>
                                 @if (detailsUrl is not null)

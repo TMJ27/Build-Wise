@@ -1,9 +1,18 @@
 @page "{id:guid?}"
 @model BuildWise.Web.Areas.Quotations.Pages.UpsertModel
 @{
-    ViewData["Title"] = Model.Input.Id.HasValue ? "Edit quotation" : "Create quotation";
+    ViewData["Title"] = Model.CreatesRevision ? "Create quotation revision" : Model.Input.Id.HasValue ? "Edit quotation" : "Create quotation";
     ViewData["PageTitle"] = ViewData["Title"];
     ViewData["PageSubTitle"] = "Prepare the scope, amounts and terms for your customer.";
+    var breadcrumbs = new List<BreadcrumbItem>
+    {
+        new("Quotations", Url.Page("/Index", new { area = "Quotations", id = (Guid?)null }))
+    };
+    if (Model.Input.Id.HasValue)
+    {
+        breadcrumbs.Add(new("Quotation details", Url.Page("/Details", new { area = "Quotations", id = Model.Input.Id })));
+    }
+    ViewData["Breadcrumbs"] = breadcrumbs;
 }
 
 <div class="requests-page quotations-page">
@@ -35,7 +44,6 @@
                         <select class="form-control" asp-for="Input.RequestId" asp-items="Model.Requests">
                             <option value="">Choose a request with scope items</option>
                         </select>
-                        <button class="btn" type="submit" asp-page-handler="LoadScope" formnovalidate>Load request scope</button>
                         <p>Load the scope after selecting a request. This replaces the items below.</p>
                     }
                     <span asp-validation-for="Input.RequestId"></span>
@@ -65,17 +73,20 @@
                     <input class="form-control" asp-for="Input.ValidUntil" type="date" />
                     <span asp-validation-for="Input.ValidUntil"></span>
                 </div>
+                @if (!Model.Input.Id.HasValue)
+                {
+                    <footer class="card-footer form-card-footer">
+                        <div class="form-actions">
+                            <button class="btn" type="submit" asp-page-handler="LoadScope" formnovalidate>Load request scope</button>
+                        </div>
+                    </footer>
+                }
             </section>
 
             <section class="panel request-detail-panel">
                 <h2>Quotation items</h2>
                 <p>Enter the full amount for each line, including its quantity.</p>
                 <div class="quotation-wording-tools">
-                    <button class="btn" type="submit" asp-page-handler="PrepareWording" formnovalidate
-                            disabled="@(!Model.WordingConfigured || !Model.ScopeItemsReviewed)">
-                        <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
-                        <span>Prepare quotation wording</span>
-                    </button>
                     @if (!Model.WordingConfigured)
                     {
                         <p class="ai-setup-note">Automatic wording preparation is being set up. Contact your administrator to enable it.</p>
@@ -126,6 +137,15 @@
                     <span asp-validation-for="Input.TaxAmount"></span>
                 </div>
                 <p>Subtotal: <strong id="quotation-subtotal">—</strong> · Total including tax: <strong id="quotation-total">—</strong></p>
+                <footer class="card-footer form-card-footer">
+                    <div class="form-actions">
+                        <button class="btn" type="submit" asp-page-handler="PrepareWording" formnovalidate
+                                disabled="@(!Model.WordingConfigured || !Model.ScopeItemsReviewed)">
+                            <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+                            <span>Prepare quotation wording</span>
+                        </button>
+                    </div>
+                </footer>
             </section>
 
             <section class="panel request-detail-panel form-panel">
@@ -140,9 +160,11 @@
                     <textarea class="form-control" asp-for="Input.Exclusions" rows="3" maxlength="4000"></textarea>
                     <span asp-validation-for="Input.Exclusions"></span>
                 </div>
-                <div class="form-actions">
-                    <button class="btn primary" type="submit">@(Model.CreatesRevision ? "Save new draft revision" : "Save draft")</button>
-                </div>
+                <footer class="card-footer form-card-footer">
+                    <div class="form-actions">
+                        <button class="btn primary" type="submit">@(Model.CreatesRevision ? "Save new draft revision" : "Save draft")</button>
+                    </div>
+                </footer>
             </section>
         </div>
     </form>

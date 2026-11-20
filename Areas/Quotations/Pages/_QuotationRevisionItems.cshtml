@@ -1,0 +1,41 @@
+@model BuildWise.Data.QuotationRevision
+<div class="table-wrap">
+    <table class="configuration-table">
+        <caption class="sr-only">Quotation services and amounts</caption>
+        <thead>
+            <tr>
+                <th scope="col">Service</th>
+                <th scope="col">Description</th>
+                <th scope="col">Quantity</th>
+                <th scope="col">Unit</th>
+                @if (Model.IncludesPrices)
+                {
+                    <th scope="col">Amount (@Model.CurrencyCode)</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.QuotationItems.OrderBy(item => item.Title))
+            {
+                <tr>
+                    <td>@item.Title</td>
+                    <td class="quotation-copy">@item.Description</td>
+                    <td>@(item.Quantity?.ToString() ?? "—")</td>
+                    <td>@(item.UnitCodeSnapshot ?? "—")</td>
+                    @if (Model.IncludesPrices)
+                    {
+                        <td>@(item.LineAmount?.ToString("N2") ?? "Not set")</td>
+                    }
+                </tr>
+            }
+        </tbody>
+        @if (Model.IncludesPrices)
+        {
+            <tfoot>
+                <tr><th colspan="4" scope="row">Subtotal</th><td>@Model.Subtotal?.ToString("N2")</td></tr>
+                <tr><th colspan="4" scope="row">Tax</th><td>@Model.TaxAmount?.ToString("N2")</td></tr>
+                <tr><th colspan="4" scope="row">Total (@Model.CurrencyCode)</th><td><strong>@Model.Total?.ToString("N2")</strong></td></tr>
+            </tfoot>
+        }
+    </table>
+</div>

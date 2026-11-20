@@ -21,7 +21,7 @@ public sealed class CustomerRegistrationService(BuildWiseDbContext db, IPassword
         // Never claim an existing customer profile by unverified email or reuse a staff identity.
         if (await db.CustomerAccounts.AnyAsync(account => account.NormalizedEmail == normalized)
             || await db.Users.AnyAsync(user => user.Email.ToUpper() == normalized)) return false;
-        var now = DateTime.UtcNow;
+        var now = DateTime.Now;
         var auditUser = new User
         {
             Id = Guid.NewGuid(), Name = input.Name.Trim(), Email = email, Phone = Clean(input.Phone),

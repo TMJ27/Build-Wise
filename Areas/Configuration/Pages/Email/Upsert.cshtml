@@ -1,0 +1,52 @@
+@page
+@model BuildWise.Web.Areas.Configuration.Pages.Email.UpsertModel
+@{
+    ViewData["Title"] = Model.IsConfigured ? "Edit email settings" : "Configure email";
+    ViewData["PageTitle"] = ViewData["Title"];
+    ViewData["PageSubTitle"] = "Set the sender and AWS region for Amazon SES.";
+    ViewData["Breadcrumbs"] = new BreadcrumbItem[]
+    {
+        new("Configuration"),
+        new("Email settings", Url.Page("/Email/Details", new { area = "Configuration" }))
+    };
+}
+<div class="requests-page configuration-page">
+    <div asp-validation-summary="All" class="configuration-errors" role="alert"></div>
+    <form method="post" class="form-stack">
+        <section class="panel configuration-section form-panel">
+            <h2>Amazon SES</h2>
+            <div class="form-fields">
+                <div class="field">
+                    <label asp-for="Input.SenderName">Sender name *</label>
+                    <input asp-for="Input.SenderName" class="form-control" />
+                    <span asp-validation-for="Input.SenderName"></span>
+                </div>
+                <div class="field">
+                    <label asp-for="Input.SenderEmail">Sender email *</label>
+                    <input asp-for="Input.SenderEmail" type="email" class="form-control" />
+                    <span asp-validation-for="Input.SenderEmail"></span>
+                </div>
+                <div class="field">
+                    <label asp-for="Input.ReplyToEmail">Reply-to email</label>
+                    <input asp-for="Input.ReplyToEmail" type="email" class="form-control" />
+                    <span asp-validation-for="Input.ReplyToEmail"></span>
+                </div>
+                <div class="field">
+                    <label asp-for="Input.Region">AWS region *</label>
+                    <input asp-for="Input.Region" class="form-control" />
+                    <span asp-validation-for="Input.Region"></span>
+                </div>
+                <div class="form-check form-wide">
+                    <input asp-for="Input.IsEnabled" />
+                    <label asp-for="Input.IsEnabled">Enable email sending</label>
+                </div>
+            </div>
+            <footer class="card-footer form-card-footer">
+                <button type="submit" class="btn primary">
+                    <i class="fa-solid fa-check" aria-hidden="true"></i> Save settings
+                </button>
+            </footer>
+        </section>
+    </form>
+
+</div>

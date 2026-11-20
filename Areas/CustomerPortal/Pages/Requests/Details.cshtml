@@ -1,12 +1,21 @@
 @page "{id:guid}"
 @model BuildWise.Web.Areas.CustomerPortal.Pages.Requests.DetailsModel
-@using BuildWise.Web.Services.Requests
+@using BuildWise.Lib.Enums.Statuses
 @{
     var request = Model.RequestDetails;
     ViewData["Title"] = "Request details";
     ViewData["PageTitle"] = request.Title;
-    ViewData["PageSubTitle"] = "Your submitted request.";
+    var isDraft = request.StatusId == (int)ClientRequestStatus.Draft;
+    ViewData["PageSubTitle"] = isDraft ? "This request is saved as a draft. You can edit or submit it when ready." : "Your request details and current status.";
     ViewData["Breadcrumbs"] = new BreadcrumbItem[] { new("My dashboard", Url.Page("/Index", new { area = "CustomerPortal", id = (Guid?)null })) };
+}
+@section actionbar {
+    @if (isDraft)
+    {
+        <a class="btn edit" asp-page="./Create" asp-route-id="@request.Id"><i class="fa-solid fa-pen" aria-hidden="true"></i><span>Edit draft</span></a>
+        <form method="post" asp-page-handler="Submit" asp-route-id="@request.Id" class="inline-action-form"><button class="btn primary" type="submit"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i><span>Submit</span></button></form>
+        <form method="post" asp-page-handler="Cancel" asp-route-id="@request.Id" class="inline-action-form"><button class="btn danger" type="submit"><i class="fa-solid fa-xmark" aria-hidden="true"></i><span>Cancel</span></button></form>
+    }
 }
 <div class="requests-page profile-details">
     @if (TempData["SuccessMessage"] is string message)
@@ -14,16 +23,20 @@
         <div class="request-success" role="status">@message</div>
     }
     <section class="detail-card panel configuration-section">
-        <header class="card-header"><h2>Request details</h2></header>
+        <header class="card-header card-header-between">
+            <h2>Request details</h2>
+            <span class="badge">@ClientRequestStatusDisplay.CustomerStatusName(request.StatusId)</span>
+        </header>
         <div class="card-body">
             <dl class="profile-detail-list">
-                <div><dt>Reference</dt><dd>@(request.ReferenceNumber ?? request.Id.ToString())</dd></div>
-                <div><dt>Status</dt><dd><span class="badge">@RequestDisplay.StatusName(request.StatusId)</span></dd></div>
+                <div><dt>Reference</dt><dd>@request.ReferenceNumber</dd></div>
                 <div><dt>Site address</dt><dd>@request.SiteAddress</dd></div>
                 <div><dt>Property type</dt><dd>@(request.PropertyType ?? "Not provided")</dd></div>
                 <div class="profile-detail-wide"><dt>Description</dt><dd>@(request.Description ?? "Not provided")</dd></div>
             </dl>
         </div>
-        <footer class="card-footer"><dl class="record-metadata"><div><dt>Submitted</dt><dd>@request.CreationDate.ToString("dd MMM yyyy, HH:mm")</dd></div></dl></footer>
+        <footer class="card-footer form-card-footer">
+            <dl class="record-metadata"><div><dt>Created</dt><dd>@request.CreationDate.ToString("dd MMM yyyy, HH:mm")</dd></div></dl>
+        </footer>
     </section>
 </div>

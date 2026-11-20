@@ -87,7 +87,7 @@ public class UpsertModel(BuildWiseDbContext db, ICurrentUserService currentUser)
             {
                 Id = Guid.NewGuid(),
                 CreatorId = creatorId.Value,
-                CreationDate = DateTime.UtcNow
+                CreationDate = DateTime.Now
             };
 
             db.Currencies.Add(currency);

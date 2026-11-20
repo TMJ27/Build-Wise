@@ -123,7 +123,7 @@ public class CurrentUserService(
             if (recordLogin)
             {
                 existing.IsEmailConfirmed = true;
-                existing.LastLoginDate = DateTime.UtcNow;
+                existing.LastLoginDate = DateTime.Now;
                 await db.SaveChangesAsync();
             }
 
@@ -135,7 +135,7 @@ public class CurrentUserService(
             return existing.Id;
         }
 
-        var now = DateTime.UtcNow;
+        var now = DateTime.Now;
         var name = principal.FindFirstValue("given_name") ?? principal.FindFirstValue("name") ?? email.Split('@')[0];
         var surname = principal.FindFirstValue("family_name");
         var newUser = new User
@@ -175,7 +175,7 @@ public class CurrentUserService(
 
     private void SetUpAdministrator(User user)
     {
-        var now = DateTime.UtcNow;
+        var now = DateTime.Now;
         var administrators = new UserGroup
         {
             Id = Guid.NewGuid(),

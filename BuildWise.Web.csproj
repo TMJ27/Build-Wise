@@ -14,6 +14,7 @@
     <Compile Remove="tests\**\*.cs" />
     <Content Remove="tests\**" />
     <None Remove="tests\**" />
+    <PackageReference Include="AWSSDK.SimpleEmailV2" Version="4.0.106.11" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
@@ -30,5 +31,6 @@
     <Folder Include="Areas\Configuration\ViewModels\UserGroups\" />
     <Folder Include="Areas\Configuration\ViewModels\Users\" />
   </ItemGroup>
+
 
 </Project>

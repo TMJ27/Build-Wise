@@ -1,4 +1,5 @@
 using BuildWise.Data;
+using BuildWise.Web.Services.GeneratedNumbers;
 using BuildWise.Lib.Enums.Statuses;
 using BuildWise.Web.Areas.Quotations.ViewModels;
 using Microsoft.AspNetCore.Mvc;
@@ -99,5 +100,11 @@ public class IndexModel(BuildWiseDbContext db) : PageModel
             _ => query.OrderByDescending(quotation => quotation.CreationDate).ThenBy(quotation => quotation.Id)
         };
         Quotations = await query.Skip((PageNumber - 1) * PageSize).Take(PageSize).ToListAsync();
+        var ids = Quotations.Select(quotation => quotation.Id).ToList();
+        var numbered = await db.Quotations.AsNoTracking().Where(quotation => ids.Contains(quotation.Id)).ToListAsync();
+        await db.ApplyQuotationNumbersAsync(numbered);
+        var numbers = numbered.ToDictionary(quotation => quotation.Id, quotation => quotation.GeneratedQuotationNumber);
+        foreach (var quotation in Quotations)
+            quotation.QuotationNumber = numbers[quotation.Id];
     }
 }

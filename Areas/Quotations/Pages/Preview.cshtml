@@ -1,92 +1,76 @@
-@page "{id:int}"
+@page "{id:guid}"
 @model BuildWise.Web.Areas.Quotations.Pages.PreviewModel
+@using BuildWise.Lib.Enums.Statuses
 @{
-    ViewData["Title"] = $"Preview · {Model.Entry.Number}";
-    ViewData["AccountName"] = "Tawanda M.";
-    ViewData["AccountRole"] = "Business owner";
-
-    ViewData["PageTitle"] = "One last look before you share.";
+    var document = Model.Document;
+    var revision = document.Revision;
+    ViewData["Title"] = "Quotation preview";
+    ViewData["QuotationPdfData"] = BuildWise.Web.Services.Quotations.QuotationPdfData.Create(document);
+    ViewData["PageTitle"] = document.Number;
     ViewData["PageHeaderClass"] = "quotation-preview-toolbar";
     ViewData["Breadcrumbs"] = new BreadcrumbItem[]
     {
-        new("Quotations", Url.Page("/Index", new { area = "Quotations" }))
+        new("Quotations", Url.Page("/Index", new { area = "Quotations", id = (Guid?)null })),
+        new(document.Number, Url.Page("/Details", new { area = "Quotations", id = document.Id, revisionId = revision.Id }))
     };
 }
-
 @section actionbar {
-    <button class="btn primary" type="button" id="print-quotation">
-        <i class="icon fa-solid fa-file-lines" aria-hidden="true"></i>
-        <span>Print / Save PDF</span>
-    </button>
+    <button class="btn" type="button" id="print-quotation"><i class="fa-solid fa-print" aria-hidden="true"></i><span>Print</span></button>
+    <button class="btn primary" type="button" id="download-quotation"><i class="fa-solid fa-download" aria-hidden="true"></i><span>Download PDF</span></button>
 }
-
 <div class="requests-page quotations-page">
-
-    @if (Model.Entry.CompanySnapshot is null)
-    {
-        <div class="request-validation" role="alert">This quotation has no saved company details. Save a draft with the configured business profile before previewing it.</div>
-    }
-    else
-    {
-        <article class="quotation-document" aria-label="Quotation document">
-            <header class="quotation-document-header">
-                <div>
-                    <div class="quotation-document-brand"><img src="~/brand/buildwise-mark-muted.svg" alt="" /><span>BuildWise</span></div>
-                    @if (Model.Entry.CompanySnapshot.LogoUrl is not null)
-                    {
-                        <img class="quotation-company-logo" src="@Model.Entry.CompanySnapshot.LogoUrl" alt="Company logo" />
-                    }
-                    <h2>@Model.Entry.CompanySnapshot.Name</h2>
-                    <p class="quotation-copy">@Model.Entry.CompanySnapshot.Address</p>
-                    <p>@Model.Entry.CompanySnapshot.Email</p>
-                    <p>@Model.Entry.CompanySnapshot.Phone</p>
-                    @if (Model.Entry.CompanySnapshot.RegistrationNumber != "")
-                    {
-                        <p>Registration: @Model.Entry.CompanySnapshot.RegistrationNumber</p>
-                    }
-                    @if (Model.Entry.CompanySnapshot.TaxNumber != "")
-                    {
-                        <p>Tax number: @Model.Entry.CompanySnapshot.TaxNumber</p>
-                    }
-                </div>
-                <div class="quotation-document-reference">
-                    <div class="eyebrow">QUOTATION</div>
-                    <h2>@Model.Entry.Number</h2>
-                    <p>Revision @Model.Entry.Quotation.Revision · @Model.Entry.Quotation.Status</p>
-                    <p>@Model.Entry.Quotation.PreparedOn.ToString("dd MMM yyyy")</p>
-                    <p>Valid until @Model.Entry.Quotation.PreparedOn.AddDays(Model.Entry.CompanySnapshot.DefaultValidityDays).ToString("dd MMM yyyy")</p>
-                </div>
-            </header>
-
-            <div class="quotation-document-customer">
-                <div>
-                    <div class="eyebrow">PREPARED FOR</div>
-                    <h3>@Model.SourceRequest.Request.Customer</h3>
-                    <p>@Model.SourceRequest.Location</p>
-                    @if (!string.IsNullOrWhiteSpace(Model.SourceRequest.Email))
-                    {
-                        <p>@Model.SourceRequest.Email</p>
-                    }
-                </div>
-                <div>
-                    <div class="eyebrow">SOURCE REQUEST</div>
-                    <h3>@Model.SourceRequest.Request.RequestNumber</h3>
-                    <p>@Model.SourceRequest.Request.Title</p>
+    <p data-pdf-status role="status" aria-live="polite" hidden></p>
+    <article class="quotation-document" aria-label="Quotation document">
+        <header class="quotation-document-header">
+            <div class="quotation-company-heading">
+                @if (!string.IsNullOrWhiteSpace(document.LogoUrl))
+                {
+                    <img class="quotation-company-logo" src="@document.LogoUrl" alt="@revision.CompanyNameSnapshot logo" />
+                }
+                <div class="quotation-company-details">
+                <h2>@revision.CompanyNameSnapshot</h2>
+                <p class="quotation-copy">@revision.CompanyAddressSnapshot</p>
+                <p>@revision.CompanyEmailSnapshot</p>
+                <p>@revision.CompanyPhoneSnapshot</p>
+                @if (!string.IsNullOrWhiteSpace(revision.CompanyRegistrationNumberSnapshot))
+                {
+                    <p>Registration: @revision.CompanyRegistrationNumberSnapshot</p>
+                }
+                @if (!string.IsNullOrWhiteSpace(revision.CompanyTaxNumberSnapshot))
+                {
+                    <p>Tax number: @revision.CompanyTaxNumberSnapshot</p>
+                }
                 </div>
             </div>
-
-            <h2>Scope of work</h2>
-            <p>The following work and pricing are subject to the terms and exclusions below.</p>
-            @await Html.PartialAsync("_QuotationLines", Model.Entry)
-
-            <section class="quotation-document-terms">
-                <h3>Terms and validity</h3>
-                <p class="quotation-copy">@Model.Entry.Terms</p>
-                <h3>Assumptions and exclusions</h3>
-                <p class="quotation-copy">@Model.Entry.Exclusions</p>
-            </section>
-            <footer class="quotation-document-footer">@Model.Entry.Number · @Model.Entry.CompanySnapshot.Name · All amounts in USD</footer>
-        </article>
-    }
+            <div class="quotation-document-reference">
+                <h2>@document.Number</h2>
+                <p>Revision @revision.RevisionNumber · @((QuotationStatus)revision.StatusId)</p>
+                <p>Issue date: @(revision.IssueDate?.ToString("dd MMM yyyy") ?? "Not set")</p>
+                <p>Valid until: @(revision.ValidUntil?.ToString("dd MMM yyyy") ?? "Not set")</p>
+            </div>
+        </header>
+        <div class="quotation-document-customer">
+            <div>
+                <h3>Prepared for</h3>
+                <p>@revision.CustomerNameSnapshot</p>
+                <p>@revision.CustomerEmailSnapshot</p>
+                <p>@revision.CustomerPhoneSnapshot</p>
+                <p class="quotation-copy">@revision.CustomerAddressSnapshot</p>
+            </div>
+            <div>
+                <h3>@revision.Title</h3>
+                <p>@document.RequestReference</p>
+                <p class="quotation-copy">@revision.SiteAddressSnapshot</p>
+            </div>
+        </div>
+        <h2>Scope of work</h2>
+        @await Html.PartialAsync("_QuotationRevisionItems", revision)
+        <section class="quotation-document-terms">
+            <h3>Terms</h3>
+            <p class="quotation-copy">@(revision.Terms ?? "Not provided")</p>
+            <h3>Assumptions and exclusions</h3>
+            <p class="quotation-copy">@(revision.Exclusions ?? "Not provided")</p>
+        </section>
+        <footer class="quotation-document-footer">@document.Number · Revision @revision.RevisionNumber · @revision.CompanyNameSnapshot</footer>
+    </article>
 </div>
-

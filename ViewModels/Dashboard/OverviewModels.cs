@@ -1,7 +1,8 @@
 using BuildWise.Lib.Enums.Statuses;
-using BuildWise.Web.Services.Requests;
 
 namespace BuildWise.Web.ViewModels.Dashboard;
+
+public sealed record DashboardDay(DateOnly Date, int Prepared, int Approved);
 
 public sealed class OverviewRequest
 {
@@ -14,7 +15,7 @@ public sealed class OverviewRequest
     public int ScopeItemCount { get; set; }
     public int PendingScopeCount { get; set; }
     public string RequestNumber => ReferenceNumber ?? Id.ToString();
-    public string Status => RequestDisplay.StatusName(StatusId);
+    public string Status => ClientRequestStatusDisplay.StatusName(StatusId);
     public string BadgeClass => StatusId == (int)ClientRequestStatus.Pending_Verification ? "amber" : string.Empty;
     public DateOnly CreatedOn => DateOnly.FromDateTime(CreationDate.AddHours(2));
 }

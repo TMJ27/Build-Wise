@@ -15,8 +15,8 @@ var empty = new IndexModel(db);
 await empty.OnGetAsync();
 Check(empty.TotalCount == 0 && empty.Records.Count == 0, "Empty catalogue summaries must be zero.");
 
-var creator = new User { Id = Guid.NewGuid(), Email = "test@example.test", PasswordHash = "test", CreationDate = DateTime.UtcNow };
-var category = new ServiceCategory { Id = Guid.NewGuid(), Name = "Plumbing", IsActive = false, CreationDate = DateTime.UtcNow };
+var creator = new User { Id = Guid.NewGuid(), Email = "test@example.test", PasswordHash = "test", CreationDate = DateTime.Now };
+var category = new ServiceCategory { Id = Guid.NewGuid(), Name = "Plumbing", IsActive = false, CreationDate = DateTime.Now };
 var first = new Service { Id = Guid.NewGuid(), Name = "Zulu", Creator = creator, Category = category, IsActive = true, RequireSiteAssessment = true, CreationDate = new DateTime(2026, 1, 1) };
 var second = new Service { Id = Guid.NewGuid(), Name = "Alpha", Creator = creator, Category = category, IsActive = false, CreationDate = new DateTime(2026, 1, 2) };
 db.AddRange(creator, category, first, second);

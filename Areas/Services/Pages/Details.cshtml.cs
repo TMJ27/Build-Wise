@@ -45,7 +45,7 @@ public class DetailsModel(BuildWiseDbContext db) : PageModel
         return Page();
     }
 
-    public async Task<IActionResult> OnPostToogleAsync(Guid id)
+    public async Task<IActionResult> OnPostToggleAsync(Guid id)
     {
         var service = await db.Services.FirstOrDefaultAsync(service => service.Id == id);
         if (service is null)

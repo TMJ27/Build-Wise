@@ -40,6 +40,7 @@ public static class ScopeQueries
     };
 
     public static IQueryable<ScopeViewModel> Requests(BuildWiseDbContext db) => db.ClientRequests.AsNoTracking()
+        .Where(request => request.StatusId != (int)ClientRequestStatus.Draft)
         .Select(request => new ScopeViewModel
         {
             RequestId = request.Id, ReferenceNumber = request.ReferenceNumber, Title = request.Title,
@@ -48,12 +49,14 @@ public static class ScopeQueries
             AssessmentCount = request.ScopeItems.Count(item => item.RequireAssessment)
         });
 
-    public static bool CanEdit(int statusId) => statusId != (int)ClientRequestStatus.Closed
+    public static bool CanEdit(int statusId) => statusId != (int)ClientRequestStatus.Draft
+        && statusId != (int)ClientRequestStatus.Closed
         && statusId != (int)ClientRequestStatus.cancelled;
 
     public static ScopeItemDetailsViewModel MapItem(ScopeItem item) => new()
     {
         Id = item.Id, RequestId = item.RequestId, ServiceId = item.ServiceId,
+        ScopeItemNumber = item.ScopeItemNumber, RequestReference = item.Request.ReferenceNumber,
         Title = item.Title, Description = item.Description, ServiceName = item.Service.Name,
         ServiceCodeSnapshot = item.ServiceCodeSnapshot, Quantity = item.Quantity,
         UnitCodeSnapshot = item.UnitCodeSnapshot, RequireAssessment = item.RequireAssessment,

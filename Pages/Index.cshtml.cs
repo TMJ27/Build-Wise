@@ -2,6 +2,7 @@ using System.Globalization;
 using BuildWise.Data;
 using BuildWise.Lib.Enums.Statuses;
 using BuildWise.Web.Services.Scopes;
+using BuildWise.Web.Services.GeneratedNumbers;
 using BuildWise.Web.ViewModels.Dashboard;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -13,7 +14,7 @@ public class IndexModel(BuildWiseDbContext db, TimeProvider? timeProvider = null
 {
     [BindProperty(SupportsGet = true)] public string Range { get; set; } = "7";
     [BindProperty(SupportsGet = true)] public string Tab { get; set; } = "requests";
-    public DateOnly Today => DateOnly.FromDateTime((timeProvider ?? TimeProvider.System).GetUtcNow().ToOffset(TimeSpan.FromHours(2)).DateTime);
+    public DateOnly Today => DateOnly.FromDateTime(timeProvider is null ? DateTime.Now : timeProvider.GetLocalNow().DateTime);
     public IReadOnlyList<OverviewRequest> Requests { get; private set; } = [];
     public IReadOnlyList<OverviewQuotation> Quotations { get; private set; } = [];
     public IReadOnlyList<OverviewRequest> VisibleRequests => Requests;
@@ -48,10 +49,11 @@ public class IndexModel(BuildWiseDbContext db, TimeProvider? timeProvider = null
         ModelState.Remove(nameof(Range));
         ModelState.Remove(nameof(Tab));
         // Harare uses UTC+02:00. Apply local calendar boundaries to timestamps stored in UTC.
-        var end = Today.AddDays(1).ToDateTime(TimeOnly.MinValue).AddHours(-2);
+        var end = Today.AddDays(1).ToDateTime(TimeOnly.MinValue);
         var start = Range == "all" ? (DateTime?)null
-            : Today.AddDays(1 - int.Parse(Range, CultureInfo.InvariantCulture)).ToDateTime(TimeOnly.MinValue).AddHours(-2);
-        var requests = db.ClientRequests.AsNoTracking().Where(request => request.CreationDate < end);
+            : Today.AddDays(1 - int.Parse(Range, CultureInfo.InvariantCulture)).ToDateTime(TimeOnly.MinValue);
+        var requests = db.ClientRequests.AsNoTracking().Where(request => request.StatusId != (int)ClientRequestStatus.Draft
+            && request.CreationDate < end);
         if (start.HasValue) requests = requests.Where(request => request.CreationDate >= start.Value);
         Requests = await requests.OrderByDescending(request => request.CreationDate).ThenBy(request => request.Id)
             .Select(request => new OverviewRequest
@@ -77,6 +79,11 @@ public class IndexModel(BuildWiseDbContext db, TimeProvider? timeProvider = null
             CurrencyCode = row.Revision == null ? null : row.Revision.CurrencyCode,
             Total = row.Revision == null ? null : row.Revision.Total
         }).ToListAsync();
+        var numbered = await db.Quotations.AsNoTracking().ToListAsync();
+        await db.ApplyQuotationNumbersAsync(numbered);
+        var numbers = numbered.ToDictionary(quotation => quotation.Id, quotation => quotation.GeneratedQuotationNumber);
+        foreach (var quotation in allQuotations)
+            quotation.QuotationNumber = numbers[quotation.Id];
         Quotations = allQuotations.Where(quotation => quotation.CreationDate < end
                 && (!start.HasValue || quotation.CreationDate >= start.Value))
             .OrderByDescending(quotation => quotation.CreationDate).ThenBy(quotation => quotation.Id).ToArray();
@@ -99,7 +106,7 @@ public class IndexModel(BuildWiseDbContext db, TimeProvider? timeProvider = null
         }).GroupBy(name => name).OrderByDescending(group => group.Count()).ThenBy(group => group.Key)
             .Select((group, index) => new OverviewCategory(group.Key, group.Count(), index % 5)).ToArray();
 
-        var chartStart = Today.AddDays(-6).ToDateTime(TimeOnly.MinValue).AddHours(-2);
+        var chartStart = Today.AddDays(-6).ToDateTime(TimeOnly.MinValue);
         var revisionEvents = await db.QuotationRevisions.AsNoTracking()
             .Where(revision => (revision.CreationDate >= chartStart && revision.CreationDate < end)
                 || (revision.ApprovalDate >= chartStart && revision.ApprovalDate < end))
@@ -135,7 +142,7 @@ public class IndexModel(BuildWiseDbContext db, TimeProvider? timeProvider = null
             "request" or "clarify" when validId => Url.Page("/Details", new { area = "Requests", id })!,
             "scope" when validId => Url.Page("/Details", new { area = "Scopes", id })!,
             "quotations" => Url.Page("/Index", new { area = "Quotations" })!,
-            "quote" when validId => Url.Page("/Upsert", new { area = "Quotations", id })!,
+            "quote" when validId => Url.Page("/Details", new { area = "Quotations", id })!,
             "quote-edit" when validId => quotationByRequest.TryGetValue(id, out var quote)
                 ? Url.Page("/Upsert", new { area = "Quotations", id = quote.Id })!
                 : Url.Page("/Upsert", new { area = "Quotations", requestId = id })!,
@@ -143,10 +150,8 @@ public class IndexModel(BuildWiseDbContext db, TimeProvider? timeProvider = null
         };
     }
 
-    private static DateOnly LocalDate(DateTime date) => DateOnly.FromDateTime(date.AddHours(2));
+    private static DateOnly LocalDate(DateTime date) => DateOnly.FromDateTime(date);
     public static string Amount(OverviewQuotation quotation) => !quotation.IncludesPrices ? "Not priced"
         : !quotation.Total.HasValue ? "Not set" : $"{quotation.CurrencyCode ?? "Currency not set"} {quotation.Total.Value.ToString("N2", CultureInfo.InvariantCulture)}";
-    // Retained for older sample quotation pages that still call this formatter.
-    public static string Money(decimal amount) => amount.ToString("C2", CultureInfo.GetCultureInfo("en-US"));
     public static string Date(DateOnly date, string format = "dd MMM yyyy") => date.ToString(format, CultureInfo.GetCultureInfo("en-GB"));
 }

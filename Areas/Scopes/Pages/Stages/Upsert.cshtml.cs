@@ -62,7 +62,7 @@ public class UpsertModel(BuildWiseDbContext db, ICurrentUserService currentUser)
         {
             stage = new ScopeStage
             {
-                Id = Guid.NewGuid(), ScopeItemId = item.Id, CreatorId = userId.Value, CreationDate = DateTime.UtcNow
+                Id = Guid.NewGuid(), ScopeItemId = item.Id, CreatorId = userId.Value, CreationDate = DateTime.Now
             };
             db.ScopeStages.Add(stage);
         }

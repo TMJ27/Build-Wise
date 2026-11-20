@@ -92,7 +92,7 @@ public class EditModel(BuildWiseDbContext context, IWebHostEnvironment environme
                 Company.DefaultValidityDays = Input.DefaultValidityDays;
                 Company.DefaultQuotationTerms = Input.DefaultTerms;
                 Company.DefaultCurrency = Input.DefaultCurrency;
-                Company.LastUpdated = DateTime.UtcNow;
+                Company.LastUpdated = DateTime.Now;
 
                 if (RemoveLogo)
                 {
@@ -131,8 +131,8 @@ public class EditModel(BuildWiseDbContext context, IWebHostEnvironment environme
                     DefaultValidityDays = Input.DefaultValidityDays,
                     DefaultQuotationTerms = Input.DefaultTerms,
                     DefaultCurrency = Input.DefaultCurrency,
-                    CreationDate = DateTime.UtcNow,
-                    LastUpdated = DateTime.UtcNow,
+                    CreationDate = DateTime.Now,
+                    LastUpdated = DateTime.Now,
                 };
 
                 if (Logo != null)

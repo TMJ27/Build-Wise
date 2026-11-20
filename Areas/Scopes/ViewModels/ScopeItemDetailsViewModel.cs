@@ -3,6 +3,8 @@ namespace BuildWise.Web.Areas.Scopes.ViewModels;
 public sealed class ScopeItemDetailsViewModel
 {
     public Guid Id { get; set; }
+    public string ScopeItemNumber { get; set; } = string.Empty;
+    public string? RequestReference { get; set; }
     public Guid? RequestId { get; set; }
     public Guid? ServiceId { get; set; }
     public string Title { get; set; } = string.Empty;

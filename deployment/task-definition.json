@@ -1,0 +1,137 @@
+{
+  "containerDefinitions": [
+    {
+      "name": "Main",
+      "image": "896932223680.dkr.ecr.eu-north-1.amazonaws.com/buildwise:release-20261118-landing-banner-patched",
+      "cpu": 0,
+      "portMappings": [
+        {
+          "containerPort": 8080,
+          "hostPort": 8080,
+          "protocol": "tcp",
+          "name": "http",
+          "appProtocol": "http"
+        }
+      ],
+      "essential": true,
+      "environment": [
+        {
+          "name": "Cognito__Authority",
+          "value": "https://cognito-idp.eu-north-1.amazonaws.com/eu-north-1_urN75kWVZ"
+        },
+        {
+          "name": "Cognito__ClientId",
+          "value": "6limjar2j78ofbmadglnsffe3h"
+        },
+        {
+          "name": "ASPNETCORE_ENVIRONMENT",
+          "value": "Production"
+        },
+        {
+          "name": "Hosting__TrustedProxyNetwork",
+          "value": "172.31.0.0/16"
+        },
+        {
+          "name": "TZ",
+          "value": "Africa/Harare"
+        },
+        {
+          "name": "Cognito__Domain",
+          "value": "https://eu-north-1urn75kwvz.auth.eu-north-1.amazoncognito.com"
+        },
+        {
+          "name": "Application__PublicBaseUrl",
+          "value": "https://bu-ed357d6290684197aa19d3e4419a88d1.ecs.eu-north-1.on.aws"
+        },
+        {
+          "name": "DataProtection__KeysPath",
+          "value": "/app/keys"
+        },
+        {
+          "name": "Cognito__BootstrapAdminEmail",
+          "value": "tavomada27@gmail.com"
+        },
+        {
+          "name": "Cognito__LogoutUri",
+          "value": "https://bu-ed357d6290684197aa19d3e4419a88d1.ecs.eu-north-1.on.aws/"
+        }
+      ],
+      "mountPoints": [
+        {
+          "sourceVolume": "keys",
+          "containerPath": "/app/keys",
+          "readOnly": false
+        },
+        {
+          "sourceVolume": "logos",
+          "containerPath": "/app/wwwroot/logos",
+          "readOnly": false
+        }
+      ],
+      "volumesFrom": [],
+      "secrets": [
+        {
+          "name": "ConnectionStrings__BuildWise",
+          "valueFrom": "arn:aws:secretsmanager:eu-north-1:896932223680:secret:buildwise/production/database-VQgtiD"
+        },
+        {
+          "name": "Cognito__ClientSecret",
+          "valueFrom": "arn:aws:secretsmanager:eu-north-1:896932223680:secret:buildwise/production/cognito-KcAfZZ"
+        },
+        {
+          "name": "Gemini__ApiKey",
+          "valueFrom": "arn:aws:secretsmanager:eu-north-1:896932223680:secret:buildwise/production/gemini-9z5aeN"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/buildwise",
+          "awslogs-region": "eu-north-1",
+          "awslogs-stream-prefix": "app"
+        }
+      },
+      "systemControls": []
+    }
+  ],
+  "family": "buildwise-production",
+  "taskRoleArn": "arn:aws:iam::896932223680:role/buildwise-task",
+  "executionRoleArn": "arn:aws:iam::896932223680:role/buildwise-execution",
+  "networkMode": "awsvpc",
+  "volumes": [
+    {
+      "name": "keys",
+      "efsVolumeConfiguration": {
+        "fileSystemId": "fs-005a585fa0f544330",
+        "rootDirectory": "/",
+        "transitEncryption": "ENABLED",
+        "authorizationConfig": {
+          "accessPointId": "fsap-004d5102d664ea750",
+          "iam": "ENABLED"
+        }
+      }
+    },
+    {
+      "name": "logos",
+      "efsVolumeConfiguration": {
+        "fileSystemId": "fs-005a585fa0f544330",
+        "rootDirectory": "/",
+        "transitEncryption": "ENABLED",
+        "authorizationConfig": {
+          "accessPointId": "fsap-05267c6c08d9f55ba",
+          "iam": "ENABLED"
+        }
+      }
+    }
+  ],
+  "placementConstraints": [],
+  "runtimePlatform": {
+    "cpuArchitecture": "X86_64",
+    "operatingSystemFamily": "LINUX"
+  },
+  "requiresCompatibilities": [
+    "FARGATE"
+  ],
+  "cpu": "512",
+  "memory": "1024"
+}

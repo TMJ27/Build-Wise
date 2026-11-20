@@ -45,6 +45,7 @@ internal static class CustomerPortalChecks
 
     private static CustomerRegistrationViewModel Registration(string email) => new()
     {
+        ClientType = BuildWise.Lib.Enums.ClientType.Individual,
         Name = "Portal customer", Email = email, Address = "Harare", Phone = "0712345678",
         Password = "A long test password 123!", ConfirmPassword = "A long test password 123!"
     };
@@ -126,17 +127,57 @@ internal static class CustomerPortalChecks
             Input = new() { Title = " Paint room ", SiteAddress = " Harare ", Description = " Paint interior walls " },
             TempData = new TempDataDictionary(new DefaultHttpContext(), new MemoryTempData())
         };
-        Check(await newRequest.OnPostAsync() is RedirectToPageResult, "Customers must be able to submit requests.");
+        Check(await newRequest.OnPostAsync() is RedirectToPageResult, "Customers must be able to save request drafts.");
         var request = await db.ClientRequests.SingleAsync();
-        Check(request.ClientId == first.ClientId && request.CreatorId == first.UserId && request.Title == "Paint room",
-            "Request ownership must come exclusively from the authenticated account.");
-        var details = new BuildWise.Web.Areas.CustomerPortal.Pages.Requests.DetailsModel(portal) { PageContext = Context(Customer(second)) };
+        Check(request.ClientId == first.ClientId && request.CreatorId == first.UserId && request.Title == "Paint room"
+            && request.StatusId == (int)ClientRequestStatus.Draft
+            && request.ReferenceNumber == $"REQ-{request.CreationDate:yyyyMMdd}-0001",
+            "New customer requests must be saved as owned drafts with a generated date-based reference.");
+        var editDraft = new BuildWise.Web.Areas.CustomerPortal.Pages.Requests.CreateModel(db, portal)
+        {
+            PageContext = Context(Customer(first)),
+            TempData = new TempDataDictionary(new DefaultHttpContext(), new MemoryTempData())
+        };
+        Check(await editDraft.OnGetAsync(request.Id) is PageResult && editDraft.Input.Title == "Paint room",
+            "Customers must be able to reopen and edit their own draft.");
+        editDraft.Input.Title = "Paint bedroom";
+        editDraft.Input.SiteAddress = request.SiteAddress;
+        editDraft.Input.Description = request.Description!;
+        Check(await editDraft.OnPostAsync(request.Id) is RedirectToPageResult,
+            "Saving edits must keep the request as a draft.");
+        Check(request.Title == "Paint bedroom" && request.StatusId == (int)ClientRequestStatus.Draft,
+            "Editing a draft must preserve draft status.");
+        var details = new BuildWise.Web.Areas.CustomerPortal.Pages.Requests.DetailsModel(db, portal)
+        {
+            PageContext = Context(Customer(second)),
+            TempData = new TempDataDictionary(new DefaultHttpContext(), new MemoryTempData())
+        };
         Check(await details.OnGetAsync(request.Id) is NotFoundResult, "A customer cannot read another customer's request by GUID.");
         details.PageContext = Context(Customer(first));
         Check(await details.OnGetAsync(request.Id) is PageResult, "An owner must be able to reopen their request.");
-        var dashboard = new BuildWise.Web.Areas.CustomerPortal.Pages.IndexModel(portal) { PageContext = Context(Customer(first)) };
-        Check(await dashboard.OnGetAsync() is PageResult && dashboard.Dashboard.RequestCount == 1, "Dashboard must count owned requests.");
-        var otherDashboard = new BuildWise.Web.Areas.CustomerPortal.Pages.IndexModel(portal) { PageContext = Context(Customer(second)) };
+        Check(await details.OnPostSubmitAsync(request.Id) is RedirectToPageResult
+            && request.StatusId == (int)ClientRequestStatus.Open,
+            "The owner can explicitly submit a draft, moving it into the open request workflow.");
+        var cancelDraft = new BuildWise.Web.Areas.CustomerPortal.Pages.Requests.CreateModel(db, portal)
+        {
+            PageContext = Context(Customer(first)),
+            Input = new() { Title = "Cancel me", SiteAddress = "Harare", Description = "Draft to cancel" },
+            TempData = new TempDataDictionary(new DefaultHttpContext(), new MemoryTempData())
+        };
+        await cancelDraft.OnPostAsync();
+        var draftToCancel = await db.ClientRequests.SingleAsync(item => item.Title == "Cancel me");
+        Check(draftToCancel.ReferenceNumber == $"REQ-{draftToCancel.CreationDate:yyyyMMdd}-0002",
+            "Each new customer request must receive the next daily reference sequence.");
+        details.PageContext = Context(Customer(first));
+        Check(await details.OnPostCancelAsync(draftToCancel.Id) is RedirectToPageResult
+            && draftToCancel.StatusId == (int)ClientRequestStatus.cancelled,
+            "The owner can cancel a draft without deleting its request record.");
+        var dashboard = new BuildWise.Web.Areas.CustomerPortal.Pages.IndexModel(db, portal) { PageContext = Context(Customer(first)) };
+        Check(await dashboard.OnGetAsync() is PageResult && dashboard.Dashboard.RequestCount == 2
+            && dashboard.Dashboard.OpenRequestCount == 1, "Dashboard must include all owned requests but count only submitted requests as open.");
+        Check(dashboard.Dashboard.Requests.Any(row => row.Id == request.Id && row.ReferenceNumber == request.ReferenceNumber),
+            "Customer request table must show the stored generated reference.");
+        var otherDashboard = new BuildWise.Web.Areas.CustomerPortal.Pages.IndexModel(db, portal) { PageContext = Context(Customer(second)) };
         await otherDashboard.OnGetAsync();
         Check(otherDashboard.Dashboard.RequestCount == 0, "Dashboard must not count another customer's requests.");
 
@@ -148,19 +189,22 @@ internal static class CustomerPortalChecks
                 Id = Guid.NewGuid(), Quotation = quote, RevisionNumber = number, Title = "Approved work", Creator = ownerRow,
                 CompanyNameSnapshot = "BuildWise", CustomerNameSnapshot = first.Client.Name, SiteAddressSnapshot = "Harare",
                 RequestDescriptionSnapshot = "Painting", StatusId = number == 3 ? (int)QuotationStatus.Draft : (int)QuotationStatus.Approved,
-                ApprovalDate = number == 3 ? null : DateTime.UtcNow, Total = number * 100m, IncludesPrices = true, CurrencyCode = "USD"
+                ApprovalDate = number == 3 ? null : DateTime.Now, Total = number * 100m, IncludesPrices = true, CurrencyCode = "USD"
             });
         }
         await db.SaveChangesAsync();
         await dashboard.OnGetAsync();
         Check(dashboard.Dashboard.Quotations.Single().RevisionNumber == 2 && dashboard.Dashboard.ApprovedQuotationCount == 1,
             "Only the latest approved revision is visible, even while a newer draft exists.");
-        var quoteDetails = new BuildWise.Web.Areas.CustomerPortal.Pages.Quotations.DetailsModel(portal) { PageContext = Context(Customer(second)) };
+        Check(dashboard.Dashboard.Quotations.Single().QuotationNumber.StartsWith("QT-"),
+            "Customer quotation table must show a generated sequential quotation number.");
+        var quoteDetails = new BuildWise.Web.Areas.CustomerPortal.Pages.Quotations.DetailsModel(db, portal) { PageContext = Context(Customer(second)) };
         Check(await quoteDetails.OnGetAsync(quote.Id) is NotFoundResult, "Quotations must enforce ownership at the database query.");
         quoteDetails.PageContext = Context(Customer(first));
-        Check(await quoteDetails.OnGetAsync(quote.Id) is PageResult && quoteDetails.Revision.RevisionNumber == 2,
+        Check(await quoteDetails.OnGetAsync(quote.Id) is PageResult && quoteDetails.Revision.RevisionNumber == 2
+            && quoteDetails.QuotationNumber.StartsWith("QT-"),
             "Quotation details must never expose a draft.");
-        var anonymousDashboard = new BuildWise.Web.Areas.CustomerPortal.Pages.IndexModel(portal) { PageContext = Context(new ClaimsPrincipal(new ClaimsIdentity())) };
+        var anonymousDashboard = new BuildWise.Web.Areas.CustomerPortal.Pages.IndexModel(db, portal) { PageContext = Context(new ClaimsPrincipal(new ClaimsIdentity())) };
         Check(await anonymousDashboard.OnGetAsync() is ChallengeResult, "Anonymous customers must be challenged.");
 
         var services = new ServiceCollection();
@@ -181,8 +225,9 @@ internal static class CustomerPortalChecks
             .UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=BuildWise_SchemaOnly;Trusted_Connection=True;TrustServerCertificate=True").Options);
         Check(!schema.Database.HasPendingModelChanges(), "Migration snapshot must match the current model.");
         var migrations = schema.Database.GetMigrations().ToArray();
-        Check(migrations.Last().EndsWith("CustomerPortalAccounts"), "New account migration must be discoverable in the Data assembly.");
-        var script = schema.GetService<IMigrator>().GenerateScript(migrations[^2], migrations[^1], MigrationsSqlGenerationOptions.Idempotent);
+        var accountMigrationIndex = Array.FindIndex(migrations, migration => migration.EndsWith("CustomerPortalAccounts"));
+        Check(accountMigrationIndex > 0, "Account migration must be discoverable in the Data assembly.");
+        var script = schema.GetService<IMigrator>().GenerateScript(migrations[accountMigrationIndex - 1], migrations[accountMigrationIndex], MigrationsSqlGenerationOptions.Idempotent);
         Check(script.Contains("CREATE TABLE [CustomerAccount]") && script.Contains("UNIQUE INDEX [IX_CustomerAccount_NormalizedEmail]")
             && !script.Contains("DROP TABLE"), "Migration must add account ownership/unique email indexes without deleting existing tables.");
         Console.WriteLine("PASS: registration/password hashes, customer isolation, staff separation/bootstrap, request ownership, approved-only quotations, session revocation, policy/cookies and migration consistency.");

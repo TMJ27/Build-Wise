@@ -4,11 +4,14 @@ using BuildWise.Lib.Enums.Statuses;
 using BuildWise.Lib.Users;
 using BuildWise.Web.Areas.Requests.Pages;
 using BuildWise.Web.Areas.Requests.ViewModels;
+using BuildWise.Web.Services.Quotations;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging.Abstractions;
 
 internal static class RequestChecks
 {
@@ -22,6 +25,7 @@ internal static class RequestChecks
         await using var db = new BuildWiseDbContext(new DbContextOptionsBuilder<BuildWiseDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
         var user = new User { Id = Guid.NewGuid(), Email = "request@example.test", PasswordHash = "test" };
+        var configuration = new ConfigurationBuilder().Build();
         var client = new Client { Id = Guid.NewGuid(), Name = "Zulu", Email = "customer@example.test", Address = "Harare", IsActive = true, Creator = user };
         var inactive = new Client { Id = Guid.NewGuid(), Name = "Inactive", Email = "inactive@example.test", Address = "Harare", IsActive = false, Creator = user };
         db.AddRange(user, client, inactive);
@@ -47,16 +51,26 @@ internal static class RequestChecks
         Check(request.Id != Guid.Empty && request.ClientId == client.Id && request.CreatorId == user.Id
             && request.Title == "Paint house" && request.SiteAddress == "Bulawayo" && request.Description == "Paint the interior walls"
             && request.PropertyType == "Existing house" && request.StatusId == (int)ClientRequestStatus.Open
-            && request.CreationDate.Kind == DateTimeKind.Utc && request.ReferenceNumber!.StartsWith("REQ-")
-            && request.ReferenceNumber.Length <= 50, "Create must trim fields, generate reference and save real IDs and audit data.");
+            && request.CreationDate.Kind == DateTimeKind.Local
+            && request.ReferenceNumber == $"REQ-{request.CreationDate:yyyyMMdd}-0001",
+            "Create must trim fields, generate a date-based reference and save real IDs and audit data.");
         var details = new DetailsModel(db);
         Check(await details.OnGetAsync(request.Id) is PageResult && details.RequestDetails.ScopeItemCount == 0
             && details.RequestDetails.CustomerName == client.Name && details.RequestDetails.CreatorName == user.Email
             && details.CanPrepareScope, "Request details must load customer, creator and scope count.");
+        var customerDraft = new ClientRequest
+        {
+            Id = Guid.NewGuid(), Client = client, Creator = user, Title = "Private draft", SiteAddress = "Harare",
+            StatusId = (int)ClientRequestStatus.Draft, CreationDate = DateTime.Now
+        };
+        db.ClientRequests.Add(customerDraft);
+        await db.SaveChangesAsync();
+        Check(await new DetailsModel(db).OnGetAsync(customerDraft.Id) is NotFoundResult,
+            "Staff cannot open a customer request before the customer submits it.");
         var scopes = new BuildWise.Web.Areas.Scopes.Pages.IndexModel(db);
         await scopes.OnGetAsync();
         Check(scopes.Requests.Single().RequestId == request.Id && scopes.Requests.Single().ItemCount == 0,
-            "A new request must immediately appear in Scope without scope items.");
+            "Only submitted requests appear in Scope; customer drafts stay private.");
 
         foreach (var id in new Guid?[] { null, Guid.Empty, Guid.NewGuid(), inactive.Id })
         {
@@ -69,9 +83,6 @@ internal static class RequestChecks
         invalidText.Input.Title = " ";
         invalidText.Input.SiteAddress = new string('x', 51);
         Check(await invalidText.OnPostAsync() is PageResult && !invalidText.ModelState.IsValid, "Database field limits must be enforced.");
-        var duplicate = Form(user.Id);
-        duplicate.Input.ReferenceNumber = request.ReferenceNumber!.ToLower();
-        Check(await duplicate.OnPostAsync() is PageResult && !duplicate.ModelState.IsValid, "Duplicate references must be rejected case-insensitively.");
         Check(await Form(null).OnPostAsync() is UnauthorizedResult, "Creating a request requires authentication.");
         Check(await Form(user.Id).OnGetAsync(Guid.NewGuid(), null) is NotFoundResult
             && await new DetailsModel(db).OnGetAsync(Guid.NewGuid()) is NotFoundResult, "Unknown customers and requests must return 404.");
@@ -88,7 +99,11 @@ internal static class RequestChecks
         Check(await scopeForm.OnPostAsync(null, request.Id) is RedirectToPageResult, "A created request must accept real scope items.");
         await details.OnGetAsync(request.Id);
         Check(details.RequestDetails.ScopeItemCount == 1, "Details must reflect saved scope items.");
-        var quoteForm = new BuildWise.Web.Areas.Quotations.Pages.UpsertModel(db, new CurrentUser(user.Id));
+        var quoteForm = new BuildWise.Web.Areas.Quotations.Pages.UpsertModel(db, new CurrentUser(user.Id),
+            new GeminiQuotationWordingService(new HttpClient(), configuration, NullLogger<GeminiQuotationWordingService>.Instance),
+            configuration, NullLogger<BuildWise.Web.Areas.Quotations.Pages.UpsertModel>.Instance);
+        Check(await quoteForm.OnGetAsync(null, customerDraft.Id) is NotFoundResult,
+            "Staff cannot start a quotation from an unsubmitted customer draft.");
         Check(await quoteForm.OnGetAsync(null, request.Id) is PageResult && quoteForm.Input.Items.Single().Title == "Paint rooms",
             "Created request scope must load into quotation creation.");
         var quote = new Quotation { Id = Guid.NewGuid(), Request = request, Creator = user, QuotationNumber = "QT-REQUEST-TEST" };
@@ -119,7 +134,8 @@ internal static class RequestChecks
         var filtered = new IndexModel(db) { Search = "  BULAWAYO " };
         await filtered.OnGetAsync();
         Check(filtered.Records.Single().Id == request.Id && filtered.TotalCount == 15 && filtered.Count(ClientRequestStatus.Closed) == 7,
-            "Search must be trimmed and case-insensitive, while summary counts remain global.");
+            "Search must be trimmed and case-insensitive, while summary counts ignore customer drafts.");
+        Check(filtered.Count(ClientRequestStatus.Draft) == 0, "The staff request register must not expose customer drafts.");
         var status = new IndexModel(db) { Status = ClientRequestStatus.Closed };
         await status.OnGetAsync();
         Check(status.FilteredCount == 7 && status.Records.All(row => row.StatusId == (int)ClientRequestStatus.Closed), "Status filtering must use stored enum values.");

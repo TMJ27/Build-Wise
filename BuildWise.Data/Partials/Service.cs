@@ -8,5 +8,6 @@ public partial class Service
     public int ServiceSequence { get; set; }
 
     [NotMapped]
-    public string ServiceNumber => $"SRV-{ServiceSequence:D4}";
+    public string ServiceNumber => GeneratedNumberFormat.Format("SRV", CreationDate, ServiceSequence);
 }
+

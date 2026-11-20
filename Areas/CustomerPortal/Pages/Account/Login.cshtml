@@ -1,8 +1,9 @@
 @page
 @model BuildWise.Web.Areas.CustomerPortal.Pages.Account.LoginModel
 @{
-    Layout = "/Pages/Shared/_CustomerAuthLayout.cshtml";
+    Layout = "/Pages/Shared/_CustomerPublicLayout.cshtml";
     ViewData["Title"] = "Sign in";
+    ViewData["CustomerAuth"] = true;
 }
 <section aria-labelledby="login-title">
     <p class="eyebrow">WELCOME BACK</p>
@@ -30,6 +31,7 @@
             <span>Sign in</span>
         </button>
     </form>
+    <p class="auth-footnote"><a asp-page="ForgotPassword">Forgot password?</a></p>
     <div class="auth-divider"><span>NEW TO BUILDWISE?</span></div>
     <a class="auth-button auth-button-secondary" asp-page="Register">Create an account <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
     <p class="auth-footnote">A workspace for your requests, scope of work and quotations.</p>

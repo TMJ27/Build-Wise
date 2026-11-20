@@ -1,0 +1,75 @@
+@page "{id:guid}"
+@model BuildWise.Web.Areas.Requests.Pages.DetailsModel
+@using BuildWise.Lib.Enums.Statuses
+@{
+    var request = Model.RequestDetails;
+    ViewData["Title"] = "Request details";
+    ViewData["PageTitle"] = request.Title;
+    ViewData["PageSubTitle"] = "Customer request and site details.";
+    ViewData["BreadcrumbTitle"] = request.ReferenceNumber ?? "Request details";
+    ViewData["Breadcrumbs"] = new BreadcrumbItem[] { new("Requests", Url.Page("/Index", new { area = "Requests", id = (Guid?)null })) };
+}
+
+@section actionbar {
+    <a class="btn primary" asp-area="Scopes" asp-page="/Details" asp-route-id="@request.Id">
+        <i class="fa-solid fa-list-check" aria-hidden="true"></i><span>@(Model.CanPrepareScope ? "Prepare scope" : "View scope")</span>
+    </a>
+    @if (Model.CanPrepareScope && request.ScopeItemCount > 0)
+    {
+        <a class="btn" asp-area="Quotations" asp-page="/Upsert" asp-route-id="" asp-route-requestId="@request.Id"><i class="fa-solid fa-file-invoice-dollar" aria-hidden="true"></i><span>Create quotation</span></a>
+    }
+}
+
+<div class="requests-page profile-details">
+    @if (TempData["SuccessMessage"] is string message)
+    {
+        <div class="request-success" role="status">@message</div>
+    }
+    <div class="details-stack">
+        <section class="detail-card panel configuration-section">
+            <header class="card-header"><h2>Request details</h2></header>
+            <div class="card-body">
+                <dl class="profile-detail-list">
+                    <div><dt>Reference</dt><dd>@(request.ReferenceNumber ?? request.Id.ToString())</dd></div>
+                    <div><dt>Status</dt><dd><span class="badge">@ClientRequestStatusDisplay.StatusName(request.StatusId)</span></dd></div>
+                    <div><dt>Site address</dt><dd>@request.SiteAddress</dd></div>
+                    <div><dt>Property type</dt><dd>@(request.PropertyType ?? "Not provided")</dd></div>
+                    <div><dt>Scope items</dt><dd>@request.ScopeItemCount</dd></div>
+                    <div class="profile-detail-wide"><dt>Description</dt><dd>@(request.Description ?? "Not provided")</dd></div>
+                </dl>
+                <hr />
+                <h3>Customer</h3>
+                <dl class="profile-detail-list">
+                    <div><dt>Name</dt><dd>@request.CustomerName</dd></div>
+                    <div><dt>Email</dt><dd>@(request.CustomerEmail ?? "Not provided")</dd></div>
+                    <div><dt>Phone</dt><dd>@(request.CustomerPhone ?? "Not provided")</dd></div>
+                </dl>
+            </div>
+            <footer class="card-footer"><dl class="record-metadata"><div><dt>Creator</dt><dd>@request.CreatorName</dd></div><div><dt>Creation date</dt><dd>@request.CreationDate.ToString("dd MMM yyyy, HH:mm")</dd></div></dl></footer>
+        </section>
+        <section class="panel configuration-section">
+            <div class="configuration-preview-heading"><h2>Quotations</h2><span class="badge">@Model.Quotations.Count quotations</span></div>
+            <div class="table-wrap">
+                <table class="configuration-table">
+                    <caption class="sr-only">Quotations for this request, showing their latest revision</caption>
+                    <thead><tr><th scope="col">Reference</th><th scope="col">Revision</th><th scope="col">Status</th><th scope="col">Amount</th><th scope="col">Currency</th></tr></thead>
+                    <tbody>
+                        @foreach (var quotation in Model.Quotations)
+                        {
+                            <tr>
+                                <td><a class="record-link" asp-area="Quotations" asp-page="/Details" asp-route-id="@quotation.Id">@quotation.QuotationNumber <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a></td>
+                                <td>@quotation.RevisionNumber</td><td><span class="badge">@(quotation.Status?.ToString() ?? "Not set")</span></td>
+                                <td>@(quotation.IncludesPrices ? quotation.Total?.ToString("N2") ?? "Not set" : "Not priced")</td>
+                                <td>@(quotation.IncludesPrices ? quotation.CurrencyCode ?? "Not set" : "—")</td>
+                            </tr>
+                        }
+                        @if (Model.Quotations.Count == 0)
+                        {
+                            <tr><td colspan="5">No quotations have been prepared for this request.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+</div>

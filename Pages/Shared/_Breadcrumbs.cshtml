@@ -1,0 +1,25 @@
+@{
+    var breadcrumbs = ViewData["Breadcrumbs"] as IEnumerable<BreadcrumbItem> ?? [];
+    var currentTitle = ViewData["BreadcrumbTitle"]?.ToString()
+        ?? ViewData["Title"]?.ToString()
+        ?? "Workspace";
+}
+
+<nav class="workspace-breadcrumbs" aria-label="Breadcrumb">
+    <ol>
+        @foreach (var item in breadcrumbs)
+        {
+            <li>
+                @if (item.Url is not null && Url.IsLocalUrl(item.Url))
+                {
+                    <a href="@item.Url">@item.Title</a>
+                }
+                else
+                {
+                    <span>@item.Title</span>
+                }
+            </li>
+        }
+        <li aria-current="page">@currentTitle</li>
+    </ol>
+</nav>

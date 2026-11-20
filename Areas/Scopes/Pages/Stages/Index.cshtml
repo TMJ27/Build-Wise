@@ -1,0 +1,69 @@
+@page "{scopeItemId:guid}"
+@model BuildWise.Web.Areas.Scopes.Pages.Stages.IndexModel
+@{
+    ViewData["Title"] = "Scope stages";
+    ViewData["PageTitle"] = ViewData["Title"];
+    ViewData["PageSubTitle"] = Model.ScopeItemTitle;
+    ViewData["Breadcrumbs"] = new BreadcrumbItem[]
+    {
+        new("Scope", Url.Page("/Index", new { area = "Scopes", id = (Guid?)null, scopeItemId = (Guid?)null, requestId = (Guid?)null })),
+        new("Request scope", Url.Page("/Details", new { area = "Scopes", id = Model.RequestId, scopeItemId = (Guid?)null, requestId = (Guid?)null })),
+        new("Scope item", Url.Page("/Items/Details", new { area = "Scopes", id = Model.ScopeItemId, requestId = Model.RequestId, scopeItemId = (Guid?)null }))
+    };
+}
+
+@section actionbar {
+    @if (Model.CanEdit)
+    {
+        <a class="btn primary" asp-page="Upsert" asp-route-id="" asp-route-scopeItemId="@Model.ScopeItemId" asp-route-requestId="">
+            <i class="fa-solid fa-plus" aria-hidden="true"></i>
+            <span>Add stage</span>
+        </a>
+    }
+}
+
+<div class="requests-page">
+    @if (TempData["SuccessMessage"] is string message)
+    {
+        <div class="request-success" role="status">@message</div>
+    }
+    <section class="panel configuration-section">
+        <div class="configuration-preview-heading">
+            <h2>Scope stages</h2>
+            <span class="badge">@Model.Stages.Count stages</span>
+        </div>
+        <div class="table-wrap">
+            <table class="configuration-table">
+                <caption class="sr-only">Work stages for @Model.ScopeItemTitle</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Name</th>
+                        <th scope="col">Description</th>
+                        <th scope="col">Creator</th>
+                        <th scope="col">Creation date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var stage in Model.Stages)
+                    {
+                        <tr>
+                            <td>
+                                <a class="record-link" asp-page="Details" asp-route-id="@stage.Id" asp-route-scopeItemId="@Model.ScopeItemId" asp-route-requestId="">
+                                    @stage.Name
+                                    <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                                </a>
+                            </td>
+                            <td>@stage.Description</td>
+                            <td>@stage.CreatorName</td>
+                            <td>@stage.CreationDate.ToString("dd MMM yyyy, HH:mm")</td>
+                        </tr>
+                    }
+                    @if (Model.Stages.Count == 0)
+                    {
+                        <tr><td colspan="4">No stages have been added to this scope item.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>

@@ -1,0 +1,140 @@
+@page
+@model BuildWise.Web.Areas.Services.Pages.IndexModel
+@{
+    ViewData["Title"] = "Service catalogue";
+    ViewData["PageTitle"] = ViewData["Title"];
+    ViewData["PageSubTitle"] = "Manage the services offered by your company.";
+}
+
+@section actionbar {
+    <a class="btn primary" asp-page="Upsert">
+        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+        <span>Add service</span>
+    </a>
+}
+
+<div class="requests-page catalogue-page">
+    @if (TempData["SuccessMessage"] is string message)
+    {
+        <div class="request-success" role="status">@message</div>
+    }
+
+    <div class="request-summary" aria-label="Catalogue summary">
+        <a class="request-summary-card" asp-page="Index" asp-route-status="@StatusFilter.Active">
+            <span class="summary-icon">
+                <i class="fa-solid fa-box" aria-hidden="true"></i>
+            </span>
+            <span>
+                <span class="summary-label">@ActiveStatus.Active services</span>
+                <strong>@Model.ActiveCount.ToString("D2")</strong>
+            </span>
+        </a>
+        <div class="request-summary-card">
+            <span class="summary-icon">
+                <i class="fa-solid fa-tags" aria-hidden="true"></i>
+            </span>
+            <span>
+                <span class="summary-label">Categories in use</span>
+                <strong>@Model.CategoryCount.ToString("D2")</strong>
+            </span>
+        </div>
+        <div class="request-summary-card">
+            <span class="summary-icon">
+                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+            </span>
+            <span>
+                <span class="summary-label">Need site assessment</span>
+                <strong>@Model.AssessmentCount.ToString("D2")</strong>
+            </span>
+        </div>
+        <a class="request-summary-card" asp-page="Index" asp-route-status="@StatusFilter.Inactive">
+            <span class="summary-icon">
+                <i class="fa-solid fa-box-archive" aria-hidden="true"></i>
+            </span>
+            <span>
+                <span class="summary-label">@ActiveStatus.Inactive services</span>
+                <strong>@Model.InactiveCount.ToString("D2")</strong>
+            </span>
+        </a>
+    </div>
+
+    <section class="panel requests-panel">
+        <nav class="request-tabs" aria-label="Service availability">
+            <a asp-page="Index" asp-route-status="@StatusFilter.Active" asp-route-categoryId="@Model.CategoryId" asp-route-search="@Model.Search"
+               class="@(Model.Status == StatusFilter.Active ? "active" : null)" aria-current="@(Model.Status == StatusFilter.Active ? "page" : null)">
+                @ActiveStatus.Active <span>@Model.ActiveCount</span>
+            </a>
+            <a asp-page="Index" asp-route-status="@StatusFilter.All" asp-route-categoryId="@Model.CategoryId" asp-route-search="@Model.Search"
+               class="@(Model.Status == StatusFilter.All ? "active" : null)" aria-current="@(Model.Status == StatusFilter.All ? "page" : null)">
+                All services <span>@Model.TotalCount</span>
+            </a>
+            <a asp-page="Index" asp-route-status="@StatusFilter.Inactive" asp-route-categoryId="@Model.CategoryId" asp-route-search="@Model.Search"
+               class="@(Model.Status == StatusFilter.Inactive ? "active" : null)" aria-current="@(Model.Status == StatusFilter.Inactive ? "page" : null)">
+                @ActiveStatus.Inactive <span>@Model.InactiveCount</span>
+            </a>
+        </nav>
+
+        <form method="get" class="form-filters" role="search">
+            <input type="hidden" asp-for="Status" />
+            <label class="form-search">
+                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                <span class="sr-only">Search services</span>
+                <input class="form-control" asp-for="Search" type="search" maxlength="120" placeholder="Search name, description or category..." />
+            </label>
+            <label class="form-filter">
+                <span>Category</span>
+                <select class="form-control" asp-for="CategoryId" asp-items="Model.Categories">
+                    <option value="">All categories</option>
+                </select>
+            </label>
+            <button class="btn" type="submit">Apply filters</button>
+            @if (Model.Search != "" || Model.CategoryId.HasValue || Model.Status != StatusFilter.Active)
+            {
+                <a class="request-clear" asp-page="Index">Clear filters</a>
+            }
+        </form>
+
+        <div class="table-wrap">
+            <table class="configuration-table">
+                <caption class="sr-only">Services matching the selected filters</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">ID</th>
+                        <th scope="col">Name</th>
+                        <th scope="col">Category</th>
+                        <th scope="col">Site assessment</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Creation date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var service in Model.Records)
+                    {
+                        <tr>
+                            <td>
+                                <a class="record-link record-id" asp-page="Details" asp-route-id="@service.Id">
+                                    @service.ServiceNumber
+                                    <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                                </a>
+                            </td>
+                            <td>@service.Name</td>
+                            <td>@service.CategoryName</td>
+                            <td>@(service.RequireSiteAssessment ? "Required" : "Not required")</td>
+                            <td>
+                                <span class="badge @(service.IsActive ? "green" : null)">@service.Status</span>
+                            </td>
+                            <td>@service.CreationDate.ToString("dd MMM yyyy, HH:mm")</td>
+                        </tr>
+                    }
+                    @if (Model.Records.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="6">@(Model.TotalCount == 0 ? "No services have been added." : "No services match the selected filters.")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+

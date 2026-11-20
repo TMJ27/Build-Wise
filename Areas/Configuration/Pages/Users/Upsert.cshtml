@@ -1,0 +1,99 @@
+@page "{id:guid?}"
+@model BuildWise.Web.Areas.Configuration.Pages.Users.UpsertModel
+@{
+    var editing = Model.Input.Id.HasValue && Model.Input.Id != Guid.Empty;
+    ViewData["Title"] = editing ? "Edit user" : "Add user";
+    ViewData["PageTitle"] = ViewData["Title"];
+    ViewData["PageSubTitle"] = editing
+        ? "Update the user's details and group assignment."
+        : "Enter the user's details and assign a group.";
+    ViewData["AccountName"] = User.FindFirst("name")?.Value ?? User.Identity?.Name ?? "Your account";
+    ViewData["Breadcrumbs"] = new BreadcrumbItem[]
+    {
+        new("Configuration"),
+        new("Users", Url.Page("/Users/Index", new { area = "Configuration", id = (Guid?)null }))
+    };
+}
+
+<div class="requests-page configuration-page user-upsert">
+    <form method="post" class="form-stack">
+        <input type="hidden" asp-for="Input.Id" />
+        <div asp-validation-summary="All" class="configuration-errors" role="alert"></div>
+
+        <div class="configuration-grid">
+            <section class="panel configuration-section form-panel">
+                <div class="configuration-section-title">
+                    <span class="summary-icon">
+                        <i class="fa-solid fa-user" aria-hidden="true"></i>
+                    </span>
+                    <div>
+                        <h2>User details</h2>
+                        <p>Fields marked with * are required.</p>
+                    </div>
+                </div>
+
+                <div class="form-fields">
+                    <div class="field">
+                        <label asp-for="Input.Name">First name <span>*</span></label>
+                        <input class="form-control" asp-for="Input.Name" required maxlength="50" autocomplete="given-name" />
+                        <span asp-validation-for="Input.Name"></span>
+                    </div>
+                    <div class="field">
+                        <label asp-for="Input.Surname">Surname</label>
+                        <input class="form-control" asp-for="Input.Surname" maxlength="50" autocomplete="family-name" />
+                        <span asp-validation-for="Input.Surname"></span>
+                    </div>
+                    <div class="field">
+                        <label asp-for="Input.Email">Email address <span>*</span></label>
+                        <input class="form-control" asp-for="Input.Email" type="email" required maxlength="50" autocomplete="email" />
+                        <span asp-validation-for="Input.Email"></span>
+                    </div>
+                    <div class="field">
+                        <label asp-for="Input.Phone">Phone number</label>
+                        <input class="form-control" asp-for="Input.Phone" type="tel" maxlength="20" autocomplete="tel" />
+                        <span asp-validation-for="Input.Phone"></span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel configuration-section form-panel">
+                <div class="configuration-section-title">
+                    <span class="summary-icon"><i class="fa-solid fa-users-gear" aria-hidden="true"></i></span>
+                    <div>
+                        <h2>Group &amp; status</h2>
+                        <p>Set the user's group and account status.</p>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label asp-for="Input.GroupId">User group</label>
+                    <select class="form-control" asp-for="Input.GroupId" asp-items="Model.Groups" aria-describedby="user-group-help">
+                        <option value="">Select a user group</option>
+                    </select>
+                    <span asp-validation-for="Input.GroupId"></span>
+                    <p id="user-group-help" class="configuration-muted">Choose a group from your configured user groups.</p>
+                </div>
+
+                <label class="form-check">
+                    <input asp-for="Input.IsActive" />
+                    <span>
+                        <strong>Active account</strong>
+                        <small>Clear this option to mark the account inactive.</small>
+                    </span>
+                </label>
+                <span asp-validation-for="Input.IsActive"></span>
+                <footer class="card-footer form-card-footer">
+                    <div class="form-actions">
+                        <button class="btn primary" type="submit">
+                            <i class="fa-solid fa-check" aria-hidden="true"></i>
+                            <span>@(editing ? "Save changes" : "Create user")</span>
+                        </button>
+                    </div>
+                </footer>
+            </section>
+        </div>
+    </form>
+</div>
+
+
+

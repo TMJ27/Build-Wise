@@ -1,0 +1,76 @@
+@page "{id:guid}"
+@model BuildWise.Web.Areas.Quotations.Pages.PreviewModel
+@using BuildWise.Lib.Enums.Statuses
+@{
+    var document = Model.Document;
+    var revision = document.Revision;
+    ViewData["Title"] = "Quotation preview";
+    ViewData["QuotationPdfData"] = BuildWise.Web.Services.Quotations.QuotationPdfData.Create(document);
+    ViewData["PageTitle"] = document.Number;
+    ViewData["PageHeaderClass"] = "quotation-preview-toolbar";
+    ViewData["Breadcrumbs"] = new BreadcrumbItem[]
+    {
+        new("Quotations", Url.Page("/Index", new { area = "Quotations", id = (Guid?)null })),
+        new(document.Number, Url.Page("/Details", new { area = "Quotations", id = document.Id, revisionId = revision.Id }))
+    };
+}
+@section actionbar {
+    <button class="btn" type="button" id="print-quotation"><i class="fa-solid fa-print" aria-hidden="true"></i><span>Print</span></button>
+    <button class="btn primary" type="button" id="download-quotation"><i class="fa-solid fa-download" aria-hidden="true"></i><span>Download PDF</span></button>
+}
+<div class="requests-page quotations-page">
+    <p data-pdf-status role="status" aria-live="polite" hidden></p>
+    <article class="quotation-document" aria-label="Quotation document">
+        <header class="quotation-document-header">
+            <div class="quotation-company-heading">
+                @if (!string.IsNullOrWhiteSpace(document.LogoUrl))
+                {
+                    <img class="quotation-company-logo" src="@document.LogoUrl" alt="@revision.CompanyNameSnapshot logo" />
+                }
+                <div class="quotation-company-details">
+                <h2>@revision.CompanyNameSnapshot</h2>
+                <p class="quotation-copy">@revision.CompanyAddressSnapshot</p>
+                <p>@revision.CompanyEmailSnapshot</p>
+                <p>@revision.CompanyPhoneSnapshot</p>
+                @if (!string.IsNullOrWhiteSpace(revision.CompanyRegistrationNumberSnapshot))
+                {
+                    <p>Registration: @revision.CompanyRegistrationNumberSnapshot</p>
+                }
+                @if (!string.IsNullOrWhiteSpace(revision.CompanyTaxNumberSnapshot))
+                {
+                    <p>Tax number: @revision.CompanyTaxNumberSnapshot</p>
+                }
+                </div>
+            </div>
+            <div class="quotation-document-reference">
+                <h2>@document.Number</h2>
+                <p>Revision @revision.RevisionNumber · @((QuotationStatus)revision.StatusId)</p>
+                <p>Issue date: @(revision.IssueDate?.ToString("dd MMM yyyy") ?? "Not set")</p>
+                <p>Valid until: @(revision.ValidUntil?.ToString("dd MMM yyyy") ?? "Not set")</p>
+            </div>
+        </header>
+        <div class="quotation-document-customer">
+            <div>
+                <h3>Prepared for</h3>
+                <p>@revision.CustomerNameSnapshot</p>
+                <p>@revision.CustomerEmailSnapshot</p>
+                <p>@revision.CustomerPhoneSnapshot</p>
+                <p class="quotation-copy">@revision.CustomerAddressSnapshot</p>
+            </div>
+            <div>
+                <h3>@revision.Title</h3>
+                <p>@document.RequestReference</p>
+                <p class="quotation-copy">@revision.SiteAddressSnapshot</p>
+            </div>
+        </div>
+        <h2>Scope of work</h2>
+        @await Html.PartialAsync("_QuotationRevisionItems", revision)
+        <section class="quotation-document-terms">
+            <h3>Terms</h3>
+            <p class="quotation-copy">@(revision.Terms ?? "Not provided")</p>
+            <h3>Assumptions and exclusions</h3>
+            <p class="quotation-copy">@(revision.Exclusions ?? "Not provided")</p>
+        </section>
+        <footer class="quotation-document-footer">@document.Number · Revision @revision.RevisionNumber · @revision.CompanyNameSnapshot</footer>
+    </article>
+</div>

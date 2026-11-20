@@ -1,0 +1,75 @@
+@page
+@model BuildWise.Web.Areas.Configuration.Pages.Currencies.IndexModel
+@{
+    ViewData["Title"] = "Currencies";
+    ViewData["PageTitle"] = "Currencies";
+    ViewData["PageSubTitle"] = "Manage the currencies available to your company.";
+    ViewData["Breadcrumbs"] = new BreadcrumbItem[]
+    {
+        new("Configuration")
+    };
+}
+
+@section actionbar {
+    <a class="btn primary" asp-area="Configuration" asp-page="/Currencies/Upsert">
+        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+        <span>Add currency</span>
+    </a>
+}
+
+<div class="requests-page configuration-page">
+    @if (TempData["SuccessMessage"] is string message)
+    {
+        <div class="request-success" role="status">@message</div>
+    }
+
+    <section class="panel configuration-section">
+        <div class="configuration-preview-heading">
+            <h2>Currency register</h2>
+            <span class="badge">@Model.Currencies.Count currencies</span>
+        </div>
+
+        <div class="table-wrap">
+            <table class="configuration-table">
+                <caption class="sr-only">Configured currencies</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">ID</th>
+                        <th scope="col">Name</th>
+                        <th scope="col">Code</th>
+                        <th scope="col">Symbol</th>
+                        <th scope="col">Creator</th>
+                        <th scope="col">Creation date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var currency in Model.Currencies)
+                    {
+                        <tr>
+                            <td>
+                                <a class="record-link record-id" asp-area="Configuration" asp-page="/Currencies/Details" asp-route-id="@currency.Id">
+                                    @currency.CurrencyNumber
+                                    <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                                </a>
+                            </td>
+                            <td>
+                                @currency.Name
+                            </td>
+                            <td>@currency.Code</td>
+                            <td>@currency.Symbol</td>
+                            <td>@currency.Creator</td>
+                            <td>@currency.CreationDate.ToString("dd MMM yyyy, HH:mm")</td>
+                        </tr>
+                    }
+
+                    @if (Model.Currencies.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="6">No currencies have been added.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>

@@ -1,0 +1,20 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "BuildWiseSendEmail",
+      "Effect": "Allow",
+      "Action": ["ses:SendEmail", "ses:SendRawEmail"],
+      "Resource": [
+        "arn:aws:ses:eu-north-1:896932223680:identity/tavomadanhire@gmail.com",
+        "arn:aws:ses:eu-north-1:896932223680:identity/tavomada27@gmail.com",
+        "arn:aws:ses:eu-north-1:896932223680:identity/madanhiretavo@gmail.com"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "ses:FromAddress": "tavomadanhire@gmail.com"
+        }
+      }
+    }
+  ]
+}

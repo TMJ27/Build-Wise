@@ -1,0 +1,106 @@
+@page "{id:guid}"
+@model BuildWise.Web.Areas.CustomerPortal.Pages.Quotations.DetailsModel
+@using BuildWise.Lib.Enums.Statuses
+@{
+    var revision = Model.Revision;
+    ViewData["Title"] = "Quotation details";
+    ViewData["PageTitle"] = Model.QuotationNumber;
+    ViewData["PageSubTitle"] = $"Revision {revision.RevisionNumber} · Approved";
+    ViewData["Breadcrumbs"] = new BreadcrumbItem[] { new("My dashboard", Url.Page("/Index", new { area = "CustomerPortal", id = (Guid?)null })) };
+}
+@section actionbar {
+    @if (Model.CustomerResponse is null)
+    {
+        @if (!Model.IsExpired)
+        {
+            <button class="btn primary" type="submit" form="quotation-response-form" asp-page-handler="Accept" asp-route-id="@revision.QuotationId">
+                <i class="fa-solid fa-check" aria-hidden="true"></i> Accept quotation
+            </button>
+        }
+        <button class="btn secondary" type="submit" form="quotation-response-form" asp-page-handler="Decline" asp-route-id="@revision.QuotationId">
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i> Decline quotation
+        </button>
+    }
+}
+<div class="requests-page profile-details">
+    @if (TempData["SuccessMessage"] is string message)
+    { <div class="request-success" role="status">@message</div> }
+    <div asp-validation-summary="All" class="configuration-errors" role="alert"></div>
+    <div class="details-stack">
+        <section class="detail-card panel configuration-section">
+            <header class="card-header"><h2>@revision.Title</h2></header>
+            <div class="card-body">
+                <dl class="profile-detail-list">
+                    <div><dt>Business</dt><dd>@revision.CompanyNameSnapshot</dd></div>
+                    <div><dt>Customer</dt><dd>@revision.CustomerNameSnapshot</dd></div>
+                    <div><dt>Issue date</dt><dd>@(revision.IssueDate?.ToString("dd MMM yyyy") ?? "Not set")</dd></div>
+                    <div><dt>Valid until</dt><dd>@(revision.ValidUntil?.ToString("dd MMM yyyy") ?? "Not set")</dd></div>
+                    <div class="profile-detail-wide"><dt>Site address</dt><dd>@revision.SiteAddressSnapshot</dd></div>
+                </dl>
+            </div>
+        </section>
+        <section class="detail-card panel configuration-section">
+            <header class="card-header"><h2>Quoted work</h2></header>
+            <div class="card-body">
+                @await Html.PartialAsync("/Areas/Quotations/Pages/_QuotationRevisionItems.cshtml", revision)
+            </div>
+            <footer class="card-footer">@revision.QuotationItems.Count services · @(revision.IncludesPrices ? revision.CurrencyCode : "Without prices")</footer>
+        </section>
+        <section class="detail-card panel configuration-section">
+            <header class="card-header"><h2>Terms and exclusions</h2></header>
+            <div class="card-body">
+                <dl class="profile-detail-list">
+                    <div class="profile-detail-wide"><dt>Terms</dt><dd>@(revision.Terms ?? "Not provided")</dd></div>
+                    <div class="profile-detail-wide"><dt>Exclusions</dt><dd>@(revision.Exclusions ?? "Not provided")</dd></div>
+                </dl>
+            </div>
+        </section>
+        <section class="detail-card panel configuration-section">
+            <header class="card-header card-header-between">
+                <h2>Your response</h2>
+                @if (Model.CustomerResponse is { } response)
+                { <span class="badge @(response.StatusId == (int)QuotationResponseStatus.Accepted ? "green" : "amber")">@((QuotationResponseStatus)response.StatusId)</span> }
+            </header>
+            @if (Model.CustomerResponse is { } saved)
+            {
+                <div class="card-body">
+                    <dl class="profile-detail-list">
+                        <div><dt>Customer</dt><dd>@saved.CustomerNameSnapshot</dd></div>
+                        <div><dt>Email</dt><dd>@saved.CustomerEmailSnapshot</dd></div>
+                        @if (!string.IsNullOrWhiteSpace(saved.Reason))
+                        { <div class="profile-detail-wide"><dt>Reason for declining</dt><dd>@saved.Reason</dd></div> }
+                    </dl>
+                </div>
+                <footer class="card-footer">
+                    <dl class="record-metadata">
+                        <div><dt>Revision</dt><dd>@revision.RevisionNumber</dd></div>
+                        <div><dt>Responded</dt><dd>@saved.CreationDate.ToString("dd MMM yyyy, HH:mm")</dd></div>
+                    </dl>
+                </footer>
+            }
+            else
+            {
+                <form method="post" id="quotation-response-form">
+                    <input type="hidden" asp-for="Input.RevisionId" />
+                    <input type="hidden" asp-for="Input.Version" />
+                    <div class="card-body form-fields">
+                        @if (Model.IsExpired)
+                        { <p class="form-wide">This quotation has expired. Contact the team for an updated quotation.</p> }
+                        <div class="field form-wide">
+                            <label asp-for="Input.DeclineReason">Reason for declining</label>
+                            <textarea asp-for="Input.DeclineReason" class="form-control" rows="3" maxlength="2000"></textarea>
+                            <small>Required when declining.</small>
+                            <span asp-validation-for="Input.DeclineReason"></span>
+                        </div>
+                        <label class="form-check form-wide">
+                            <input asp-for="Input.Confirm" required />
+                            <span>I have reviewed revision @revision.RevisionNumber and confirm my response.</span>
+                        </label>
+                        <span class="form-wide" asp-validation-for="Input.Confirm"></span>
+                    </div>
+                    <footer class="card-footer">Revision @revision.RevisionNumber</footer>
+                </form>
+            }
+        </section>
+    </div>
+</div>

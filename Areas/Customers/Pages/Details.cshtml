@@ -1,0 +1,116 @@
+@page "{id:guid}"
+@model BuildWise.Web.Areas.Customers.Pages.DetailsModel
+@{
+    ViewData["Title"] = Model.Customer.Name;
+    ViewData["PageTitle"] = Model.Customer.Name;
+    ViewData["PageSubTitle"] = "Customer contact details and work history.";
+    ViewData["Breadcrumbs"] = new BreadcrumbItem[]
+    {
+        new("Customers", Url.Page("/Index", new { area = "Customers", id = (Guid?)null }))
+    };
+}
+
+@section actionbar {
+    <a class="btn edit" asp-page="/Upsert" asp-route-id="@Model.Customer.Id">
+        <i class="fa-solid fa-pen" aria-hidden="true"></i> Edit customer
+    </a>
+    @if (Model.Customer.IsActive)
+    {
+        <a class="btn primary" asp-area="Requests" asp-page="/Create" asp-route-id="" asp-route-customerId="@Model.Customer.Id">
+            <i class="fa-solid fa-plus" aria-hidden="true"></i> New request
+        </a>
+    }
+}
+
+<div class="requests-page customers-page form-stack">
+    <section class="panel detail-card">
+        <header class="card-header card-header-between">
+            <h2>Customer details</h2>
+            <span class="badge @(Model.Customer.IsActive ? "green" : null)">@(Model.Customer.IsActive ? ActiveStatus.Active : ActiveStatus.Inactive)</span>
+        </header>
+        <div class="card-body">
+            <dl class="profile-detail-list">
+                <div><dt>Customer ID</dt><dd>@Model.Customer.ClientNumber</dd></div>
+                <div><dt>Customer type</dt><dd>@((ClientType)Model.Customer.ClientTypeId)</dd></div>
+                <div><dt>Email</dt><dd>
+                    @if (!string.IsNullOrWhiteSpace(Model.Customer.Email))
+                    { <a href="mailto:@Model.Customer.Email">@Model.Customer.Email</a> }
+                    else { <span>Not provided</span> }
+                </dd></div>
+                <div><dt>Phone</dt><dd>
+                    @if (!string.IsNullOrWhiteSpace(Model.Customer.Phone))
+                    { <a href="tel:@Model.Customer.Phone">@Model.Customer.Phone</a> }
+                    else { <span>Not provided</span> }
+                </dd></div>
+                <div class="profile-detail-wide"><dt>Address</dt><dd>@(string.IsNullOrWhiteSpace(Model.Customer.Address) ? "Not provided" : Model.Customer.Address)</dd></div>
+            </dl>
+        </div>
+        <footer class="card-footer">
+            <dl class="record-metadata">
+                <div><dt>Creator</dt><dd>@(Model.Customer.Creator.Name ?? Model.Customer.Creator.Email)</dd></div>
+                <div><dt>Creation date</dt><dd>@Model.Customer.CreationDate.ToString("dd MMM yyyy, HH:mm")</dd></div>
+            </dl>
+        </footer>
+    </section>
+
+    <section class="panel detail-card">
+        <header class="card-header"><h2>Work summary</h2></header>
+        <div class="card-body">
+            <dl class="profile-detail-list">
+                <div><dt>Total requests</dt><dd>@Model.Requests.Count</dd></div>
+                <div><dt>Open requests</dt><dd>@Model.OpenCount</dd></div>
+                <div class="profile-detail-wide"><dt>Approved value</dt><dd>
+                    @foreach (var value in Model.ApprovedValues)
+                    { <div>@value.CurrencyCode @value.Total.ToString("N2")</div> }
+                    @if (Model.ApprovedValues.Count == 0)
+                    { <span>No approved priced quotations</span> }
+                </dd></div>
+            </dl>
+        </div>
+        <footer class="card-footer">Approved values use the latest approved revision of each quotation.</footer>
+    </section>
+
+    <section class="panel detail-card">
+        <header class="card-header"><h2>Customer work history</h2></header>
+        <div class="card-body">
+            <nav class="request-tabs" aria-label="Customer history">
+                <a asp-page="/Details" asp-route-id="@Model.Customer.Id" asp-route-tab="requests" class="@(Model.Tab == "requests" ? "active" : null)">Requests <span>@Model.Requests.Count</span></a>
+                <a asp-page="/Details" asp-route-id="@Model.Customer.Id" asp-route-tab="quotations" class="@(Model.Tab == "quotations" ? "active" : null)">Quotations <span>@Model.Quotations.Count</span></a>
+            </nav>
+        </div>
+        <div class="table-wrap">
+            <table class="configuration-table">
+                <thead><tr><th scope="col">ID</th><th scope="col">Title</th><th scope="col">Status</th><th scope="col">@(Model.Tab == "requests" ? "Creation date" : "Value")</th></tr></thead>
+                <tbody>
+                    @if (Model.Tab == "requests")
+                    {
+                        @foreach (var request in Model.Requests)
+                        {
+                            <tr>
+                                <td><a class="record-link record-id" asp-area="Requests" asp-page="/Details" asp-route-id="@request.Id">@request.ReferenceNumber <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a></td>
+                                <td>@request.Title</td>
+                                <td><span class="badge">@ClientRequestStatusDisplay.StatusName(request.StatusId)</span></td>
+                                <td>@request.CreationDate.ToString("dd MMM yyyy, HH:mm")</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        @foreach (var quotation in Model.Quotations)
+                        {
+                            <tr>
+                                <td><a class="record-link record-id" asp-area="Quotations" asp-page="/Details" asp-route-id="@quotation.Id">@quotation.Number <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a></td>
+                                <td>@quotation.Title <small>Revision @quotation.RevisionNumber</small></td>
+                                <td><span class="badge @(quotation.Status == QuotationStatus.Approved ? "green" : null)">@quotation.Status</span></td>
+                                <td>@(quotation.IncludesPrices && quotation.Total.HasValue ? $"{quotation.CurrencyCode} {quotation.Total.Value:N2}" : "Not priced")</td>
+                            </tr>
+                        }
+                    }
+                    @if ((Model.Tab == "requests" && Model.Requests.Count == 0) || (Model.Tab == "quotations" && Model.Quotations.Count == 0))
+                    { <tr><td colspan="4">No @(Model.Tab) found.</td></tr> }
+                </tbody>
+            </table>
+        </div>
+        <footer class="card-footer">@(Model.Tab == "requests" ? Model.Requests.Count : Model.Quotations.Count) records</footer>
+    </section>
+</div>

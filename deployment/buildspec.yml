@@ -1,0 +1,14 @@
+version: 0.2
+env:
+  variables:
+    IMAGE_URI: 896932223680.dkr.ecr.eu-north-1.amazonaws.com/buildwise
+    IMAGE_TAG: release-20261113-cloud
+phases:
+  pre_build:
+    commands:
+      - docker info
+      - aws ecr get-login-password --region eu-north-1 | docker login --username AWS --password-stdin 896932223680.dkr.ecr.eu-north-1.amazonaws.com
+  build:
+    commands:
+      - docker build -t "$IMAGE_URI:$IMAGE_TAG" .
+      - docker push "$IMAGE_URI:$IMAGE_TAG"
